@@ -48,7 +48,7 @@ export default function Home() {
   return (
     <div className="space-y-24 sm:space-y-32">
       {/* Hero */}
-      <section className="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
+      <section className="relative aurora grid items-center gap-10 lg:grid-cols-[1.05fr_1fr]">
         <div className="space-y-7">
           <motion.h1
             className="text-2xl font-medium tracking-[-0.02em] [text-wrap:balance] sm:text-3xl"
