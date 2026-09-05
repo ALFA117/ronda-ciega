@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { springLayout } from "@/lib/motion";
 import { NONE } from "@/lib/constants";
+import { useT } from "@/lib/i18n";
 
 const ROW = 46;
 /** Where the wire leaves one column and enters the other. */
@@ -139,6 +140,7 @@ function Column({
   matched: (i: number) => boolean;
   compact: boolean;
 }) {
+  const t = useT();
   return (
     <div>
       {nodes.map((n, i) => {
@@ -153,11 +155,11 @@ function Column({
               } ${
                 align === "right" ? "justify-end pr-3" : "justify-start pl-3"
               } transition-colors duration-300 ${
-                on ? "text-chalk" : "text-muted/50"
+                on ? "text-chalk" : "text-dim"
               }`}
             >
               {n.label}
-              {n.you && <span className="text-2xs text-sealed">tú</span>}
+              {n.you && <span className="text-2xs text-sealed">{t.round.you}</span>}
             </motion.span>
           </div>
         );

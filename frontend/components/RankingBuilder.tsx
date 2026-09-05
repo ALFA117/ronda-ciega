@@ -10,6 +10,7 @@ import { getProgram, ParticipantAccount, RoundAccount } from "@/lib/program";
 import { participantPda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
 import { springLayout, springSnappy } from "@/lib/motion";
+import { useT } from "@/lib/i18n";
 import { Button, ErrorText, Label, Note, Panel } from "./ui";
 
 export function RankingBuilder({
@@ -24,6 +25,7 @@ export function RankingBuilder({
   onSubmitted: () => void;
 }) {
   const wallet = useWallet();
+  const t = useT();
   const reduce = useReducedMotion();
   const others = participants
     .filter((p) => p.side !== me.side)
@@ -88,16 +90,14 @@ export function RankingBuilder({
               >
                 <Lock className="h-3.5 w-3.5" aria-hidden />
               </motion.span>
-              <Label>Lista sellada</Label>
+              <Label>{t.ranking.sealed}</Label>
             </div>
             <Note>
-              Tu ranking está en una cuenta que solo tu wallet puede leer. No hay
-              instrucción en el programa que la revele, ni al cerrar la ronda ni
-              después. Puedes reemplazarla mientras la ronda siga abierta.
+              {t.ranking.sealedNote}
             </Note>
             <Button variant="ghost" onClick={() => setDone(false)}>
               <PenLine className="h-3.5 w-3.5" aria-hidden />
-              Cambiar mi lista
+              {t.ranking.change}
             </Button>
           </Panel>
         </motion.div>
@@ -111,11 +111,9 @@ export function RankingBuilder({
         >
           <Panel sealed className="space-y-5 p-6">
             <div className="space-y-2">
-              <Label>Tu ranking privado</Label>
+              <Label>{t.ranking.label}</Label>
               <Note>
-                Toca en orden, del que más quieres al que menos. Puedes dejar
-                gente fuera: no listar a alguien es decir que prefieres quedarte
-                sin par.
+                {t.ranking.help}
               </Note>
             </div>
 
@@ -142,7 +140,7 @@ export function RankingBuilder({
                       transition={springSnappy}
                       className={`tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-mono text-2xs ${
                         chosen
-                          ? "bg-sealed text-bg"
+                          ? "bg-sealed text-onSealed"
                           : "border border-edge text-muted"
                       }`}
                     >
@@ -173,7 +171,7 @@ export function RankingBuilder({
             </div>
 
             {others.length === 0 && (
-              <Note>Todavía no hay nadie del otro lado a quien rankear.</Note>
+              <Note>{t.ranking.nobody}</Note>
             )}
 
             {error && <ErrorText>{error}</ErrorText>}
@@ -186,12 +184,10 @@ export function RankingBuilder({
                 disabled={ranking.length === 0}
               >
                 <Lock className="h-3.5 w-3.5" aria-hidden />
-                Sellar mi lista
+                {t.ranking.seal}
               </Button>
               <Note>
-                Tu wallet va a pedirte una firma. Esa firma es lo que le prueba
-                al enclave quién eres, y es la razón por la que nadie más puede
-                leer lo que estás por escribir.
+                {t.ranking.signatureNote}
               </Note>
             </div>
           </Panel>

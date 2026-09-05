@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { MatchGraph } from "./MatchGraph";
 import { NONE } from "@/lib/constants";
+import { useT } from "@/lib/i18n";
 
 const LEFT = [{ label: "ana" }, { label: "beto" }, { label: "cami" }, { label: "dani" }];
 const RIGHT = [{ label: "eli" }, { label: "fran" }, { label: "gus" }, { label: "hana" }];
@@ -25,6 +26,7 @@ const FRAMES: number[][] = [
 ];
 
 export function HeroVisual() {
+  const t = useT();
   const reduce = useReducedMotion();
   const [frame, setFrame] = useState(reduce ? FRAMES.length - 1 : 0);
 
@@ -48,10 +50,10 @@ export function HeroVisual() {
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.18em] text-sealed">
             <Lock className="h-3 w-3" aria-hidden />
-            listas selladas
+            {t.hero.sealed}
           </span>
           <span className="tnum font-mono text-2xs text-muted">
-            {settled ? "estable" : `ronda ${idx}`}
+            {settled ? t.hero.stable : `${t.hero.round} ${idx}`}
           </span>
         </div>
 
@@ -59,8 +61,8 @@ export function HeroVisual() {
 
         <div className="space-y-3 border-t border-edge/70 pt-3">
           <div className="flex items-center justify-between font-mono text-2xs text-muted">
-            <span>founders proponen</span>
-            <span>builders eligen</span>
+            <span>{t.hero.proposers}</span>
+            <span>{t.hero.receivers}</span>
           </div>
           <motion.p
             key={settled ? "done" : "run"}
@@ -71,9 +73,7 @@ export function HeroVisual() {
               settled ? "text-sealed" : "text-muted"
             }`}
           >
-            {settled
-              ? "estable — nadie mejora cambiando de par"
-              : "proponiendo…"}
+            {settled ? t.hero.settledNote : t.hero.proposing}
           </motion.p>
         </div>
       </div>

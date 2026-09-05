@@ -8,6 +8,7 @@ import { RankingBuilder } from "@/components/RankingBuilder";
 import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
 import { springLayout } from "@/lib/motion";
+import { useT } from "@/lib/i18n";
 import {
   ErrorText,
   Explorer,
@@ -21,6 +22,7 @@ import {
 
 export default function RoundPage({ params }: { params: { address: string } }) {
   const wallet = useWallet();
+  const t = useT();
   const reduce = useReducedMotion();
   const { round, participants, delegated, loading, error, refresh } = useRound(
     params.address,
@@ -38,7 +40,7 @@ export default function RoundPage({ params }: { params: { address: string } }) {
   if (error || !round) {
     return (
       <Panel className="p-6">
-        <ErrorText>{error || "Ronda no encontrada"}</ErrorText>
+        <ErrorText>{error || t.round.notFound}</ErrorText>
       </Panel>
     );
   }
@@ -54,17 +56,17 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="tnum font-mono text-base">
-              Ronda #{round.roundId.toString().slice(-6)}
+              {t.round.title} #{round.roundId.toString().slice(-6)}
             </h1>
             <StatusPill status={round.status} />
-            {round.transparent && <Tag tone="open">transparente</Tag>}
-            {delegated && <Tag tone="sealed">en el rollup</Tag>}
+            {round.transparent && <Tag tone="open">{t.round.transparent}</Tag>}
+            {delegated && <Tag tone="sealed">{t.round.onRollup}</Tag>}
           </div>
           <div className="tnum font-mono text-2xs text-muted">
-            {participants.filter((p) => p.side === "founder").length} founders ·{" "}
-            {participants.filter((p) => p.side === "builder").length} builders ·{" "}
+            {participants.filter((p) => p.side === "founder").length} {t.rounds.founders} ·{" "}
+            {participants.filter((p) => p.side === "builder").length} {t.rounds.builders} ·{" "}
             <span className="text-sealed">
-              {round.rankingCount} listas selladas
+              {round.rankingCount} {t.rounds.sealedLists}
             </span>
           </div>
         </div>
@@ -75,10 +77,8 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         <Reveal>
           <Panel className="border-open/25 bg-open/[0.03] p-4">
             <Note>
-              <span className="text-open">Ronda transparente.</span> Publica los
-              estados intermedios del algoritmo, lo que revela quién propuso a
-              quién y en qué orden. Las listas completas siguen selladas, pero
-              esta ronda no da la garantía completa — por eso es solo para demos.
+              <span className="text-open">{t.round.transparent}.</span>{" "}
+              {t.round.transparentWarning}
             </Note>
           </Panel>
         </Reveal>
@@ -143,9 +143,8 @@ export default function RoundPage({ params }: { params: { address: string } }) {
           >
             <Panel className="p-6">
               <Note>
-                Estás dentro como <span className="text-chalk">{me.handle}</span>
-                . Espera a que quien organiza delegue la ronda al rollup — tu
-                lista privada no puede existir hasta entonces.
+                {t.join.youAreIn}{" "}
+                <span className="text-chalk">{me.handle}</span>. {t.join.waiting}
               </Note>
             </Panel>
           </motion.div>
@@ -155,7 +154,7 @@ export default function RoundPage({ params }: { params: { address: string } }) {
       <div className="grid gap-6 sm:grid-cols-2">
         {(["founder", "builder"] as const).map((side) => (
           <div key={side} className="space-y-3">
-            <Label>{side === "founder" ? "Founders" : "Builders"}</Label>
+            <Label>{side === "founder" ? t.rounds.founders : t.rounds.builders}</Label>
             <div className="space-y-1.5">
               {participants
                 .filter((p) => p.side === side)
@@ -167,12 +166,12 @@ export default function RoundPage({ params }: { params: { address: string } }) {
                     <span className="tnum w-4 text-muted">{p.index}</span>
                     <span>{p.handle}</span>
                     {me && p.wallet.equals(me.wallet) && (
-                      <span className="text-2xs text-sealed">tú</span>
+                      <span className="text-2xs text-sealed">{t.round.you}</span>
                     )}
                   </div>
                 ))}
               {participants.filter((p) => p.side === side).length === 0 && (
-                <Note>Nadie todavía.</Note>
+                <Note>{t.ranking.nobody}</Note>
               )}
             </div>
           </div>

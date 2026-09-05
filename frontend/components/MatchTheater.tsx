@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import { framesFor, ParticipantAccount, RoundAccount } from "@/lib/program";
+import { useT } from "@/lib/i18n";
 import { MatchGraph } from "./MatchGraph";
 import { Label, Note, Panel } from "./ui";
 
@@ -25,6 +26,7 @@ export function MatchTheater({
   participants: ParticipantAccount[];
   meWallet?: string;
 }) {
+  const t = useT();
   const reduce = useReducedMotion();
   const founders = participants.filter((p) => p.side === "founder");
   const builders = participants.filter((p) => p.side === "builder");
@@ -58,17 +60,17 @@ export function MatchTheater({
     <Panel className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-edge/70 px-5 py-4">
         <Label>
-          {round.transparent ? "El algoritmo, ronda por ronda" : "Resultado"}
+          {round.transparent ? t.round.algorithm : t.round.result}
         </Label>
 
         {scrubbable && (
           <div className="flex items-center gap-3">
             <span className="tnum font-mono text-2xs text-muted">
-              ronda {Math.min(frame + 1, round.tick)} / {round.tick}
+              {t.stats.tick} {Math.min(frame + 1, round.tick)} / {round.tick}
             </span>
             <div className="flex items-center gap-1">
               <ControlButton
-                label={atEnd ? "Repetir" : playing ? "Pausar" : "Continuar"}
+                label={atEnd ? t.round.replay : playing ? t.round.pause : t.round.play}
                 onClick={() => {
                   if (atEnd) {
                     setFrame(0);
@@ -103,7 +105,7 @@ export function MatchTheater({
       </div>
 
       {scrubbable && (
-        <div className="flex gap-1 px-5 pt-4" role="group" aria-label="Rondas">
+        <div className="flex gap-1 px-5 pt-4" role="group" aria-label={t.stats.tick}>
           {frames.map((_, i) => (
             <button
               key={i}
@@ -111,7 +113,7 @@ export function MatchTheater({
                 setFrame(i);
                 setPlaying(false);
               }}
-              aria-label={`Ir a la ronda ${i + 1}`}
+              aria-label={`${t.round.goToTick} ${i + 1}`}
               aria-current={i === frame}
               className="group h-6 flex-1 cursor-pointer"
             >
@@ -135,15 +137,13 @@ export function MatchTheater({
 
       <div className="space-y-3 border-t border-edge/70 px-5 py-4">
         <div className="flex items-center justify-between font-mono text-2xs text-muted">
-          <span>founders proponen</span>
-          <span>builders eligen</span>
+          <span>{t.hero.proposers}</span>
+          <span>{t.hero.receivers}</span>
         </div>
 
         {!round.transparent && (
           <Note>
-            Esta ronda no es transparente, así que no hay nada que animar: los
-            estados intermedios nunca salieron del enclave. Lo de arriba es todo
-            lo que existe públicamente.
+            {t.round.notTransparent}
           </Note>
         )}
 
@@ -156,9 +156,7 @@ export function MatchTheater({
               transition={{ duration: 0.3 }}
             >
               <Note>
-                Emparejamiento estable: nadie puede mejorar cambiando de par. Las
-                listas siguen dentro del enclave y no se van a publicar nunca —
-                no hay instrucción que las revele.
+                {t.round.settled}
               </Note>
             </motion.div>
           )}

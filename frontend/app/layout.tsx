@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
+import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const sans = Inter({
@@ -34,6 +35,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${sans.variable} ${mono.variable}`}>
+      <head>
+        {/* Stamps the theme on <html> before first paint. Anything later and a
+            light-mode user sees a dark flash. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-dvh font-sans">
         <Providers>
           <Nav />

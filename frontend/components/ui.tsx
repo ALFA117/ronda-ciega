@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Loader2 } from "lucide-react";
 import { easeEnter, riseIn, springSnappy, stagger } from "@/lib/motion";
+import { useOnScreen } from "@/hooks/useOnScreen";
+import { useT } from "@/lib/i18n";
 
 export function Panel({
   children,
@@ -78,18 +81,14 @@ export function Button({
 }
 
 export function StatusPill({ status }: { status: string }) {
+  const t = useT();
   const tone: Record<string, string> = {
     open: "border-open/40 text-open bg-open/5",
     sealing: "border-sealed/40 text-sealed bg-sealed/5",
     matching: "border-sealed/40 text-sealed bg-sealed/5",
     settled: "border-edge text-muted",
   };
-  const label: Record<string, string> = {
-    open: "abierta",
-    sealing: "sellando",
-    matching: "emparejando",
-    settled: "cerrada",
-  };
+  const label: Record<string, string> = t.status;
   return (
     <span
       className={`rounded-md border px-2 py-0.5 font-mono text-2xs ${
@@ -163,13 +162,15 @@ export function Reveal({
   delay?: number;
 }) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const shown = useOnScreen(ref);
   if (reduce) return <div className={className}>{children}</div>;
   return (
     <motion.div
+      ref={ref}
       className={className}
       initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-70px" }}
+      animate={shown ? { opacity: 1, y: 0 } : undefined}
       transition={{ ...easeEnter, delay }}
     >
       {children}
@@ -186,12 +187,15 @@ export function StaggerList({
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const shown = useOnScreen(ref);
   return (
     <motion.div
+      ref={ref}
       className={className}
       variants={reduce ? undefined : stagger()}
       initial={reduce ? undefined : "hidden"}
-      animate={reduce ? undefined : "show"}
+      animate={reduce || shown ? "show" : "hidden"}
     >
       {children}
     </motion.div>

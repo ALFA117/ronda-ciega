@@ -7,12 +7,14 @@ import { SystemProgram } from "@solana/web3.js";
 import BN from "bn.js";
 import { getProgram } from "@/lib/program";
 import { roundPda } from "@/lib/pdas";
+import { useT } from "@/lib/i18n";
 import { Button, Note, Panel } from "./ui";
 
 export function CreateRound() {
   const { connection } = useConnection();
   const wallet = useWallet();
   const router = useRouter();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [minutes, setMinutes] = useState(10);
   const [transparent, setTransparent] = useState(true);
@@ -49,7 +51,7 @@ export function CreateRound() {
   if (!open) {
     return (
       <Button variant="ghost" onClick={() => setOpen(true)}>
-        Crear ronda
+        {t.rounds.create}
       </Button>
     );
   }
@@ -58,7 +60,7 @@ export function CreateRound() {
     <Panel className="w-full max-w-md space-y-4 p-5">
       <div className="space-y-2">
         <label className="font-mono text-2xs uppercase tracking-widest text-muted">
-          Cierra en
+          {t.create.closesIn}
         </label>
         <div className="flex items-center gap-2">
           <input
@@ -68,7 +70,7 @@ export function CreateRound() {
             onChange={(e) => setMinutes(Number(e.target.value))}
             className="h-9 w-24 rounded-md border border-edge bg-bg px-3 font-mono text-sm outline-none focus:border-muted"
           />
-          <span className="font-mono text-xs text-muted">minutos</span>
+          <span className="font-mono text-xs text-muted">{t.create.minutes}</span>
         </div>
       </div>
 
@@ -81,14 +83,11 @@ export function CreateRound() {
         />
         <span className="space-y-1">
           <span className="block font-mono text-xs text-open">
-            Ronda transparente
+            {t.create.transparent}
           </span>
           {/* This is a disclosure, not a display toggle. It has to read like one. */}
           <span className="block text-xs leading-relaxed text-muted">
-            Publica los estados intermedios para poder ver el algoritmo correr.
-            Eso revela quién propuso a quién y en qué orden, lo que reconstruye
-            buena parte de los rankings. Úsala solo para demos o cuando todos
-            los participantes lo acepten.
+            {t.create.transparentNote}
           </span>
         </span>
       </label>
@@ -101,13 +100,13 @@ export function CreateRound() {
 
       <div className="flex gap-2">
         <Button onClick={create} busy={busy} disabled={!wallet.publicKey}>
-          {wallet.publicKey ? "Crear" : "Conecta tu wallet"}
+          {wallet.publicKey ? t.create.submit : t.join.connect}
         </Button>
         <Button variant="ghost" onClick={() => setOpen(false)}>
-          Cancelar
+          {t.create.cancel}
         </Button>
       </div>
-      <Note>Devnet. No se mueve dinero real.</Note>
+      <Note>{t.create.devnetNote}</Note>
     </Panel>
   );
 }

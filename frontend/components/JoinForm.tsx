@@ -8,6 +8,7 @@ import { getProgram } from "@/lib/program";
 import { participantPda } from "@/lib/pdas";
 import { SIDE_BLURB, SIDE_LABEL, Side } from "@/lib/constants";
 import { RoundAccount } from "@/lib/program";
+import { useT } from "@/lib/i18n";
 import { Button, Label, Note, Panel } from "./ui";
 
 export function JoinForm({
@@ -19,6 +20,7 @@ export function JoinForm({
 }) {
   const { connection } = useConnection();
   const wallet = useWallet();
+  const t = useT();
   const [side, setSide] = useState<Side>("founder");
   const [handle, setHandle] = useState("");
   const [link, setLink] = useState("");
@@ -56,7 +58,7 @@ export function JoinForm({
   return (
     <Panel className="space-y-5 p-6">
       <div className="space-y-2">
-        <Label>Tu lado del mercado</Label>
+        <Label>{t.join.sideLabel}</Label>
         <div className="grid gap-2 sm:grid-cols-2">
           {(["founder", "builder"] as Side[]).map((s) => (
             <button
@@ -68,23 +70,21 @@ export function JoinForm({
                   : "border-edge hover:border-edgeStrong"
               }`}
             >
-              <div className="font-mono text-sm">{SIDE_LABEL[s]}</div>
+              <div className="font-mono text-sm">{s === "founder" ? t.join.founder : t.join.builder}</div>
               <div className="mt-1 text-xs leading-relaxed text-muted">
-                {SIDE_BLURB[s]}
+                {s === "founder" ? t.join.founderBlurb : t.join.builderBlurb}
               </div>
             </button>
           ))}
         </div>
         <Note>
-          Los founders proponen y los builders eligen. Eso hace el resultado
-          óptimo para los founders — es una propiedad del algoritmo, y se dice
-          aquí en vez de esconderla.
+          {t.join.sideNote}
         </Note>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Handle</Label>
+          <Label>{t.join.handle}</Label>
           <input
             value={handle}
             maxLength={32}
@@ -94,7 +94,7 @@ export function JoinForm({
           />
         </div>
         <div className="space-y-2">
-          <Label>Link</Label>
+          <Label>{t.join.link}</Label>
           <input
             value={link}
             maxLength={96}
@@ -106,8 +106,7 @@ export function JoinForm({
       </div>
 
       <Note>
-        Tu perfil es público. Lo privado nunca es quién eres, solo a quién
-        quieres.
+        {t.join.profileNote}
       </Note>
 
       {error && (
@@ -121,7 +120,7 @@ export function JoinForm({
         busy={busy}
         disabled={!wallet.publicKey || handle.trim().length === 0}
       >
-        {wallet.publicKey ? "Entrar a la ronda" : "Conecta tu wallet"}
+        {wallet.publicKey ? t.join.submit : t.join.connect}
       </Button>
     </Panel>
   );

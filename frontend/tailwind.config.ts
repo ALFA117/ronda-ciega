@@ -19,6 +19,8 @@ const config: Config = {
         edgeStrong: "var(--edge-strong)",
         chalk: "var(--text)",
         muted: "var(--text-muted)",
+        dim: "var(--text-dim)",
+        onSealed: "var(--on-sealed)",
         sealed: "var(--sealed)",
         sealedDim: "var(--sealed-dim)",
         open: "var(--open)",

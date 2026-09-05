@@ -8,6 +8,7 @@ import { getProgram, ParticipantAccount, RoundAccount } from "@/lib/program";
 import { matchStatePda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
 import { TEE_VALIDATOR } from "@/lib/constants";
+import { useT } from "@/lib/i18n";
 import { Button, Label, Note, Panel } from "./ui";
 
 /**
@@ -28,6 +29,7 @@ export function RoundControls({
 }) {
   const { connection } = useConnection();
   const wallet = useWallet();
+  const t = useT();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
@@ -69,7 +71,7 @@ export function RoundControls({
           validator: TEE_VALIDATOR,
         })
         .rpc();
-      say("Ronda delegada al validador TEE");
+      say(t.controls.delegated);
 
       const erProgram = await er();
       await erProgram.methods
@@ -81,7 +83,7 @@ export function RoundControls({
           matchStatePermission: permissionPdaFromAccount(matchState),
         })
         .rpc();
-      say("Memoria de trabajo creada, privada y sin miembros");
+      say(t.controls.matchStateCreated);
     });
 
   const settle = () =>
@@ -92,7 +94,7 @@ export function RoundControls({
         .closeRound(roundId)
         .accountsPartial({ round: round.address })
         .rpc();
-      say("Ronda cerrada");
+      say(t.controls.closed);
 
       // Chunked so the account list always fits in one transaction.
       const withRankings = participants.slice(0, round.rankingCount);
@@ -109,18 +111,14 @@ export function RoundControls({
           )
           .rpc();
       }
-      say(`${withRankings.length} listas ingeridas al enclave`);
+      say(`${withRankings.length} ${t.controls.ingested}`);
 
       const started = Date.now();
       const sig = await erProgram.methods
         .runMatching(roundId, 64)
         .accountsPartial({ round: round.address, matchState })
         .rpc();
-      say(
-        `Matching completo en UNA transacción del rollup · ${
-          Date.now() - started
-        } ms de reloj de pared`,
-      );
+      say(`${t.controls.matched} · ${Date.now() - started} ${t.controls.wallClock}`);
       say(sig);
     });
 
@@ -130,12 +128,12 @@ export function RoundControls({
 
   return (
     <Panel className="space-y-4 p-6">
-      <Label>Controles de la ronda</Label>
+      <Label>{t.controls.label}</Label>
 
       <div className="flex flex-wrap gap-2">
         {!delegated && (
           <Button onClick={delegate} busy={busy === "delegate"}>
-            Delegar al rollup
+            {t.controls.delegate}
           </Button>
         )}
         {delegated && round.status === "open" && (
@@ -144,20 +142,19 @@ export function RoundControls({
             busy={busy === "settle"}
             disabled={!deadlinePassed}
           >
-            {deadlinePassed ? "Cerrar y emparejar" : "Esperando el deadline"}
+            {deadlinePassed ? t.controls.settle : t.controls.waitingDeadline}
           </Button>
         )}
         {delegated && round.status === "matching" && (
           <Button onClick={settle} busy={busy === "settle"}>
-            Continuar el matching
+            {t.controls.continue}
           </Button>
         )}
       </div>
 
       {!delegated && (
         <Note>
-          Hasta que la ronda esté delegada nadie puede sellar su lista: las
-          cuentas privadas solo existen dentro del rollup.
+          {t.controls.notDelegated}
         </Note>
       )}
 
