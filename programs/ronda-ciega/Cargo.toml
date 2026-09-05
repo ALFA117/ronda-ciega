@@ -1,0 +1,25 @@
+[package]
+name = "ronda-ciega"
+version = "0.1.0"
+description = "Blind stable matching: preference lists stay private forever inside a MagicBlock Private Ephemeral Rollup, only mutual pairings are published"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "ronda_ciega"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+custom-heap = []
+custom-panic = []
+anchor-debug = []
+
+[dependencies]
+anchor-lang = { version = "=1.0.2", features = ["init-if-needed"] }
+ephemeral-rollups-sdk = { version = "0.16.2", features = ["anchor", "access-control", "vrf"] }
+session-keys = { version = "3.1.1", features = ["no-entrypoint"] }

@@ -1,0 +1,24 @@
+.anchor
+.DS_Store
+target
+**/*.rs.bk
+node_modules
+test-ledger
+.yarn
+
+# Never commit keypairs — including the program keypair under target/deploy.
+*.pem
+keypair.json
+id.json
+
+# Env
+.env
+.env.local
+.env*.local
+!.env.example
+
+# Next.js
+frontend/.next
+frontend/out
+frontend/build
+frontend/.vercel

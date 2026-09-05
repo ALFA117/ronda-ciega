@@ -1,0 +1,21 @@
+[toolchain]
+
+[features]
+seeds = false
+skip-lint = false
+
+[programs.devnet]
+ronda_ciega = "5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+# No local validator on native Windows (solana-test-validator does not run
+# there). Every dev and test target is devnet; the matching rounds run on the
+# MagicBlock TEE ephemeral rollup at https://devnet-tee.magicblock.app
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
