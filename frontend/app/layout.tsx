@@ -17,10 +17,21 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
+const DESCRIPTION =
+  "Matching estable ciego en Solana. Las listas de preferencias viven solo dentro de un Private Ephemeral Rollup y no se publican nunca.";
+
 export const metadata: Metadata = {
-  title: "Ronda Ciega",
-  description:
-    "Matching estable ciego en Solana. Dices a quién quieres sin que nadie sepa que lo dijiste.",
+  metadataBase: new URL("https://ronda-ciega.vercel.app"),
+  title: { default: "Ronda Ciega", template: "%s · Ronda Ciega" },
+  description: DESCRIPTION,
+  openGraph: {
+    title: "Ronda Ciega",
+    description: DESCRIPTION,
+    url: "https://ronda-ciega.vercel.app",
+    siteName: "Ronda Ciega",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", title: "Ronda Ciega", description: DESCRIPTION },
 };
 
 export const viewport = {

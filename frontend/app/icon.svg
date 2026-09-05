@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#060a12"/>
+  <!-- Two columns and the wire between them: the product in 32 pixels. -->
+  <circle cx="9" cy="10" r="2.4" fill="#22d3ee"/>
+  <circle cx="23" cy="22" r="2.4" fill="#22d3ee"/>
+  <path d="M9 10 L23 22" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="9" cy="22" r="2.4" fill="#2e4262"/>
+  <circle cx="23" cy="10" r="2.4" fill="#2e4262"/>
+</svg>

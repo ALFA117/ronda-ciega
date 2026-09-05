@@ -12,6 +12,7 @@ import { teeConnection } from "@/lib/tee";
 import { springLayout, springSnappy } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import { Button, ErrorText, Label, Note, Panel } from "./ui";
+import { useToast } from "./Toast";
 
 export function RankingBuilder({
   round,
@@ -26,6 +27,7 @@ export function RankingBuilder({
 }) {
   const wallet = useWallet();
   const t = useT();
+  const toast = useToast();
   const reduce = useReducedMotion();
   const others = participants
     .filter((p) => p.side !== me.side)
@@ -62,9 +64,12 @@ export function RankingBuilder({
         .rpc();
 
       setDone(true);
+      toast(t.ranking.sealed);
       onSubmitted();
     } catch (e: any) {
-      setError(e.message || String(e));
+      const msg = e.message || String(e);
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setBusy(false);
     }

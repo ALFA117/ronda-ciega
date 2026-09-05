@@ -9,6 +9,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { DEVNET_RPC } from "@/lib/constants";
 import { ThemeProvider } from "@/lib/theme";
 import { LocaleProvider } from "@/lib/i18n";
+import { ToastProvider } from "@/components/Toast";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 
@@ -22,7 +23,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <LocaleProvider>
         <ConnectionProvider endpoint={DEVNET_RPC}>
           <WalletProvider wallets={wallets} autoConnect>
-            <WalletModalProvider>{children}</WalletModalProvider>
+            <WalletModalProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </WalletModalProvider>
           </WalletProvider>
         </ConnectionProvider>
       </LocaleProvider>

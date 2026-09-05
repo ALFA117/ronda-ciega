@@ -10,6 +10,7 @@ import { teeConnection } from "@/lib/tee";
 import { EPHEMERAL_QUEUE, TEE_VALIDATOR } from "@/lib/constants";
 import { useT } from "@/lib/i18n";
 import { Button, Label, Note, Panel } from "./ui";
+import { useToast } from "./Toast";
 
 /**
  * The round authority drives the phase changes. Each button maps to exactly one
@@ -30,6 +31,7 @@ export function RoundControls({
   const { connection } = useConnection();
   const wallet = useWallet();
   const t = useT();
+  const toast = useToast();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
@@ -38,7 +40,10 @@ export function RoundControls({
   const matchState = matchStatePda(round.address);
   const deadlinePassed = Date.now() / 1000 >= round.deadlineTs;
 
-  const say = (m: string) => setLog((l) => [...l, m]);
+  const say = (m: string) => {
+    setLog((l) => [...l, m]);
+    toast(m);
+  };
 
   async function er() {
     const conn = await teeConnection(wallet.publicKey!, (m) =>
@@ -54,7 +59,9 @@ export function RoundControls({
       await fn();
       onDone();
     } catch (e: any) {
-      setError(e.message || String(e));
+      const msg = e.message || String(e);
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setBusy(null);
     }

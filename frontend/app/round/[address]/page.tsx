@@ -7,6 +7,7 @@ import { JoinForm } from "@/components/JoinForm";
 import { RankingBuilder } from "@/components/RankingBuilder";
 import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
+import { Deadline } from "@/components/Deadline";
 import { springLayout } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import {
@@ -70,7 +71,10 @@ export default function RoundPage({ params }: { params: { address: string } }) {
             </span>
           </div>
         </div>
-        <Explorer address={round.address.toBase58()} />
+        <div className="flex flex-col items-end gap-2">
+          {round.status === "open" && <Deadline deadlineTs={round.deadlineTs} />}
+          <Explorer address={round.address.toBase58()} />
+        </div>
       </header>
 
       {round.transparent && (
