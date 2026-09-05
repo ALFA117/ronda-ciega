@@ -57,7 +57,7 @@ export function CreateRound() {
   return (
     <Panel className="w-full max-w-md space-y-4 p-5">
       <div className="space-y-2">
-        <label className="font-mono text-[11px] uppercase tracking-widest text-muted">
+        <label className="font-mono text-2xs uppercase tracking-widest text-muted">
           Cierra en
         </label>
         <div className="flex items-center gap-2">
@@ -66,9 +66,9 @@ export function CreateRound() {
             min={1}
             value={minutes}
             onChange={(e) => setMinutes(Number(e.target.value))}
-            className="h-9 w-24 rounded-md border border-edge bg-ink px-3 font-mono text-[13px] outline-none focus:border-muted"
+            className="h-9 w-24 rounded-md border border-edge bg-bg px-3 font-mono text-sm outline-none focus:border-muted"
           />
-          <span className="font-mono text-[12px] text-muted">minutos</span>
+          <span className="font-mono text-xs text-muted">minutos</span>
         </div>
       </div>
 
@@ -77,14 +77,14 @@ export function CreateRound() {
           type="checkbox"
           checked={transparent}
           onChange={(e) => setTransparent(e.target.checked)}
-          className="mt-1 accent-[#f0a742]"
+          className="mt-1 accent-open"
         />
         <span className="space-y-1">
-          <span className="block font-mono text-[12px] text-open">
+          <span className="block font-mono text-xs text-open">
             Ronda transparente
           </span>
           {/* This is a disclosure, not a display toggle. It has to read like one. */}
-          <span className="block text-[12px] leading-relaxed text-muted">
+          <span className="block text-xs leading-relaxed text-muted">
             Publica los estados intermedios para poder ver el algoritmo correr.
             Eso revela quién propuso a quién y en qué orden, lo que reconstruye
             buena parte de los rankings. Úsala solo para demos o cuando todos
@@ -94,7 +94,7 @@ export function CreateRound() {
       </label>
 
       {error && (
-        <p className="font-mono text-[11px] leading-relaxed text-red-400">
+        <p className="font-mono text-2xs leading-relaxed text-red-400">
           {error}
         </p>
       )}

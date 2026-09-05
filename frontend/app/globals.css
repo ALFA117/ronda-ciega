@@ -4,49 +4,97 @@
 
 :root {
   color-scheme: dark;
+
+  /* Semantic tokens. Components never reach for a raw hex. */
+  --bg: #08080a;
+  --surface: #101014;
+  --surface-2: #16161c;
+  --edge: #23232b;
+  --edge-strong: #33333d;
+  --text: #f5f5f7;
+  --text-muted: #9a9aa5;
+
+  /* The one distinction the product is about, carried by colour. */
+  --sealed: #9b8cff;
+  --sealed-dim: #6d5fd6;
+  --open: #f5b342;
 }
 
-body {
-  background: #0a0a0b;
-  color: #ededf0;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Never remove the focus ring — only make it match the design. */
+  :focus-visible {
+    outline: 2px solid var(--sealed);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(155, 140, 255, 0.28);
+  }
 }
 
-/* The wallet adapter ships its own styles; align them with the palette. */
+@layer utilities {
+  /* Tabular figures for anything that counts, so numbers don't jitter as
+     they change during the replay. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sealed-hatch {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(155, 140, 255, 0.07) 0px,
+      rgba(155, 140, 255, 0.07) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  }
+
+  .grid-field {
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .glow-sealed {
+    text-shadow: 0 0 18px rgba(155, 140, 255, 0.45);
+  }
+}
+
+/* Wallet adapter ships its own styles; bring them into the system. */
 .wallet-adapter-button {
-  background: #131316 !important;
-  border: 1px solid #232329 !important;
-  border-radius: 6px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--edge) !important;
+  border-radius: 8px !important;
   font-size: 13px !important;
-  height: 36px !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  height: 38px !important;
+  padding: 0 14px !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  transition: background 180ms ease, border-color 180ms ease !important;
 }
 .wallet-adapter-button:not([disabled]):hover {
-  background: #1b1b20 !important;
+  background: var(--surface-2) !important;
+  border-color: var(--edge-strong) !important;
+}
+.wallet-adapter-modal-wrapper {
+  background: var(--surface) !important;
+  border: 1px solid var(--edge) !important;
 }
 
-/* A sealed thing gets a faint violet weave, so "private" is legible at a
-   glance and not just a label. */
-.sealed-hatch {
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(139, 124, 246, 0.09) 0px,
-    rgba(139, 124, 246, 0.09) 1px,
-    transparent 1px,
-    transparent 7px
-  );
-}
-
-@keyframes settle {
-  0% {
-    transform: translateY(-3px);
-    opacity: 0.4;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-  100% {
-    transform: none;
-    opacity: 1;
-  }
-}
-.settle {
-  animation: settle 220ms ease-out;
 }

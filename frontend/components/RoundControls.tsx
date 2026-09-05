@@ -164,7 +164,7 @@ export function RoundControls({
       {log.length > 0 && (
         <div className="space-y-1 border-t border-edge pt-4">
           {log.map((l, i) => (
-            <div key={i} className="break-all font-mono text-[11px] text-muted">
+            <div key={i} className="break-all font-mono text-2xs text-muted">
               {l}
             </div>
           ))}
@@ -172,7 +172,7 @@ export function RoundControls({
       )}
 
       {error && (
-        <p className="font-mono text-[11px] leading-relaxed text-red-400">
+        <p className="font-mono text-2xs leading-relaxed text-red-400">
           {error}
         </p>
       )}

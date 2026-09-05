@@ -1,80 +1,107 @@
 "use client";
 
 import { useWallet } from "@solana/wallet-adapter-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRound } from "@/hooks/useRound";
 import { JoinForm } from "@/components/JoinForm";
 import { RankingBuilder } from "@/components/RankingBuilder";
 import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
-import { Explorer, Label, Note, Panel, StatusPill } from "@/components/ui";
+import { springLayout } from "@/lib/motion";
+import {
+  ErrorText,
+  Explorer,
+  Label,
+  Note,
+  Panel,
+  Reveal,
+  StatusPill,
+  Tag,
+} from "@/components/ui";
 
 export default function RoundPage({ params }: { params: { address: string } }) {
   const wallet = useWallet();
+  const reduce = useReducedMotion();
   const { round, participants, delegated, loading, error, refresh } = useRound(
     params.address,
   );
 
-  if (loading) return <Note>Cargando la ronda…</Note>;
-  if (error || !round)
+  if (loading) {
+    return (
+      <div className="space-y-4" aria-live="polite">
+        <div className="h-8 w-56 animate-pulse rounded-lg bg-surface" />
+        <div className="h-64 animate-pulse rounded-xl border border-edge bg-surface/40" />
+      </div>
+    );
+  }
+
+  if (error || !round) {
     return (
       <Panel className="p-6">
-        <p className="font-mono text-[12px] text-red-400">
-          {error || "Ronda no encontrada"}
-        </p>
+        <ErrorText>{error || "Ronda no encontrada"}</ErrorText>
       </Panel>
     );
+  }
 
   const me = participants.find(
     (p) => wallet.publicKey && p.wallet.equals(wallet.publicKey),
   );
-  const founders = participants.filter((p) => p.side === "founder");
-  const builders = participants.filter((p) => p.side === "builder");
   const showTheater = round.status === "settled" || round.tick > 0;
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2.5">
-            <h1 className="font-mono text-[15px]">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="tnum font-mono text-base">
               Ronda #{round.roundId.toString().slice(-6)}
             </h1>
             <StatusPill status={round.status} />
-            {round.transparent && (
-              <span className="rounded border border-open/40 px-2 py-0.5 font-mono text-[11px] text-open">
-                transparente
-              </span>
-            )}
-            {delegated && (
-              <span className="rounded border border-sealed/40 px-2 py-0.5 font-mono text-[11px] text-sealed">
-                en el rollup
-              </span>
-            )}
+            {round.transparent && <Tag tone="open">transparente</Tag>}
+            {delegated && <Tag tone="sealed">en el rollup</Tag>}
           </div>
-          <div className="font-mono text-[11px] text-muted">
-            {founders.length} founders · {builders.length} builders ·{" "}
+          <div className="tnum font-mono text-2xs text-muted">
+            {participants.filter((p) => p.side === "founder").length} founders ·{" "}
+            {participants.filter((p) => p.side === "builder").length} builders ·{" "}
             <span className="text-sealed">
               {round.rankingCount} listas selladas
             </span>
           </div>
         </div>
         <Explorer address={round.address.toBase58()} />
-      </div>
+      </header>
 
       {round.transparent && (
-        <Panel className="border-open/25 p-4">
-          <Note>
-            <span className="text-open">Ronda transparente.</span> Publica los
-            estados intermedios del algoritmo, lo que revela quién propuso a
-            quién y en qué orden. Las listas completas siguen selladas, pero
-            esta ronda no da la garantía completa — por eso es solo para demos.
-          </Note>
-        </Panel>
+        <Reveal>
+          <Panel className="border-open/25 bg-open/[0.03] p-4">
+            <Note>
+              <span className="text-open">Ronda transparente.</span> Publica los
+              estados intermedios del algoritmo, lo que revela quién propuso a
+              quién y en qué orden. Las listas completas siguen selladas, pero
+              esta ronda no da la garantía completa — por eso es solo para demos.
+            </Note>
+          </Panel>
+        </Reveal>
       )}
 
-      {showTheater && (
-        <MatchTheater round={round} participants={participants} />
-      )}
+      <AnimatePresence mode="popLayout">
+        {showTheater && (
+          <motion.div
+            key="theater"
+            layout
+            initial={reduce ? undefined : { opacity: 0, y: 12 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { opacity: 0 }}
+            transition={springLayout}
+          >
+            <MatchTheater
+              round={round}
+              participants={participants}
+              meWallet={wallet.publicKey?.toBase58()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <RoundControls
         round={round}
@@ -83,29 +110,47 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         onDone={refresh}
       />
 
-      {round.status === "open" && !me && (
-        <JoinForm round={round} onJoined={refresh} />
-      )}
+      <AnimatePresence mode="wait">
+        {round.status === "open" && !me && (
+          <motion.div
+            key="join"
+            initial={reduce ? undefined : { opacity: 0, y: 12 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { opacity: 0, y: -8 }}
+            transition={springLayout}
+          >
+            <JoinForm round={round} onJoined={refresh} />
+          </motion.div>
+        )}
 
-      {round.status === "open" && me && delegated && (
-        <RankingBuilder
-          round={round}
-          me={me}
-          participants={participants}
-          onSubmitted={refresh}
-        />
-      )}
+        {round.status === "open" && me && delegated && (
+          <motion.div key="rank">
+            <RankingBuilder
+              round={round}
+              me={me}
+              participants={participants}
+              onSubmitted={refresh}
+            />
+          </motion.div>
+        )}
 
-      {round.status === "open" && me && !delegated && (
-        <Panel className="p-6">
-          <Note>
-            Estás dentro como{" "}
-            <span className="text-chalk">{me.handle}</span>. Espera a que quien
-            organiza delegue la ronda al rollup — tu lista privada no puede
-            existir hasta entonces.
-          </Note>
-        </Panel>
-      )}
+        {round.status === "open" && me && !delegated && (
+          <motion.div
+            key="wait"
+            initial={reduce ? undefined : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: 1 }}
+            exit={reduce ? undefined : { opacity: 0 }}
+          >
+            <Panel className="p-6">
+              <Note>
+                Estás dentro como <span className="text-chalk">{me.handle}</span>
+                . Espera a que quien organiza delegue la ronda al rollup — tu
+                lista privada no puede existir hasta entonces.
+              </Note>
+            </Panel>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid gap-6 sm:grid-cols-2">
         {(["founder", "builder"] as const).map((side) => (
@@ -117,12 +162,12 @@ export default function RoundPage({ params }: { params: { address: string } }) {
                 .map((p) => (
                   <div
                     key={p.address.toBase58()}
-                    className="flex items-center gap-2 font-mono text-[12px]"
+                    className="flex items-center gap-2.5 font-mono text-xs"
                   >
-                    <span className="w-5 text-muted">{p.index}</span>
+                    <span className="tnum w-4 text-muted">{p.index}</span>
                     <span>{p.handle}</span>
                     {me && p.wallet.equals(me.wallet) && (
-                      <span className="text-[10px] text-muted">(tú)</span>
+                      <span className="text-2xs text-sealed">tú</span>
                     )}
                   </div>
                 ))}

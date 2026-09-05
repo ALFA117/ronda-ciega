@@ -1,122 +1,194 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { NONE } from "@/lib/constants";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Pause, Play, RotateCcw } from "lucide-react";
 import { framesFor, ParticipantAccount, RoundAccount } from "@/lib/program";
+import { MatchGraph } from "./MatchGraph";
 import { Label, Note, Panel } from "./ui";
 
 /**
  * Replays the matching frame by frame.
  *
- * The frames come from the round's recorded history, not from transaction
- * logs — the TEE serves no logs for transactions that touch private accounts.
- * And the history only exists when the round is transparent, which is why a
- * private round shows its outcome and nothing else. That absence is the
- * product working, so the component says so rather than looking broken.
+ * Frames come from the round's recorded history, not from transaction logs —
+ * the TEE serves no logs for transactions touching private accounts. And the
+ * history only exists when the round is transparent, so a private round shows
+ * its outcome and says why there is nothing to animate. That absence is the
+ * product working, not a missing feature.
  */
 export function MatchTheater({
   round,
   participants,
+  meWallet,
 }: {
   round: RoundAccount;
   participants: ParticipantAccount[];
+  meWallet?: string;
 }) {
+  const reduce = useReducedMotion();
   const founders = participants.filter((p) => p.side === "founder");
   const builders = participants.filter((p) => p.side === "builder");
   const frames = framesFor(round);
+  const scrubbable = round.transparent && frames.length > 1;
 
-  const [frame, setFrame] = useState(0);
-  const [playing, setPlaying] = useState(true);
+  const [frame, setFrame] = useState(scrubbable && !reduce ? 0 : frames.length - 1);
+  const [playing, setPlaying] = useState(scrubbable && !reduce);
 
   useEffect(() => {
     if (!playing || frame >= frames.length - 1) return;
-    const id = setTimeout(() => setFrame((f) => f + 1), 900);
+    const id = setTimeout(() => setFrame((f) => f + 1), 1100);
     return () => clearTimeout(id);
   }, [playing, frame, frames.length]);
 
   useEffect(() => {
-    setFrame(0);
-    setPlaying(true);
-  }, [round.historyLen, round.status]);
+    setFrame(scrubbable && !reduce ? 0 : frames.length - 1);
+    setPlaying(scrubbable && !reduce);
+    // Restart whenever new frames land on chain.
+  }, [round.historyLen, round.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const atEnd = frame >= frames.length - 1;
   const pairs = frames[Math.min(frame, frames.length - 1)] || [];
-  const isFinal = frame >= frames.length - 1;
 
-  const nameOf = (side: "founder" | "builder", idx: number) =>
-    (side === "founder" ? founders : builders).find((p) => p.index === idx)
-      ?.handle || `#${idx}`;
+  const node = (p: ParticipantAccount) => ({
+    label: p.handle,
+    you: meWallet ? p.wallet.toBase58() === meWallet : false,
+  });
 
   return (
-    <Panel className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <Panel className="overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-edge/70 px-5 py-4">
         <Label>
           {round.transparent ? "El algoritmo, ronda por ronda" : "Resultado"}
         </Label>
-        {round.transparent && frames.length > 1 && (
+
+        {scrubbable && (
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] text-muted">
-              tick {Math.min(frame + 1, round.tick)} / {round.tick}
+            <span className="tnum font-mono text-2xs text-muted">
+              ronda {Math.min(frame + 1, round.tick)} / {round.tick}
             </span>
-            <button
-              onClick={() => {
-                if (isFinal) setFrame(0);
-                setPlaying(!playing || isFinal);
-              }}
-              className="rounded border border-edge px-2 py-1 font-mono text-[11px] text-muted hover:text-chalk"
-            >
-              {isFinal ? "repetir" : playing ? "pausa" : "seguir"}
-            </button>
+            <div className="flex items-center gap-1">
+              <ControlButton
+                label={atEnd ? "Repetir" : playing ? "Pausar" : "Continuar"}
+                onClick={() => {
+                  if (atEnd) {
+                    setFrame(0);
+                    setPlaying(true);
+                  } else {
+                    setPlaying(!playing);
+                  }
+                }}
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={atEnd ? "replay" : playing ? "pause" : "play"}
+                    initial={reduce ? undefined : { opacity: 0, scale: 0.7 }}
+                    animate={reduce ? undefined : { opacity: 1, scale: 1 }}
+                    exit={reduce ? undefined : { opacity: 0, scale: 0.7 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                    className="flex"
+                  >
+                    {atEnd ? (
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    ) : playing ? (
+                      <Pause className="h-3.5 w-3.5" />
+                    ) : (
+                      <Play className="h-3.5 w-3.5" />
+                    )}
+                  </motion.span>
+                </AnimatePresence>
+              </ControlButton>
+            </div>
           </div>
         )}
       </div>
 
-      <div className="space-y-2">
-        {founders.map((f) => {
-          const b = pairs[f.index];
-          const matched = b !== NONE && b !== undefined;
-          return (
-            <div
-              key={f.address.toBase58()}
-              className="grid grid-cols-[1fr_auto_1fr] items-center gap-4"
+      {scrubbable && (
+        <div className="flex gap-1 px-5 pt-4" role="group" aria-label="Rondas">
+          {frames.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setFrame(i);
+                setPlaying(false);
+              }}
+              aria-label={`Ir a la ronda ${i + 1}`}
+              aria-current={i === frame}
+              className="group h-6 flex-1 cursor-pointer"
             >
-              <div className="truncate text-right font-mono text-[13px]">
-                {f.handle}
-              </div>
-              <div
-                key={`${f.index}-${matched ? b : "none"}`}
-                className={`settle w-24 text-center font-mono text-[12px] ${
-                  matched ? "text-sealed" : "text-edge"
+              <span
+                className={`block h-1 rounded-full transition-colors ${
+                  i <= frame ? "bg-sealed" : "bg-edge group-hover:bg-edgeStrong"
                 }`}
-              >
-                {matched ? "───────" : "· · · · ·"}
-              </div>
-              <div
-                className={`truncate font-mono text-[13px] ${
-                  matched ? "" : "text-edge"
-                }`}
-              >
-                {matched ? nameOf("builder", b) : "sin par"}
-              </div>
-            </div>
-          );
-        })}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="px-2 py-5 sm:px-5">
+        <MatchGraph
+          left={founders.map(node)}
+          right={builders.map(node)}
+          pairs={pairs}
+        />
       </div>
 
-      {!round.transparent && (
-        <Note>
-          Esta ronda no es transparente, así que no hay nada que animar: los
-          estados intermedios nunca salieron del enclave. Lo de arriba es todo
-          lo que existe públicamente.
-        </Note>
-      )}
+      <div className="space-y-3 border-t border-edge/70 px-5 py-4">
+        <div className="flex items-center justify-between font-mono text-2xs text-muted">
+          <span>founders proponen</span>
+          <span>builders eligen</span>
+        </div>
 
-      {round.status === "settled" && (
-        <Note>
-          Emparejamiento estable. Las listas de preferencias siguen dentro del
-          enclave y no se van a publicar nunca — no hay instrucción que las
-          revele.
-        </Note>
-      )}
+        {!round.transparent && (
+          <Note>
+            Esta ronda no es transparente, así que no hay nada que animar: los
+            estados intermedios nunca salieron del enclave. Lo de arriba es todo
+            lo que existe públicamente.
+          </Note>
+        )}
+
+        <AnimatePresence>
+          {round.status === "settled" && atEnd && (
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 6 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Note>
+                Emparejamiento estable: nadie puede mejorar cambiando de par. Las
+                listas siguen dentro del enclave y no se van a publicar nunca —
+                no hay instrucción que las revele.
+              </Note>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </Panel>
+  );
+}
+
+function ControlButton({
+  children,
+  onClick,
+  label,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  label: string;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.button
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      whileHover={reduce ? undefined : { scale: 1.05 }}
+      whileTap={reduce ? undefined : { scale: 0.94 }}
+      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-edge text-muted transition-colors hover:border-edgeStrong hover:text-chalk"
+    >
+      {children}
+    </motion.button>
   );
 }

@@ -64,12 +64,12 @@ export function JoinForm({
               onClick={() => setSide(s)}
               className={`rounded-md border p-4 text-left transition ${
                 side === s
-                  ? "border-chalk/40 bg-chalk/5"
-                  : "border-edge hover:border-muted"
+                  ? "border-sealed/50 bg-sealed/10"
+                  : "border-edge hover:border-edgeStrong"
               }`}
             >
-              <div className="font-mono text-[13px]">{SIDE_LABEL[s]}</div>
-              <div className="mt-1 text-[12px] leading-relaxed text-muted">
+              <div className="font-mono text-sm">{SIDE_LABEL[s]}</div>
+              <div className="mt-1 text-xs leading-relaxed text-muted">
                 {SIDE_BLURB[s]}
               </div>
             </button>
@@ -90,7 +90,7 @@ export function JoinForm({
             maxLength={32}
             onChange={(e) => setHandle(e.target.value)}
             placeholder="@tu_handle"
-            className="h-9 w-full rounded-md border border-edge bg-ink px-3 font-mono text-[13px] outline-none focus:border-muted"
+            className="h-9 w-full rounded-md border border-edge bg-bg px-3 font-mono text-sm outline-none focus:border-muted"
           />
         </div>
         <div className="space-y-2">
@@ -100,7 +100,7 @@ export function JoinForm({
             maxLength={96}
             onChange={(e) => setLink(e.target.value)}
             placeholder="github.com/…"
-            className="h-9 w-full rounded-md border border-edge bg-ink px-3 font-mono text-[13px] outline-none focus:border-muted"
+            className="h-9 w-full rounded-md border border-edge bg-bg px-3 font-mono text-sm outline-none focus:border-muted"
           />
         </div>
       </div>
@@ -111,7 +111,7 @@ export function JoinForm({
       </Note>
 
       {error && (
-        <p className="font-mono text-[11px] leading-relaxed text-red-400">
+        <p className="font-mono text-2xs leading-relaxed text-red-400">
           {error}
         </p>
       )}

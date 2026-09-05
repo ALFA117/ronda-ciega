@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check, Lock, PenLine } from "lucide-react";
 import BN from "bn.js";
 import { permissionPdaFromAccount } from "@magicblock-labs/ephemeral-rollups-sdk";
 import { getProgram, ParticipantAccount, RoundAccount } from "@/lib/program";
 import { participantPda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
-import { Button, Label, Note, Panel } from "./ui";
+import { springLayout, springSnappy } from "@/lib/motion";
+import { Button, ErrorText, Label, Note, Panel } from "./ui";
 
 export function RankingBuilder({
   round,
@@ -21,6 +24,7 @@ export function RankingBuilder({
   onSubmitted: () => void;
 }) {
   const wallet = useWallet();
+  const reduce = useReducedMotion();
   const others = participants
     .filter((p) => p.side !== me.side)
     .sort((a, b) => a.index - b.index);
@@ -31,9 +35,7 @@ export function RankingBuilder({
   const [error, setError] = useState<string | null>(null);
 
   const toggle = (idx: number) =>
-    setRanking((r) =>
-      r.includes(idx) ? r.filter((v) => v !== idx) : [...r, idx],
-    );
+    setRanking((r) => (r.includes(idx) ? r.filter((v) => v !== idx) : [...r, idx]));
 
   async function submit() {
     if (!wallet.publicKey || !wallet.signMessage) return;
@@ -42,9 +44,7 @@ export function RankingBuilder({
     try {
       // This signature is the moment the enclave learns who you are. It is also
       // the reason nobody else can read what you are about to write.
-      const conn = await teeConnection(wallet.publicKey, (m) =>
-        wallet.signMessage!(m),
-      );
+      const conn = await teeConnection(wallet.publicKey, (m) => wallet.signMessage!(m));
       const program = getProgram(conn, wallet as any);
       const preferences = preferencesPda(round.address, wallet.publicKey);
 
@@ -68,77 +68,135 @@ export function RankingBuilder({
     }
   }
 
-  if (done) {
-    return (
-      <Panel sealed className="space-y-3 p-6">
-        <Label>Lista sellada</Label>
-        <Note>
-          Tu ranking está en una cuenta que solo tu wallet puede leer. No hay
-          instrucción en el programa que la revele, ni al cerrar la ronda ni
-          después. Puedes reemplazarla mientras la ronda siga abierta.
-        </Note>
-        <Button variant="ghost" onClick={() => setDone(false)}>
-          Cambiar mi lista
-        </Button>
-      </Panel>
-    );
-  }
-
   return (
-    <Panel sealed className="space-y-5 p-6">
-      <div className="space-y-2">
-        <Label>Tu ranking privado</Label>
-        <Note>
-          Toca en orden, del que más quieres al que menos. Puedes dejar gente
-          fuera: no listar a alguien es decir que prefieres quedarte sin par.
-        </Note>
-      </div>
-
-      <div className="grid gap-2">
-        {others.map((p) => {
-          const pos = ranking.indexOf(p.index);
-          const chosen = pos >= 0;
-          return (
-            <button
-              key={p.address.toBase58()}
-              onClick={() => toggle(p.index)}
-              className={`flex items-center gap-3 rounded-md border px-4 py-3 text-left transition ${
-                chosen
-                  ? "border-sealed/50 bg-sealed/10"
-                  : "border-edge hover:border-muted"
-              }`}
-            >
-              <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded font-mono text-[11px] ${
-                  chosen ? "bg-sealed text-ink" : "border border-edge text-muted"
-                }`}
+    <AnimatePresence mode="wait">
+      {done ? (
+        <motion.div
+          key="sealed"
+          initial={reduce ? undefined : { opacity: 0, y: 10 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0, y: -6 }}
+          transition={springLayout}
+        >
+          <Panel sealed className="space-y-4 p-6">
+            <div className="flex items-center gap-2">
+              <motion.span
+                initial={reduce ? undefined : { scale: 0.5, opacity: 0 }}
+                animate={reduce ? undefined : { scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 380, damping: 18 }}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-sealed/15 text-sealed"
               >
-                {chosen ? pos + 1 : "·"}
-              </span>
-              <span className="font-mono text-[13px]">{p.handle}</span>
-              {p.link && (
-                <span className="ml-auto truncate font-mono text-[11px] text-muted">
-                  {p.link}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+                <Lock className="h-3.5 w-3.5" aria-hidden />
+              </motion.span>
+              <Label>Lista sellada</Label>
+            </div>
+            <Note>
+              Tu ranking está en una cuenta que solo tu wallet puede leer. No hay
+              instrucción en el programa que la revele, ni al cerrar la ronda ni
+              después. Puedes reemplazarla mientras la ronda siga abierta.
+            </Note>
+            <Button variant="ghost" onClick={() => setDone(false)}>
+              <PenLine className="h-3.5 w-3.5" aria-hidden />
+              Cambiar mi lista
+            </Button>
+          </Panel>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="builder"
+          initial={reduce ? undefined : { opacity: 0, y: 10 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0, y: -6 }}
+          transition={springLayout}
+        >
+          <Panel sealed className="space-y-5 p-6">
+            <div className="space-y-2">
+              <Label>Tu ranking privado</Label>
+              <Note>
+                Toca en orden, del que más quieres al que menos. Puedes dejar
+                gente fuera: no listar a alguien es decir que prefieres quedarte
+                sin par.
+              </Note>
+            </div>
 
-      {others.length === 0 && (
-        <Note>Todavía no hay nadie del otro lado a quien rankear.</Note>
+            <div className="grid gap-2">
+              {others.map((p) => {
+                const pos = ranking.indexOf(p.index);
+                const chosen = pos >= 0;
+                return (
+                  <motion.button
+                    key={p.address.toBase58()}
+                    layout
+                    onClick={() => toggle(p.index)}
+                    whileTap={reduce ? undefined : { scale: 0.985 }}
+                    transition={springSnappy}
+                    aria-pressed={chosen}
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+                      chosen
+                        ? "border-sealed/50 bg-sealed/10"
+                        : "border-edge hover:border-edgeStrong hover:bg-surface2"
+                    }`}
+                  >
+                    <motion.span
+                      layout
+                      transition={springSnappy}
+                      className={`tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-mono text-2xs ${
+                        chosen
+                          ? "bg-sealed text-bg"
+                          : "border border-edge text-muted"
+                      }`}
+                    >
+                      {chosen ? pos + 1 : "·"}
+                    </motion.span>
+                    <span className="font-mono text-sm">{p.handle}</span>
+                    {p.link && (
+                      <span className="ml-auto hidden truncate font-mono text-2xs text-muted sm:block">
+                        {p.link}
+                      </span>
+                    )}
+                    <AnimatePresence>
+                      {chosen && (
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.6 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.6 }}
+                          transition={springSnappy}
+                          className="ml-auto text-sealed sm:ml-0"
+                        >
+                          <Check className="h-3.5 w-3.5" aria-hidden />
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {others.length === 0 && (
+              <Note>Todavía no hay nadie del otro lado a quien rankear.</Note>
+            )}
+
+            {error && <ErrorText>{error}</ErrorText>}
+
+            <div className="space-y-2">
+              <Button
+                variant="sealed"
+                onClick={submit}
+                busy={busy}
+                disabled={ranking.length === 0}
+              >
+                <Lock className="h-3.5 w-3.5" aria-hidden />
+                Sellar mi lista
+              </Button>
+              <Note>
+                Tu wallet va a pedirte una firma. Esa firma es lo que le prueba
+                al enclave quién eres, y es la razón por la que nadie más puede
+                leer lo que estás por escribir.
+              </Note>
+            </div>
+          </Panel>
+        </motion.div>
       )}
-
-      {error && (
-        <p className="font-mono text-[11px] leading-relaxed text-red-400">
-          {error}
-        </p>
-      )}
-
-      <Button onClick={submit} busy={busy} disabled={ranking.length === 0}>
-        Sellar mi lista
-      </Button>
-    </Panel>
+    </AnimatePresence>
   );
 }
