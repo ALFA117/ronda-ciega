@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background: #0a0a0b;
+  color: #ededf0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The wallet adapter ships its own styles; align them with the palette. */
+.wallet-adapter-button {
+  background: #131316 !important;
+  border: 1px solid #232329 !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  height: 36px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+}
+.wallet-adapter-button:not([disabled]):hover {
+  background: #1b1b20 !important;
+}
+
+/* A sealed thing gets a faint violet weave, so "private" is legible at a
+   glance and not just a label. */
+.sealed-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(139, 124, 246, 0.09) 0px,
+    rgba(139, 124, 246, 0.09) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+}
+
+@keyframes settle {
+  0% {
+    transform: translateY(-3px);
+    opacity: 0.4;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+.settle {
+  animation: settle 220ms ease-out;
+}
