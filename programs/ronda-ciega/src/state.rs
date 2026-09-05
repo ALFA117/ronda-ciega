@@ -13,6 +13,10 @@ pub const NONE: u8 = u8::MAX;
 /// than every real rank, so an unranked proposer only ever wins an empty slot.
 pub const UNRANKED: u8 = u8::MAX;
 
+/// Snapshots kept for a transparent round. Beyond this the animation simply
+/// stops recording; the matching itself is unaffected.
+pub const MAX_HISTORY: usize = 24;
+
 pub const MAX_HANDLE_LEN: usize = 32;
 pub const MAX_LINK_LEN: usize = 96;
 
@@ -68,12 +72,36 @@ pub struct Round {
     /// tie-breaks without seeing a single preference.
     pub randomness: [u8; 32],
     pub randomness_fulfilled: bool,
+    /// A transparent round publishes its intermediate states so the algorithm
+    /// can be watched running. That is a real disclosure, not a display option:
+    /// the sequence of proposals and rejections reconstructs much of everyone's
+    /// ranking. Demo rounds set it; rounds with real people must not, and the
+    /// UI says so at creation time rather than burying it.
+    pub transparent: bool,
+    /// Per-tick snapshots of `pairs`, recorded only when `transparent`.
+    pub history: [[u8; MAX_PER_SIDE]; MAX_HISTORY],
+    pub history_len: u8,
     pub bump: u8,
 }
 
 impl Round {
-    pub const LEN: usize =
-        32 + 8 + 8 + 1 + 1 + 1 + 1 + 1 + 2 + MAX_PER_SIDE + 1 + 32 + 1 + 1;
+    pub const LEN: usize = 32
+        + 8
+        + 8
+        + 1
+        + 1
+        + 1
+        + 1
+        + 1
+        + 2
+        + MAX_PER_SIDE
+        + 1
+        + 32
+        + 1
+        + 1
+        + (MAX_HISTORY * MAX_PER_SIDE)
+        + 1
+        + 1;
 }
 
 /// Public profile. Deliberately the same information someone already publishes

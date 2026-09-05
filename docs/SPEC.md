@@ -90,6 +90,50 @@ El riesgo técnico y la feature del demo son la misma cosa. Esto es lo que el ER
 no puede: no es "más barato", es que la granularidad del cómputo se vuelve la granularidad de la
 animación.
 
+## 5b. La animación filtra preferencias, y por eso es opt-in
+
+Descubierto al construirlo, no al diseñarlo, así que vale la pena dejarlo escrito.
+
+**Animar los estados intermedios de Gale–Shapley revela las listas.** Si el tick 1 muestra que el
+founder 0 propuso al builder 2, acabamos de publicar cuál era la primera opción del founder 0. La
+secuencia completa de propuestas y rechazos reconstruye buena parte de todos los rankings. La
+animación bonita y la promesa del producto estaban en conflicto directo.
+
+La solución no es esconder el conflicto, es hacerlo explícito: la ronda lleva un flag
+`transparent`, decidido al crearla.
+
+- **Ronda transparente:** graba un snapshot de `pairs` por tick. Se puede ver el algoritmo
+  resolverse. Es para demos y para rondas donde todos los participantes aceptaron mostrarlo.
+- **Ronda normal:** los estados intermedios nunca salen del TEE. Solo se publica el emparejamiento
+  final.
+
+Y esto mejora el pitch en vez de debilitarlo: *"¿quieres ver el algoritmo correr? En una ronda real
+no puedes, ni yo tampoco. Ese es exactamente el punto. Así que aquí hay una ronda de demostración
+donde todos aceptaron mostrarlo."*
+
+**Nota de implementación:** la animación se reproduce desde el historial grabado en la cuenta
+`Round`, no desde los logs de la transacción. Verificado en devnet: el TEE **no sirve logs ni
+compute units** para transacciones que tocan cuentas privadas (`getTransaction` devuelve cero
+mensajes de log). Tiene sentido — los logs son parte de lo que el permiso controla vía
+`TX_LOGS_FLAG` — pero significa que cualquier UI que dependa de eventos de Anchor no funciona aquí.
+
+## 5c. Todo el matching en una sola transacción
+
+Medido contra devnet: correr los ticks uno por transacción cuesta **0.9–1.6 s cada uno desde
+México**. Eso no es el rollup, es round-trip de red — y ningún crank del lado del cliente lo
+arregla, porque cada tick depende del anterior.
+
+La respuesta correcta no es acelerar al cliente sino pedirle menos: `run_matching` corre todas las
+rondas de propuestas **dentro de una sola transacción del ER**, grabando un frame por tick. Un
+cliente remoto no puede hacer N transacciones secuenciales rápido; sí puede hacer una transacción
+que haga N rondas.
+
+Medido con un pool 6×6: converge en 3 ticks, **671 ms de reloj de pared, un solo round-trip**.
+
+Por eso el pitch nunca debe decir "cada tick tarda 10 ms" mostrando ticks separados. Lo que se dice
+es: el matching completo se liquida en una transacción del rollup, y la animación reproduce los
+frames que esa transacción grabó.
+
 ## 6. Dónde entra el VRF (y por qué no es decoración)
 
 Gale–Shapley asume órdenes estrictos. Los empates son un problema real: si dos proponentes caen en

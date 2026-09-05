@@ -28,6 +28,8 @@ pub enum ErrorCode {
     ProfileTooLong,
     #[msg("Session token is missing, expired, or not authorized for this wallet")]
     InvalidSession,
+    #[msg("Tick budget must be at least 1")]
+    InvalidTickBudget,
     #[msg("Arithmetic overflow")]
     MathOverflow,
 }

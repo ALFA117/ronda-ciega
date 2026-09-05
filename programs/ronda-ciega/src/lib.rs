@@ -38,7 +38,7 @@ mod state;
 use error::ErrorCode;
 use state::{
     MatchState, Participant, Preferences, Round, RoundStatus, Side, MAX_HANDLE_LEN, MAX_LINK_LEN,
-    MAX_PER_SIDE, NONE, UNRANKED,
+    MAX_HISTORY, MAX_PER_SIDE, NONE, UNRANKED,
 };
 
 declare_id!("5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R");
@@ -62,11 +62,18 @@ pub mod ronda_ciega {
     /// Open a round. Prefunds the round PDA for the `MatchState` it will
     /// sponsor inside the rollup; per-participant rent is collected at join
     /// time instead, so opening a round stays cheap.
+    /// `transparent` makes the round publish every intermediate state of the
+    /// matching so it can be watched running. Read the field's doc comment
+    /// before setting it: watching the algorithm means watching who proposed to
+    /// whom in what order, which reconstructs much of everyone's ranking. It is
+    /// for demo rounds. A round with real people leaves it false and publishes
+    /// only the final pairings.
     pub fn init_round(
         ctx: Context<InitRound>,
         round_id: u64,
         deadline_ts: i64,
         min_per_side: u8,
+        transparent: bool,
     ) -> Result<()> {
         require!(
             deadline_ts > Clock::get()?.unix_timestamp,
@@ -107,6 +114,9 @@ pub mod ronda_ciega {
         round.status = RoundStatus::Open;
         round.randomness = [0u8; 32];
         round.randomness_fulfilled = false;
+        round.transparent = transparent;
+        round.history = [[NONE; MAX_PER_SIDE]; MAX_HISTORY];
+        round.history_len = 0;
         round.bump = ctx.bumps.round;
 
         emit!(RoundOpened {
@@ -463,15 +473,17 @@ pub mod ronda_ciega {
         Ok(())
     }
 
-    /// One proposal round of Gale–Shapley. This is the unit the whole design
-    /// is built around: O(n) work, one small transaction, and at ~10 ms per
-    /// rollup block the entire matching resolves in under a second with every
-    /// intermediate state observable.
+    /// One proposal round of Gale–Shapley, as its own transaction.
     ///
     /// Each still-unmatched founder proposes to the next builder on their list.
     /// A builder holding nobody accepts. A builder already holding someone keeps
     /// whichever of the two they rank higher and releases the other, who will
     /// propose again on the next tick.
+    ///
+    /// This is the step-through mode — useful for inspecting the algorithm one
+    /// frame at a time, but note that from a remote client the wall-clock cost
+    /// per tick is network round-trip, not rollup execution. `run_matching` is
+    /// what actually demonstrates the rollup's speed.
     pub fn tick(ctx: Context<Tick>, round_id: u64) -> Result<()> {
         require_eq!(ctx.accounts.round.round_id, round_id);
         require!(
@@ -486,49 +498,8 @@ pub mod ronda_ciega {
         let founder_count = ctx.accounts.round.founder_count as usize;
         let mut pairs = ctx.accounts.round.pairs;
         let randomness = ctx.accounts.round.randomness;
-        let mut proposals: u8 = 0;
 
-        for f in 0..founder_count {
-            // Already tentatively held by someone: nothing to do this tick.
-            if pairs[f] != NONE {
-                continue;
-            }
-            let cursor = ms.cursor[f] as usize;
-            // Ran out of list: this founder finishes the round unmatched.
-            if cursor >= ms.founder_len[f] as usize {
-                continue;
-            }
-
-            let b = ms.founder_ranking[f][cursor] as usize;
-            ms.cursor[f] = (cursor + 1) as u8;
-            proposals = proposals.saturating_add(1);
-
-            let incumbent = ms.hold[b];
-            if incumbent == NONE {
-                ms.hold[b] = f as u8;
-                pairs[f] = b as u8;
-                continue;
-            }
-
-            let challenger_rank = ms.builder_rank[b][f];
-            let incumbent_rank = ms.builder_rank[b][incumbent as usize];
-
-            let challenger_wins = if challenger_rank != incumbent_rank {
-                // Lower rank is better; UNRANKED loses to every real rank.
-                challenger_rank < incumbent_rank
-            } else {
-                // Only reachable when the builder ranked neither of them. Index
-                // order would hand the slot to whoever registered first, so the
-                // tie goes to verifiable randomness instead.
-                break_tie(&randomness, b, f, incumbent as usize)
-            };
-
-            if challenger_wins {
-                ms.hold[b] = f as u8;
-                pairs[f] = b as u8;
-                pairs[incumbent as usize] = NONE;
-            }
-        }
+        let proposals = advance_one_round(&mut ms, &mut pairs, founder_count, &randomness);
 
         write_account(&match_state_info, &ms)?;
 
@@ -555,6 +526,84 @@ pub mod ronda_ciega {
         }
         Ok(())
     }
+
+    /// Run the matching to completion inside a single rollup transaction.
+    ///
+    /// This is the instruction that actually shows what the rollup can do. The
+    /// per-tick loop still runs, and still emits one `TickAdvanced` event per
+    /// proposal round — the frontend replays those events as the animation —
+    /// but all of it executes in one block instead of paying an internet
+    /// round-trip per frame. A remote client cannot make N sequential
+    /// transactions fast; it can make one transaction that does N rounds.
+    ///
+    /// `max_ticks` bounds the loop so the instruction can never run away. The
+    /// theoretical worst case for Gale–Shapley is n² proposals, so a caller
+    /// that passes fewer can simply call again — the state is resumable.
+    pub fn run_matching(ctx: Context<Tick>, round_id: u64, max_ticks: u8) -> Result<()> {
+        require_eq!(ctx.accounts.round.round_id, round_id);
+        require!(
+            ctx.accounts.round.status == RoundStatus::Matching,
+            ErrorCode::WrongRoundStatus
+        );
+        require!(max_ticks > 0, ErrorCode::InvalidTickBudget);
+
+        let round_key = ctx.accounts.round.key();
+        let match_state_info = ctx.accounts.match_state.to_account_info();
+        let mut ms: MatchState = read_account(&match_state_info)?;
+
+        let founder_count = ctx.accounts.round.founder_count as usize;
+        let mut pairs = ctx.accounts.round.pairs;
+        let randomness = ctx.accounts.round.randomness;
+        let mut tick_no = ctx.accounts.round.tick;
+        let transparent = ctx.accounts.round.transparent;
+        let mut history = ctx.accounts.round.history;
+        let mut history_len = ctx.accounts.round.history_len as usize;
+        let mut settled = false;
+
+        for _ in 0..max_ticks {
+            let proposals = advance_one_round(&mut ms, &mut pairs, founder_count, &randomness);
+            tick_no = tick_no.checked_add(1).ok_or(ErrorCode::MathOverflow)?;
+
+            if proposals == 0 {
+                settled = true;
+                break;
+            }
+
+            // Only a transparent round records the frame. On a private round
+            // the intermediate states never leave the TEE, because the order of
+            // proposals is itself preference data.
+            if transparent && history_len < MAX_HISTORY {
+                history[history_len] = pairs;
+                history_len += 1;
+            }
+
+            emit!(TickAdvanced {
+                round: round_key,
+                tick: tick_no,
+                proposals,
+                pairs,
+            });
+        }
+
+        write_account(&match_state_info, &ms)?;
+
+        let round = &mut ctx.accounts.round;
+        round.pairs = pairs;
+        round.tick = tick_no;
+        if transparent {
+            round.history = history;
+            round.history_len = history_len as u8;
+        }
+        if settled {
+            round.status = RoundStatus::Settled;
+            emit!(RoundSettled {
+                round: round_key,
+                ticks: tick_no,
+                pairs,
+            });
+        }
+        Ok(())
+    }
 }
 
 // ------------------------------------------------------------- helpers ---
@@ -564,6 +613,62 @@ fn permission_member(pubkey: Pubkey) -> Member {
         flags: AUTHORITY_FLAG | TX_LOGS_FLAG | TX_MESSAGE_FLAG | TX_BALANCES_FLAG,
         pubkey,
     }
+}
+
+/// One proposal round, shared by `tick` and `run_matching` so the step-through
+/// mode and the single-transaction mode can never drift apart. Returns how many
+/// proposals were made; zero means the matching has reached its fixed point.
+fn advance_one_round(
+    ms: &mut MatchState,
+    pairs: &mut [u8; MAX_PER_SIDE],
+    founder_count: usize,
+    randomness: &[u8; 32],
+) -> u8 {
+    let mut proposals: u8 = 0;
+
+    for f in 0..founder_count {
+        // Already tentatively held by someone: nothing to do this round.
+        if pairs[f] != NONE {
+            continue;
+        }
+        let cursor = ms.cursor[f] as usize;
+        // Ran out of list: this founder finishes the round unmatched.
+        if cursor >= ms.founder_len[f] as usize {
+            continue;
+        }
+
+        let b = ms.founder_ranking[f][cursor] as usize;
+        ms.cursor[f] = (cursor + 1) as u8;
+        proposals = proposals.saturating_add(1);
+
+        let incumbent = ms.hold[b];
+        if incumbent == NONE {
+            ms.hold[b] = f as u8;
+            pairs[f] = b as u8;
+            continue;
+        }
+
+        let challenger_rank = ms.builder_rank[b][f];
+        let incumbent_rank = ms.builder_rank[b][incumbent as usize];
+
+        let challenger_wins = if challenger_rank != incumbent_rank {
+            // Lower rank is better; UNRANKED loses to every real rank.
+            challenger_rank < incumbent_rank
+        } else {
+            // Only reachable when the builder ranked neither of them. Index
+            // order would hand the slot to whoever registered first, so the tie
+            // goes to verifiable randomness instead.
+            break_tie(randomness, b, f, incumbent as usize)
+        };
+
+        if challenger_wins {
+            ms.hold[b] = f as u8;
+            pairs[f] = b as u8;
+            pairs[incumbent as usize] = NONE;
+        }
+    }
+
+    proposals
 }
 
 /// Deterministic, reproducible tie-break from the round's VRF output. Anyone

@@ -42,9 +42,32 @@ const MATCH_STATE_SEED = Buffer.from("match_state");
 const PROGRAM_ID = new PublicKey(IDL.address);
 
 // 2 per side keeps the spike cheap; the interesting case (a builder dropping
-// one founder for a better one) still shows up.
-const FOUNDERS = 2;
-const BUILDERS = 2;
+// one founder for a better one) still shows up. `POOL=8 npx ts-node ...` runs
+// a bigger market to measure how the single-transaction mode scales.
+const POOL = Number(process.env.POOL || 2);
+const FOUNDERS = POOL;
+const BUILDERS = POOL;
+/** "batch" runs the whole matching in one rollup tx; "step" is one tx per tick. */
+const MODE = process.env.MODE || "batch";
+
+/**
+ * Rankings. For the 2x2 case they are hand-picked so a builder drops one
+ * founder for a better proposal. For larger pools each participant ranks the
+ * whole other side in a rotated order, which keeps plenty of contention.
+ */
+function rankingFor(side: "founder" | "builder", idx: number): number[] {
+  if (POOL === 2) {
+    return { "founder-0": [0, 1], "founder-1": [0, 1], "builder-0": [1, 0], "builder-1": [0, 1] }[
+      `${side}-${idx}`
+    ]!;
+  }
+  const n = side === "founder" ? BUILDERS : FOUNDERS;
+  // Everyone's top choice clusters near index 0, so the early ticks are
+  // maximally contended — the worst realistic case, not a friendly one.
+  return Array.from({ length: n }, (_, i) => (i + idx * 2) % n).filter(
+    (v, i, a) => a.indexOf(v) === i,
+  );
+}
 
 function loadAuthority(): Keypair {
   const p = path.join(os.homedir(), ".config", "solana", "id.json");
@@ -131,7 +154,10 @@ async function main() {
   const deadline = new anchor.BN(Math.floor(Date.now() / 1000) + 60);
 
   await l1Program.methods
-    .initRound(roundId, deadline, 2)
+    // transparent = true: this is a demo round, so it records every
+    // intermediate state for the animation. A round with real people must pass
+    // false — the proposal order is itself preference data.
+    .initRound(roundId, deadline, 2, true)
     .accountsPartial({
       authority: authority.publicKey,
       round,
@@ -163,6 +189,9 @@ async function main() {
       })
       .rpc();
     ok(`${p.side} #${p.idx} joined`);
+    // The public devnet RPC rate-limits hard once a script drives more than a
+    // handful of wallets. Pacing here is cheaper than a paid endpoint for now.
+    await new Promise((r) => setTimeout(r, 700));
   }
 
   // ---------------------------------------------------------------------
@@ -198,16 +227,6 @@ async function main() {
     .rpc();
   ok(`match state ${matchState.toBase58()} (private, no members)`);
 
-  // Founder 0 and founder 1 both want builder 0 first. Builder 0 prefers
-  // founder 1. So founder 0 gets bumped on a later tick and falls back to
-  // builder 1 — the case worth watching in the demo.
-  const rankings: Record<string, number[]> = {
-    "founder-0": [0, 1],
-    "founder-1": [0, 1],
-    "builder-0": [1, 0],
-    "builder-1": [0, 1],
-  };
-
   const prefsOf: Record<string, PublicKey> = {};
   for (const p of people) {
     const key = `${p.side}-${p.idx}`;
@@ -223,7 +242,7 @@ async function main() {
 
     const erConn = await teeConnectionFor(p.kp);
     await programFor(erConn, p.kp)
-      .methods.submitRanking(roundId, Buffer.from(rankings[key]))
+      .methods.submitRanking(roundId, Buffer.from(rankingFor(p.side, p.idx)))
       .accountsPartial({
         wallet: p.kp.publicKey,
         round,
@@ -313,37 +332,78 @@ async function main() {
     .rpc();
   ok("round closed");
 
-  await erAuthorityProgram.methods
-    .sealPreferences(roundId)
-    .accountsPartial({ round, matchState })
-    .remainingAccounts(
-      people.map((p) => ({
-        pubkey: prefsOf[`${p.side}-${p.idx}`],
-        isSigner: false,
-        isWritable: false,
-      })),
-    )
-    .rpc();
-  ok("rankings ingested into private working memory");
-
-  for (let i = 0; i < 32; i++) {
-    const before = Date.now();
+  // Chunked so the account list always fits in one transaction.
+  const CHUNK = 8;
+  for (let i = 0; i < people.length; i += CHUNK) {
     await erAuthorityProgram.methods
-      .tick(roundId)
+      .sealPreferences(roundId)
       .accountsPartial({ round, matchState })
+      .remainingAccounts(
+        people.slice(i, i + CHUNK).map((p) => ({
+          pubkey: prefsOf[`${p.side}-${p.idx}`],
+          isSigner: false,
+          isWritable: false,
+        })),
+      )
       .rpc();
-    const state: any = await (erAuthorityProgram.account as any).round.fetch(round);
-    const pairs = Array.from(state.pairs as number[])
+  }
+  ok(`rankings ingested into private working memory (${people.length} lists)`);
+
+  const fmtPairs = (pairs: number[]) =>
+    pairs
       .slice(0, FOUNDERS)
       .map((b, f) => (b === 255 ? `F${f}:—` : `F${f}↔B${b}`))
       .join("  ");
-    console.log(
-      `   tick ${String(state.tick).padStart(2)}  ${pairs}   (${Date.now() - before} ms)`,
-    );
-    if (state.status.settled) {
-      ok(`converged after ${state.tick} ticks`);
-      break;
+
+  if (MODE === "step") {
+    // One transaction per tick. Honest about what dominates: the wall-clock
+    // number here is a round-trip to the validator, not rollup execution.
+    for (let i = 0; i < 64; i++) {
+      const before = Date.now();
+      await erAuthorityProgram.methods
+        .tick(roundId)
+        .accountsPartial({ round, matchState })
+        .rpc();
+      const state: any = await (erAuthorityProgram.account as any).round.fetch(round);
+      console.log(
+        `   tick ${String(state.tick).padStart(2)}  ${fmtPairs(
+          Array.from(state.pairs),
+        )}   (${Date.now() - before} ms round-trip)`,
+      );
+      if (state.status.settled) {
+        ok(`converged after ${state.tick} ticks`);
+        break;
+      }
     }
+  } else {
+    // The whole matching in one rollup transaction.
+    const before = Date.now();
+    const sig = await erAuthorityProgram.methods
+      .runMatching(roundId, 64)
+      .accountsPartial({ round, matchState })
+      .rpc();
+    const elapsed = Date.now() - before;
+
+    const state: any = await (erAuthorityProgram.account as any).round.fetch(round);
+
+    // The animation is replayed from the round's recorded history, NOT from
+    // transaction logs: the TEE does not serve logs for transactions that touch
+    // private accounts (verified — getTransaction returns zero log messages).
+    // And the history only exists at all because this round is transparent.
+    const historyLen = state.historyLen as number;
+    for (let t = 0; t < historyLen; t++) {
+      console.log(
+        `   tick ${String(t + 1).padStart(2)}  ${fmtPairs(Array.from(state.history[t]))}`,
+      );
+    }
+    console.log(
+      `   tick ${String(state.tick).padStart(2)}  ${fmtPairs(Array.from(state.pairs))}  final`,
+    );
+
+    ok(`converged after ${state.tick} ticks in ONE transaction`);
+    ok(`recorded ${historyLen} intermediate frames (round is transparent)`);
+    ok(`client wall clock: ${elapsed} ms (one round-trip, not ${state.tick})`);
+    console.log(`   explorer: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
   }
 
   console.log("\n\x1b[1mSpike complete.\x1b[0m");
