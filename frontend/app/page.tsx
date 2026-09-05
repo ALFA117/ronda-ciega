@@ -1,36 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { Connection } from "@solana/web3.js";
-import { ArrowRight } from "lucide-react";
 import { DEVNET_RPC } from "@/lib/constants";
 import { getReadProgram, RoundAccount } from "@/lib/program";
 import { fetchRounds } from "@/lib/rounds";
-import { stagger, wordIn } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
-import {
-  Explorer,
-  Label,
-  Note,
-  Panel,
-  Reveal,
-  StaggerItem,
-  StaggerList,
-  StatusPill,
-  Tag,
-} from "@/components/ui";
-import { CreateRound } from "@/components/CreateRound";
-import { HeroVisual } from "@/components/HeroVisual";
-import { StatBand } from "@/components/StatBand";
-import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
-import dynamic from "next/dynamic";
+import { Note, Panel } from "@/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PreflightBanner } from "@/components/Preflight";
+import { CreateRound } from "@/components/CreateRound";
+import { Hero } from "@/components/Hero";
+import { Section } from "@/components/Section";
+import { StatBand } from "@/components/StatBand";
+import { RoundRow } from "@/components/RoundRow";
+import { Footer } from "@/components/Footer";
+import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
 
-// Charts sit below the fold and pull their own code. Deferring them keeps the
-// first paint to what the reader actually sees.
+// Charts sit below the fold and pull their own code.
 const ConvergenceChart = dynamic(
   () => import("@/components/charts/Charts").then((m) => m.ConvergenceChart),
   { ssr: false, loading: () => <ChartSkeleton /> },
@@ -42,25 +30,12 @@ const LatencyChart = dynamic(
 
 function ChartSkeleton() {
   return (
-    <div className="h-56 animate-pulse rounded-xl border border-edge bg-surface/40" />
-  );
-}
-
-/** A section header, so every band of the page announces itself the same way. */
-function SectionHead({ label, title }: { label: string; title: string }) {
-  return (
-    <Reveal className="space-y-3">
-      <Label>{label}</Label>
-      <h2 className="max-w-prose text-xl font-medium tracking-[-0.01em] [text-wrap:balance]">
-        {title}
-      </h2>
-    </Reveal>
+    <div className="h-60 animate-pulse rounded-xl border border-edge bg-surface/40" />
   );
 }
 
 export default function Home() {
   const t = useT();
-  const reduce = useReducedMotion();
   const [rounds, setRounds] = useState<RoundAccount[] | null>(null);
 
   useEffect(() => {
@@ -76,207 +51,141 @@ export default function Home() {
     })();
   }, []);
 
-  const headline = t.hero.headline.split(" ");
-  const subline = t.hero.subline.split(" ");
-  // The newest settled transparent round is the only one with real frames to
-  // chart. No round like that yet means the chart says so rather than inventing.
+  // Only a settled transparent round has real frames to chart. None yet means
+  // the chart says so rather than inventing a series.
   const showcase = rounds?.find((r) => r.status === "settled" && r.transparent);
 
   return (
-    <div className="space-y-24 sm:space-y-28">
+    <>
       <PreflightBanner />
-      {/* Hero. `overflow-hidden` contains the aurora, which is deliberately
-          wider than its box and would otherwise push the page sideways. */}
-      <section className="relative aurora grid items-center gap-10 overflow-hidden lg:grid-cols-[1.05fr_1fr]">
-        <div className="space-y-7">
-          <motion.h1
-            key={t.hero.headline}
-            className="text-2xl font-medium tracking-[-0.02em] [text-wrap:balance] sm:text-3xl"
-            variants={reduce ? undefined : stagger()}
-            initial={reduce ? undefined : "hidden"}
-            animate={reduce ? undefined : "show"}
-          >
-            <span className="block">
-              {headline.map((w, i) => (
-                <motion.span
-                  key={i}
-                  variants={reduce ? undefined : wordIn}
-                  className="mr-[0.25em] inline-block"
-                >
-                  {w}
-                </motion.span>
-              ))}
-            </span>
-            <span className="block text-muted">
-              {subline.map((w, i) => (
-                <motion.span
-                  key={i}
-                  variants={reduce ? undefined : wordIn}
-                  className="mr-[0.25em] inline-block"
-                >
-                  {w}
-                </motion.span>
-              ))}
-            </span>
-          </motion.h1>
+      <Hero />
 
-          <Reveal delay={0.2}>
-            <p className="max-w-prose text-base leading-relaxed text-chalk/85">
-              {t.hero.lede}
-            </p>
-          </Reveal>
+      <div className="mt-8">
+        <StatBand />
+      </div>
 
-          <Reveal delay={0.3}>
-            <Link
-              href="#rondas"
-              className="group inline-flex items-center gap-2 font-mono text-sm text-chalk transition-colors hover:text-sealed"
-            >
-              {t.hero.cta}
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Reveal>
-        </div>
-
-        <Reveal delay={0.15}>
-          <HeroVisual />
-        </Reveal>
-      </section>
-
-      {/* Measured, before anything is claimed */}
-      <StatBand />
-
-      {/* Problem — three short cards, no prose */}
-      <section className="space-y-6">
-        <SectionHead label={t.problem.label} title={t.problem.title} />
-        <StaggerList className="grid gap-3 sm:grid-cols-3">
+      <Section
+        index="01"
+        label={t.problem.label}
+        title={t.problem.title}
+        id="problema"
+      >
+        {/* A numbered editorial list, not three equal cards. */}
+        <ol className="divide-y divide-edge border-y border-edge">
           {t.problem.cards.map((c, i) => (
-            <StaggerItem key={c.title}>
-              <Panel className="h-full space-y-3 p-5">
-                <span className="tnum font-mono text-2xs text-muted">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 className="text-sm font-medium">{c.title}</h3>
-                <p className="text-xs leading-relaxed text-muted">{c.body}</p>
-              </Panel>
-            </StaggerItem>
+            <li key={c.title} className="grid gap-3 py-6 sm:grid-cols-[3rem_1fr]">
+              <span className="tnum font-mono text-2xs text-muted">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="space-y-2">
+                <h3 className="text-base font-medium">{c.title}</h3>
+                <p className="max-w-prose text-sm leading-relaxed text-muted">
+                  {c.body}
+                </p>
+              </div>
+            </li>
           ))}
-        </StaggerList>
-      </section>
+        </ol>
+      </Section>
 
-      {/* Solution — a diagram, not a paragraph */}
-      <section className="space-y-6">
-        <SectionHead label={t.solution.label} title={t.solution.title} />
-        <Reveal>
-          <p className="max-w-prose text-sm leading-relaxed text-muted">
-            {t.solution.body}
-          </p>
-        </Reveal>
+      <Section
+        index="02"
+        label={t.solution.label}
+        title={t.solution.title}
+        lede={t.solution.body}
+        id="como-funciona"
+        wide
+      >
         <FlowDiagram />
-      </section>
+      </Section>
 
-      {/* The argument, as two columns */}
-      <section className="space-y-6">
-        <SectionHead label={t.compare.label} title={t.compare.title} />
+      <Section
+        index="03"
+        label={t.compare.label}
+        title={t.compare.title}
+        id="commit-reveal"
+        wide
+      >
         <CompareColumns />
-      </section>
+      </Section>
 
-      {/* Measured, not claimed */}
-      <section className="space-y-6">
-        <SectionHead label={t.stats.label} title={t.stats.title} />
-        <div className="grid gap-3 lg:grid-cols-2">
-          <Reveal>
-            <ErrorBoundary>
-              {showcase ? (
-                <ConvergenceChart round={showcase} />
-              ) : (
-                <Panel className="p-5">
-                  <Note>{t.stats.empty}</Note>
-                </Panel>
-              )}
-            </ErrorBoundary>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <ErrorBoundary>
-              <LatencyChart />
-            </ErrorBoundary>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Limits, stated up front rather than buried in a README */}
-      <section className="space-y-6">
-        <SectionHead label={t.limits.label} title={t.limits.title} />
-        <StaggerList className="grid gap-3 sm:grid-cols-2">
-          {t.limits.items.map((l) => (
-            <StaggerItem key={l.title}>
-              <Panel className="h-full space-y-2 p-5">
-                <h3 className="font-mono text-xs text-open">{l.title}</h3>
-                <p className="text-xs leading-relaxed text-muted">{l.body}</p>
+      <Section
+        index="04"
+        label={t.stats.label}
+        title={t.stats.title}
+        id="medido"
+        wide
+      >
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ErrorBoundary>
+            {showcase ? (
+              <ConvergenceChart round={showcase} />
+            ) : (
+              <Panel className="p-6">
+                <Note>{t.stats.empty}</Note>
               </Panel>
-            </StaggerItem>
-          ))}
-        </StaggerList>
-      </section>
+            )}
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <LatencyChart />
+          </ErrorBoundary>
+        </div>
+      </Section>
 
-      {/* Rounds */}
-      <section id="rondas" className="scroll-mt-24 space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="space-y-2">
-            <Label>{t.rounds.label}</Label>
-            <Note>{t.rounds.note}</Note>
-          </div>
+      <Section
+        index="05"
+        label={t.limits.label}
+        title={t.limits.title}
+        id="limites"
+      >
+        <ul className="grid gap-x-10 gap-y-7 sm:grid-cols-2">
+          {t.limits.items.map((l) => (
+            <li key={l.title} className="space-y-2 border-t border-edge pt-5">
+              <h3 className="font-mono text-2xs uppercase tracking-[0.14em] text-open">
+                {l.title}
+              </h3>
+              <p className="text-sm leading-relaxed text-muted">{l.body}</p>
+            </li>
+          ))}
+        </ul>
+      </Section>
+
+      <Section
+        index="06"
+        label={t.rounds.label}
+        title={t.rounds.note}
+        id="rondas"
+        wide
+      >
+        <div className="mb-6 flex justify-end">
           <CreateRound />
         </div>
 
         {rounds === null && (
-          <div className="space-y-3" aria-live="polite">
-            {[0, 1].map((i) => (
+          <div aria-live="polite">
+            {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-[86px] animate-pulse rounded-xl border border-edge bg-surface/40"
+                className="h-[88px] animate-pulse border-b border-edge bg-surface/30"
               />
             ))}
           </div>
         )}
 
         {rounds?.length === 0 && (
-          <Panel className="p-8 text-center">
+          <Panel className="p-10 text-center">
             <Note>{t.rounds.empty}</Note>
           </Panel>
         )}
 
-        <StaggerList className="grid gap-3">
+        <div className="border-t border-edge">
           {rounds?.map((r) => (
-            <StaggerItem key={r.address.toBase58()}>
-              <Link href={`/round/${r.address.toBase58()}`} className="block">
-                <motion.div
-                  whileHover={reduce ? undefined : { y: -2 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 24 }}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-edge bg-surface/70 p-5 transition-colors hover:border-edgeStrong"
-                >
-                  <div className="min-w-0 space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="tnum font-mono text-sm">
-                        #{r.roundId.toString().slice(-6)}
-                      </span>
-                      <StatusPill status={r.status} />
-                      {r.transparent && <Tag tone="open">{t.round.transparent}</Tag>}
-                    </div>
-                    <div className="tnum font-mono text-2xs text-muted">
-                      {r.founderCount} {t.rounds.founders} · {r.builderCount}{" "}
-                      {t.rounds.builders} ·{" "}
-                      <span className="text-sealed">
-                        {r.rankingCount} {t.rounds.sealedLists}
-                      </span>
-                    </div>
-                  </div>
-                  <Explorer address={r.address.toBase58()} />
-                </motion.div>
-              </Link>
-            </StaggerItem>
+            <RoundRow key={r.address.toBase58()} round={r} />
           ))}
-        </StaggerList>
-      </section>
-    </div>
+        </div>
+      </Section>
+
+      <Footer />
+    </>
   );
 }

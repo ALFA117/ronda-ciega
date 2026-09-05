@@ -7,18 +7,18 @@
 
   /* Semantic tokens. Components never reach for a raw hex, which is why
      repainting the whole app is this one block. */
-  --bg: #060a12;
-  --surface: #0c1320;
-  --surface-2: #121c2e;
-  --edge: #1c2a40;
-  --edge-strong: #2e4262;
+  --bg: #05070d;
+  --bg-deep: #03050a;
+  --surface: #0b1120;
+  --surface-2: #111a2c;
+  --edge: #1a2740;
+  --edge-strong: #2c3f60;
   --text: #eaf2ff;
-  --text-muted: #7f93b0;
+  --text-muted: #8095b3;
 
   /* The one distinction the product is about, carried by colour.
-     Cyan is sealed, magenta is public. Both are pushed off their pure
-     values so they clear 4.5:1 against the background — pure #0ff and
-     #f0f vibrate against dark and fail on thin type. */
+     Cyan is sealed, magenta is public. Both are pushed off their pure values
+     so they clear 4.5:1 — pure #0ff and #f0f vibrate and fail on thin type. */
   --sealed: #22d3ee;
   --sealed-dim: #0e93ab;
   --open: #f45cf0;
@@ -27,47 +27,43 @@
   --open-rgb: 244, 92, 240;
 
   /* Chart series. Deliberately NOT the brand cyan/magenta: those two are
-     nearly the same colour to a deuteranope (validated ΔE 0.3-6.8), so a
-     two-series chart painted in them is unreadable for ~5% of men. These
-     steps clear all six checks of the palette validator in this mode.
-     Magenta stays reserved for the "public" semantic in the UI chrome. */
+     nearly the same colour to a deuteranope (validated ΔE 0.3-6.8). These
+     steps clear all six checks of the palette validator in this mode. */
   --chart-1: #1d9bb2;
   --chart-2: #c07a1d;
 
-  /* Ink that sits ON a sealed-coloured fill, and the de-emphasised ink used
-     for "not matched yet". Both need their own value per theme: a 50%-opacity
-     muted grey that reads as dim on near-black lands at 1.9:1 on paper. */
   --on-sealed: #06121a;
   --text-dim: #708298;
 
-  /* Depth. A dark UI with one flat surface everywhere reads as unfinished;
-     what makes it feel built is a hairline of light on the top edge of every
-     raised thing, and shadows that actually sit under them. */
   --card-top: rgba(255, 255, 255, 0.07);
   --card-wash: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.028) 0%,
-    rgba(255, 255, 255, 0) 42%
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0) 45%
   );
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 18px 40px -18px rgba(0, 0, 0, 0.75);
-  --grain-opacity: 0.035;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px -14px rgba(0, 0, 0, 0.7);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 24px 50px -20px rgba(0, 0, 0, 0.85);
+  --grain-opacity: 0.04;
+
+  /* Ghost numerals in the section spine. Barely there on purpose: they are
+     rhythm, not information. */
+  --ghost: rgba(234, 242, 255, 0.05);
 }
 
-
-/* Light theme. Contrast checked against the light surfaces rather than
-   assumed from the dark values — cyan that reads fine on near-black is
-   unreadable on paper, so sealed goes several steps darker here. */
+/* Light theme on warm paper rather than blue-grey. A light mode that is only
+   the dark one inverted always reads as an afterthought. Every value is
+   measured against these surfaces, never inherited from the dark set. */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f6f7fb;
+  --bg: #f7f5f1;
+  --bg-deep: #efece6;
   --surface: #ffffff;
-  --surface-2: #eef1f7;
-  --edge: #dbe0ea;
-  --edge-strong: #b9c2d2;
-  --text: #10141c;
-  --text-muted: #5b6579;
+  --surface-2: #f2efe9;
+  --edge: #e0dbd1;
+  --edge-strong: #bdb5a7;
+  --text: #14120f;
+  --text-muted: #5d5850;
 
   --sealed: #0e7490;
   --sealed-dim: #155e75;
@@ -76,36 +72,42 @@
   --sealed-rgb: 14, 116, 144;
   --open-rgb: 162, 28, 175;
 
-  /* Re-stepped for the white surface rather than inherited from dark: the
-     dark cyan drops below the chroma floor and reads grey on paper. */
-  --chart-1: #009bc4;
+  --chart-1: #0086ad;
   --chart-2: #b45309;
 
   --on-sealed: #ffffff;
-  --text-dim: #68717f;
+  --text-dim: #6b665e;
 
-  /* Light mode gets real shadows instead of borrowed highlights. A white
-     hairline on a white card is invisible; depth on paper comes from the
-     shadow under the card, so the wash inverts and the grain drops. */
   --card-top: rgba(255, 255, 255, 0.9);
   --card-wash: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(15, 23, 42, 0.012) 100%
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(20, 18, 15, 0.014) 100%
   );
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 20px -12px rgba(16, 24, 40, 0.16);
-  --shadow-lift: 0 2px 6px rgba(16, 24, 40, 0.07), 0 20px 44px -20px rgba(16, 24, 40, 0.24);
-  --grain-opacity: 0.02;
+  --shadow-card: 0 1px 2px rgba(20, 18, 15, 0.05), 0 10px 24px -14px rgba(20, 18, 15, 0.18);
+  --shadow-lift: 0 2px 8px rgba(20, 18, 15, 0.07), 0 24px 50px -22px rgba(20, 18, 15, 0.26);
+  --grain-opacity: 0.022;
+
+  --ghost: rgba(20, 18, 15, 0.055);
 }
 
 @layer base {
   /* Nothing should ever scroll the page sideways. `clip` rather than `hidden`
-     because `hidden` on an ancestor silently kills `position: sticky` on the
-     nav. Decorative elements wider than their box are contained locally. */
+     because `hidden` on an ancestor silently kills `position: sticky`. */
   html,
   body {
     overflow-x: clip;
     max-width: 100%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 
   body {
@@ -118,7 +120,7 @@
   /* Never remove the focus ring — only make it match the design. */
   :focus-visible {
     outline: 2px solid var(--sealed);
-    outline-offset: 2px;
+    outline-offset: 3px;
     border-radius: 4px;
   }
 
@@ -129,9 +131,42 @@
 }
 
 @layer utilities {
-  /* A single grain layer over the whole page. Dark surfaces band badly on
-     cheap panels and gradients look like posters without it; at 3.5% it is
-     invisible until you remove it. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Display type. One clamp instead of five breakpoints, with tracking that
+     only makes sense at these sizes. */
+  .display {
+    font-size: clamp(2.5rem, 7.2vw, 5.25rem);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+  }
+
+  .display-sm {
+    font-size: clamp(1.6rem, 3.4vw, 2.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 500;
+  }
+
+  .lede {
+    font-size: clamp(1rem, 1.5vw, 1.175rem);
+    line-height: 1.6;
+  }
+
+  /* The numeral that anchors each section: large, nearly invisible, behind
+     the content. Rhythm rather than information. */
+  .ghost-num {
+    font-size: clamp(4rem, 11vw, 9rem);
+    line-height: 0.8;
+    font-weight: 500;
+    letter-spacing: -0.05em;
+    color: var(--ghost);
+    user-select: none;
+  }
+
   .grain::after {
     content: "";
     position: fixed;
@@ -142,8 +177,6 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* The raised-surface recipe: wash, hairline, shadow. Used by every panel so
-     depth is consistent instead of decided per component. */
   .surface-raised {
     background-image: var(--card-wash);
     box-shadow: inset 0 1px 0 0 var(--card-top), var(--shadow-card);
@@ -151,18 +184,6 @@
 
   .surface-lift {
     box-shadow: inset 0 1px 0 0 var(--card-top), var(--shadow-lift);
-  }
-
-  /* Section numbers and rules: editorial rhythm, so the page has structure
-     rather than a stack of evenly spaced boxes. */
-  .rule-left {
-    border-left: 1px solid var(--edge);
-  }
-
-  /* Tabular figures for anything that counts, so numbers don't jitter as
-     they change during the replay. */
-  .tnum {
-    font-variant-numeric: tabular-nums;
   }
 
   .sealed-hatch {
@@ -175,21 +196,6 @@
     );
   }
 
-  .grid-field {
-    background-image:
-      linear-gradient(to right, rgba(var(--sealed-rgb), 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(var(--sealed-rgb), 0.05) 1px, transparent 1px);
-    background-size: 44px 44px;
-  }
-
-  /* Same pattern, less of it: on a light ground these read as dirt at the
-     opacity that looks like texture on a dark one. */
-  :root[data-theme="light"] .grid-field {
-    background-image:
-      linear-gradient(to right, rgba(var(--sealed-rgb), 0.07) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(var(--sealed-rgb), 0.07) 1px, transparent 1px);
-  }
-
   :root[data-theme="light"] .sealed-hatch {
     background-image: repeating-linear-gradient(
       45deg,
@@ -200,39 +206,81 @@
     );
   }
 
+  .grid-field {
+    background-image:
+      linear-gradient(to right, rgba(var(--sealed-rgb), 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(var(--sealed-rgb), 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  :root[data-theme="light"] .grid-field {
+    background-image:
+      linear-gradient(to right, rgba(var(--sealed-rgb), 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(var(--sealed-rgb), 0.07) 1px, transparent 1px);
+  }
+
+  .glow-sealed {
+    text-shadow: 0 0 24px rgba(var(--sealed-rgb), 0.45);
+  }
+
   :root[data-theme="light"] .glow-sealed {
     text-shadow: none;
   }
 
   .wire-glow {
-    filter: drop-shadow(0 0 4px rgba(var(--sealed-rgb), 0.45));
+    filter: drop-shadow(0 0 5px rgba(var(--sealed-rgb), 0.5));
   }
 
-  .glow-sealed {
-    text-shadow: 0 0 20px rgba(var(--sealed-rgb), 0.5);
+  :root[data-theme="light"] .wire-glow {
+    filter: none;
   }
 
-  /* A single cyan-to-magenta wash behind the hero. Used once, so it reads as
-     a light source rather than as decoration. */
+  /* Atmosphere behind the hero. One light source rather than decoration
+     sprinkled around: cyan low-left, magenta high-right, both very dilute. */
   .aurora::before {
     content: "";
     position: absolute;
-    inset: -35% 0 auto 0;
-    height: 420px;
+    inset: -30% 0 auto 0;
+    height: 620px;
     background:
-      radial-gradient(
-        50% 60% at 20% 40%,
-        rgba(var(--sealed-rgb), 0.11),
-        transparent 70%
-      ),
-      radial-gradient(
-        45% 55% at 80% 30%,
-        rgba(var(--open-rgb), 0.085),
-        transparent 70%
-      );
-    filter: blur(40px);
+      radial-gradient(46% 58% at 18% 45%, rgba(var(--sealed-rgb), 0.13), transparent 72%),
+      radial-gradient(42% 52% at 82% 22%, rgba(var(--open-rgb), 0.09), transparent 72%);
+    filter: blur(48px);
     pointer-events: none;
     z-index: -1;
+  }
+
+  /* Full-bleed hairline: separates bands without boxing them. */
+  .bleed-rule {
+    position: relative;
+  }
+  .bleed-rule::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    max-width: 100%;
+    transform: translateX(-50%);
+    border-top: 1px solid var(--edge);
+    opacity: 0.65;
+  }
+
+  /* Off-screen until focused. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 10000;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--sealed);
+    color: var(--text);
   }
 }
 
@@ -245,15 +293,11 @@
   height: 38px !important;
   padding: 0 14px !important;
   color: var(--text) !important;
+  white-space: nowrap !important;
   font-family: var(--font-mono), ui-monospace, monospace !important;
   transition: background 180ms ease, border-color 180ms ease !important;
 }
-.wallet-adapter-button {
-  white-space: nowrap !important;
-}
 
-/* At 375px the nav holds a wordmark, two toggles and the wallet button. The
-   wallet label is the one that can afford to get smaller. */
 @media (max-width: 420px) {
   .wallet-adapter-button {
     font-size: 11px !important;

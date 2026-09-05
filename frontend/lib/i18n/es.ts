@@ -27,6 +27,7 @@ export const es = {
   },
 
   band: {
+    proposals: "propuestas",
     matching: "Matching completo, de reloj de pared",
     vrf: "En llegar la aleatoriedad verificable",
     oneTx: "Transacción del rollup para todo el matching",
@@ -90,7 +91,7 @@ export const es = {
   },
 
   limits: {
-    title: "Lo que este sistema no promete",
+    title: "Los límites, antes de que los preguntes",
     label: "Lo que no prometemos",
     items: [
       {

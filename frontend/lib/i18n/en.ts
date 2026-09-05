@@ -28,6 +28,7 @@ export const en: Dictionary = {
   },
 
   band: {
+    proposals: "proposals",
     matching: "Whole matching, wall clock",
     vrf: "For verifiable randomness to land",
     oneTx: "Rollup transaction for the entire matching",
@@ -91,7 +92,7 @@ export const en: Dictionary = {
   },
 
   limits: {
-    title: "What this system does not promise",
+    title: "The limits, before you ask",
     label: "What we don't promise",
     items: [
       {

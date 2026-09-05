@@ -53,8 +53,14 @@ export default function RootLayout({
       </head>
       <body className="grain min-h-dvh font-sans">
         <Providers>
+          <a href="#main" className="skip-link">
+            Ir al contenido
+          </a>
           <Nav />
-          <main className="mx-auto w-full max-w-5xl px-5 pb-32 sm:px-8">
+          <main
+            id="main"
+            className="mx-auto w-full max-w-6xl px-5 pb-24 sm:px-8"
+          >
             {children}
           </main>
         </Providers>

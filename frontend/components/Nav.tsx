@@ -38,7 +38,27 @@ export function Nav() {
           </span>
         </Link>
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <nav className="ml-8 hidden items-center gap-6 xl:flex" aria-label="Secciones">
+          {[
+            { href: "#como-funciona", key: "solution" },
+            { href: "#commit-reveal", key: "compare" },
+            { href: "#rondas", key: "rounds" },
+          ].map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="font-mono text-2xs text-muted transition-colors hover:text-chalk"
+            >
+              {l.key === "solution"
+                ? t.solution.label
+                : l.key === "compare"
+                  ? t.compare.label
+                  : t.rounds.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
           <span className="hidden items-center gap-1.5 rounded-lg border border-edge px-2.5 py-2 font-mono text-2xs text-muted lg:inline-flex">
             <span className="h-1.5 w-1.5 rounded-full bg-open" aria-hidden />
             {t.nav.network}
