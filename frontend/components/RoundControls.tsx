@@ -7,7 +7,7 @@ import { permissionPdaFromAccount } from "@magicblock-labs/ephemeral-rollups-sdk
 import { getProgram, ParticipantAccount, RoundAccount } from "@/lib/program";
 import { matchStatePda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
-import { TEE_VALIDATOR } from "@/lib/constants";
+import { EPHEMERAL_QUEUE, TEE_VALIDATOR } from "@/lib/constants";
 import { useT } from "@/lib/i18n";
 import { Button, Label, Note, Panel } from "./ui";
 
@@ -84,6 +84,18 @@ export function RoundControls({
         })
         .rpc();
       say(t.controls.matchStateCreated);
+
+      // Requested now, not at settle time, so the oracle has the whole open
+      // window to answer. `run_matching` refuses to run without it.
+      await erProgram.methods
+        .requestRoundRandomness(roundId)
+        .accountsPartial({
+          payer: wallet.publicKey!,
+          round: round.address,
+          oracleQueue: EPHEMERAL_QUEUE,
+        })
+        .rpc();
+      say(t.controls.vrfRequested);
     });
 
   const settle = () =>
@@ -122,6 +134,16 @@ export function RoundControls({
       say(sig);
     });
 
+  const undelegate = () =>
+    run("undelegate", async () => {
+      const erProgram = await er();
+      await erProgram.methods
+        .undelegateRound(roundId)
+        .accountsPartial({ payer: wallet.publicKey!, round: round.address })
+        .rpc();
+      say(t.controls.undelegated);
+    });
+
   if (!wallet.publicKey || !wallet.publicKey.equals(round.authority)) {
     return null;
   }
@@ -140,7 +162,7 @@ export function RoundControls({
           <Button
             onClick={settle}
             busy={busy === "settle"}
-            disabled={!deadlinePassed}
+            disabled={!deadlinePassed || !round.randomnessFulfilled}
           >
             {deadlinePassed ? t.controls.settle : t.controls.waitingDeadline}
           </Button>
@@ -150,7 +172,26 @@ export function RoundControls({
             {t.controls.continue}
           </Button>
         )}
+        {delegated && round.status === "settled" && (
+          <Button variant="ghost" onClick={undelegate} busy={busy === "undelegate"}>
+            {t.controls.undelegate}
+          </Button>
+        )}
       </div>
+
+      {delegated && round.status !== "settled" && (
+        <div className="flex items-center gap-2 font-mono text-2xs">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              round.randomnessFulfilled ? "bg-sealed" : "bg-open animate-pulse"
+            }`}
+            aria-hidden
+          />
+          <span className="text-muted">
+            {round.randomnessFulfilled ? t.controls.vrfReady : t.controls.vrfWaiting}
+          </span>
+        </div>
+      )}
 
       {!delegated && (
         <Note>

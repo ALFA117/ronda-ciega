@@ -212,6 +212,11 @@ export const en: Dictionary = {
     closed: "Round closed",
     ingested: "lists ingested into the enclave",
     matched: "Matching completed in ONE rollup transaction",
+    vrfRequested: "VRF randomness requested from the oracle",
+    vrfWaiting: "Waiting for the oracle's randomness…",
+    vrfReady: "Verifiable randomness ready",
+    undelegate: "Commit back to L1",
+    undelegated: "Round committed back to L1",
     wallClock: "ms wall clock",
   },
 

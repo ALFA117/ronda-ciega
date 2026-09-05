@@ -27,9 +27,14 @@ use ephemeral_rollups_sdk::{
             TX_LOGS_FLAG, TX_MESSAGE_FLAG,
         },
     },
-    anchor::{delegate, ephemeral, ephemeral_accounts},
+    anchor::{commit, delegate, ephemeral, ephemeral_accounts, vrf, vrf_callback},
     consts::{EPHEMERAL_VAULT_ID, MAGIC_PROGRAM_ID, PERMISSION_PROGRAM_ID},
     cpi::DelegateConfig,
+    ephem::MagicIntentBundleBuilder,
+    vrf::{
+        instructions::{create_request_scoped_randomness_ix, RequestRandomnessParams},
+        types::SerializableAccountMeta,
+    },
 };
 
 mod error;
@@ -117,6 +122,8 @@ pub mod ronda_ciega {
         round.transparent = transparent;
         round.history = [[NONE; MAX_PER_SIDE]; MAX_HISTORY];
         round.history_len = 0;
+        round.total_proposals = 0;
+        round.settled_ts = 0;
         round.bump = ctx.bumps.round;
 
         emit!(RoundOpened {
@@ -491,6 +498,11 @@ pub mod ronda_ciega {
             ErrorCode::WrongRoundStatus
         );
 
+        require!(
+            ctx.accounts.round.randomness_fulfilled,
+            ErrorCode::RandomnessMissing
+        );
+
         let round_key = ctx.accounts.round.key();
         let match_state_info = ctx.accounts.match_state.to_account_info();
         let mut ms: MatchState = read_account(&match_state_info)?;
@@ -506,11 +518,16 @@ pub mod ronda_ciega {
         let round = &mut ctx.accounts.round;
         round.pairs = pairs;
         round.tick = round.tick.checked_add(1).ok_or(ErrorCode::MathOverflow)?;
+        round.total_proposals = round
+            .total_proposals
+            .checked_add(proposals as u32)
+            .ok_or(ErrorCode::MathOverflow)?;
 
         // A tick where nobody could propose is the fixed point: every founder
         // is either held or has exhausted their list. The matching is stable.
         if proposals == 0 {
             round.status = RoundStatus::Settled;
+            round.settled_ts = Clock::get()?.unix_timestamp;
             emit!(RoundSettled {
                 round: round_key,
                 ticks: round.tick,
@@ -524,6 +541,86 @@ pub mod ronda_ciega {
                 pairs,
             });
         }
+        Ok(())
+    }
+
+    /// Ask the oracle for the round's tie-break randomness.
+    ///
+    /// Requested on the rollup, against the ephemeral queue, because that is
+    /// where the round lives once delegated. Matching refuses to run until the
+    /// callback lands: a tie resolved by account index would quietly reward
+    /// whoever registered first, which is exactly the bias this exists to
+    /// remove. See `break_tie`.
+    pub fn request_round_randomness(
+        ctx: Context<RequestRoundRandomness>,
+        round_id: u64,
+    ) -> Result<()> {
+        require_eq!(ctx.accounts.round.round_id, round_id);
+        require!(
+            !ctx.accounts.round.randomness_fulfilled,
+            ErrorCode::RandomnessAlreadyFulfilled
+        );
+
+        let ix = create_request_scoped_randomness_ix(RequestRandomnessParams {
+            payer: ctx.accounts.payer.key(),
+            oracle_queue: ctx.accounts.oracle_queue.key(),
+            callback_program_id: ID,
+            callback_discriminator: instruction::RoundRandomnessCallback::DISCRIMINATOR.to_vec(),
+            caller_seed: ctx.accounts.round.key().to_bytes(),
+            accounts_metas: Some(vec![SerializableAccountMeta {
+                pubkey: ctx.accounts.round.key(),
+                is_signer: false,
+                is_writable: true,
+            }]),
+            ..Default::default()
+        });
+        ctx.accounts
+            .invoke_signed_vrf(&ctx.accounts.payer.to_account_info(), &ix)?;
+
+        msg!("Randomness requested for round {}", ctx.accounts.round.key());
+        Ok(())
+    }
+
+    /// Oracle callback. The seed is published on the round so anyone can replay
+    /// every tie-break without seeing a single preference.
+    pub fn round_randomness_callback(
+        ctx: Context<RoundRandomnessCallbackCtx>,
+        randomness: [u8; 32],
+    ) -> Result<()> {
+        let round = &mut ctx.accounts.round;
+        round.randomness = randomness;
+        round.randomness_fulfilled = true;
+
+        emit!(RandomnessFulfilled {
+            round: round.key(),
+            randomness,
+        });
+        Ok(())
+    }
+
+    /// Commit the round back to L1 and end its life on the rollup.
+    ///
+    /// Only `Round` is committed. `Preferences` and `MatchState` are ephemeral
+    /// accounts that were never delegated from L1 and are never committed to
+    /// it — there is no code path that moves a ranking out of the enclave.
+    pub fn undelegate_round(ctx: Context<UndelegateRound>, round_id: u64) -> Result<()> {
+        require_eq!(ctx.accounts.round.round_id, round_id);
+        require!(
+            ctx.accounts.round.status == RoundStatus::Settled,
+            ErrorCode::WrongRoundStatus
+        );
+
+        let round_key = ctx.accounts.round.key();
+
+        MagicIntentBundleBuilder::new(
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.magic_context.to_account_info(),
+            ctx.accounts.magic_program.to_account_info(),
+        )
+        .commit_and_undelegate(&[ctx.accounts.round.to_account_info()])
+        .build_and_invoke()?;
+
+        msg!("Round {} committed back to L1", round_key);
         Ok(())
     }
 
@@ -546,6 +643,12 @@ pub mod ronda_ciega {
             ErrorCode::WrongRoundStatus
         );
         require!(max_ticks > 0, ErrorCode::InvalidTickBudget);
+        // No matching without verifiable randomness: ties would otherwise fall
+        // to registration order.
+        require!(
+            ctx.accounts.round.randomness_fulfilled,
+            ErrorCode::RandomnessMissing
+        );
 
         let round_key = ctx.accounts.round.key();
         let match_state_info = ctx.accounts.match_state.to_account_info();
@@ -560,9 +663,14 @@ pub mod ronda_ciega {
         let mut history_len = ctx.accounts.round.history_len as usize;
         let mut settled = false;
 
+        let mut total = ctx.accounts.round.total_proposals;
+
         for _ in 0..max_ticks {
             let proposals = advance_one_round(&mut ms, &mut pairs, founder_count, &randomness);
             tick_no = tick_no.checked_add(1).ok_or(ErrorCode::MathOverflow)?;
+            total = total
+                .checked_add(proposals as u32)
+                .ok_or(ErrorCode::MathOverflow)?;
 
             if proposals == 0 {
                 settled = true;
@@ -590,12 +698,14 @@ pub mod ronda_ciega {
         let round = &mut ctx.accounts.round;
         round.pairs = pairs;
         round.tick = tick_no;
+        round.total_proposals = total;
         if transparent {
             round.history = history;
             round.history_len = history_len as u8;
         }
         if settled {
             round.status = RoundStatus::Settled;
+            round.settled_ts = Clock::get()?.unix_timestamp;
             emit!(RoundSettled {
                 round: round_key,
                 ticks: tick_no,
@@ -771,6 +881,12 @@ pub struct TickAdvanced {
 }
 
 #[event]
+pub struct RandomnessFulfilled {
+    pub round: Pubkey,
+    pub randomness: [u8; 32],
+}
+
+#[event]
 pub struct RoundSettled {
     pub round: Pubkey,
     pub ticks: u16,
@@ -938,6 +1054,43 @@ pub struct SealPreferences<'info> {
     )]
     pub match_state: UncheckedAccount<'info>,
     // remaining_accounts: the Preferences accounts to ingest this call.
+}
+
+#[vrf]
+#[derive(Accounts)]
+#[instruction(round_id: u64)]
+pub struct RequestRoundRandomness<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        seeds = [ROUND_SEED, round.authority.as_ref(), &round.round_id.to_le_bytes()],
+        bump = round.bump
+    )]
+    pub round: Account<'info, Round>,
+    /// CHECK: Validated by the ephemeral VRF program when it processes the request.
+    #[account(mut)]
+    pub oracle_queue: UncheckedAccount<'info>,
+}
+
+#[vrf_callback]
+#[derive(Accounts)]
+pub struct RoundRandomnessCallbackCtx<'info> {
+    #[account(mut)]
+    pub round: Account<'info, Round>,
+}
+
+#[commit]
+#[derive(Accounts)]
+#[instruction(round_id: u64)]
+pub struct UndelegateRound<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [ROUND_SEED, round.authority.as_ref(), &round.round_id.to_le_bytes()],
+        bump = round.bump
+    )]
+    pub round: Account<'info, Round>,
 }
 
 #[derive(Accounts)]

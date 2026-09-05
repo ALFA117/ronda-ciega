@@ -6,7 +6,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Connection } from "@solana/web3.js";
 import { ArrowRight } from "lucide-react";
 import { DEVNET_RPC } from "@/lib/constants";
-import { decodeRound, getReadProgram, RoundAccount } from "@/lib/program";
+import { getReadProgram, RoundAccount } from "@/lib/program";
+import { fetchRounds } from "@/lib/rounds";
 import { stagger, wordIn } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import {
@@ -45,13 +46,10 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
-        const program = getReadProgram(new Connection(DEVNET_RPC, "confirmed"));
-        const raw = await (program.account as any).round.all();
-        setRounds(
-          raw
-            .map((r: any) => decodeRound(r.publicKey, r.account))
-            .sort((a: RoundAccount, b: RoundAccount) => Number(b.roundId - a.roundId)),
-        );
+        const connection = new Connection(DEVNET_RPC, "confirmed");
+        const program = getReadProgram(connection);
+        const { rounds: found } = await fetchRounds(connection, program);
+        setRounds(found);
       } catch {
         setRounds([]);
       }

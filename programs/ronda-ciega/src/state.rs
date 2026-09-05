@@ -81,6 +81,11 @@ pub struct Round {
     /// Per-tick snapshots of `pairs`, recorded only when `transparent`.
     pub history: [[u8; MAX_PER_SIDE]; MAX_HISTORY],
     pub history_len: u8,
+    /// Total proposals made across every round. A public measure of how much
+    /// work the matching actually took, without revealing who proposed.
+    pub total_proposals: u32,
+    /// When the matching converged. Zero until it does.
+    pub settled_ts: i64,
     pub bump: u8,
 }
 
@@ -101,6 +106,8 @@ impl Round {
         + 1
         + (MAX_HISTORY * MAX_PER_SIDE)
         + 1
+        + 4
+        + 8
         + 1;
 }
 

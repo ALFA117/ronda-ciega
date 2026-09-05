@@ -47,6 +47,9 @@ export interface RoundAccount {
   transparent: boolean;
   history: number[][];
   historyLen: number;
+  randomnessFulfilled: boolean;
+  totalProposals: number;
+  settledTs: number;
 }
 
 export function decodeRound(address: PublicKey, raw: any): RoundAccount {
@@ -67,6 +70,9 @@ export function decodeRound(address: PublicKey, raw: any): RoundAccount {
     transparent: raw.transparent,
     history: (raw.history as number[][]).map((h) => Array.from(h)),
     historyLen: raw.historyLen,
+    randomnessFulfilled: raw.randomnessFulfilled,
+    totalProposals: Number(raw.totalProposals),
+    settledTs: Number(raw.settledTs),
   };
 }
 

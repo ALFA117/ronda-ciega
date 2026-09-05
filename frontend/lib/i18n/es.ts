@@ -211,6 +211,11 @@ export const es = {
     closed: "Ronda cerrada",
     ingested: "listas ingeridas al enclave",
     matched: "Matching completo en UNA transacción del rollup",
+    vrfRequested: "Aleatoriedad VRF solicitada al oráculo",
+    vrfWaiting: "Esperando la aleatoriedad del oráculo…",
+    vrfReady: "Aleatoriedad verificable lista",
+    undelegate: "Devolver a L1",
+    undelegated: "Ronda comiteada de vuelta a L1",
     wallClock: "ms de reloj de pared",
   },
 

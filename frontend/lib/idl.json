@@ -669,6 +669,146 @@
       ]
     },
     {
+      "name": "request_round_randomness",
+      "docs": [
+        "Ask the oracle for the round's tie-break randomness.",
+        "",
+        "Requested on the rollup, against the ephemeral queue, because that is",
+        "where the round lives once delegated. Matching refuses to run until the",
+        "callback lands: a tie resolved by account index would quietly reward",
+        "whoever registered first, which is exactly the bias this exists to",
+        "remove. See `break_tie`."
+      ],
+      "discriminator": [
+        236,
+        68,
+        70,
+        194,
+        98,
+        157,
+        112,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "round",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round.authority",
+                "account": "Round"
+              },
+              {
+                "kind": "account",
+                "path": "round.round_id",
+                "account": "Round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "oracle_queue",
+          "writable": true
+        },
+        {
+          "name": "program_identity",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrf_program",
+          "address": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz"
+        },
+        {
+          "name": "slot_hashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "round_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "round_randomness_callback",
+      "docs": [
+        "Oracle callback. The seed is published on the round so anyone can replay",
+        "every tie-break without seeing a single preference."
+      ],
+      "discriminator": [
+        26,
+        37,
+        169,
+        136,
+        6,
+        5,
+        170,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "vrf_program_identity",
+          "docs": [
+            "Scoped VRF identity PDA, bound to this program. Its presence as a signer proves",
+            "the callback was issued by the VRF program for this program."
+          ],
+          "signer": true
+        },
+        {
+          "name": "round",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "randomness",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "run_matching",
       "docs": [
         "Run the matching to completion inside a single rollup transaction.",
@@ -1089,6 +1229,76 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "undelegate_round",
+      "docs": [
+        "Commit the round back to L1 and end its life on the rollup.",
+        "",
+        "Only `Round` is committed. `Preferences` and `MatchState` are ephemeral",
+        "accounts that were never delegated from L1 and are never committed to",
+        "it — there is no code path that moves a ranking out of the enclave."
+      ],
+      "discriminator": [
+        158,
+        187,
+        73,
+        237,
+        216,
+        44,
+        132,
+        162
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "round",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round.authority",
+                "account": "Round"
+              },
+              {
+                "kind": "account",
+                "path": "round.round_id",
+                "account": "Round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "round_id",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1144,6 +1354,19 @@
         181,
         24,
         253
+      ]
+    },
+    {
+      "name": "RandomnessFulfilled",
+      "discriminator": [
+        61,
+        67,
+        128,
+        142,
+        15,
+        77,
+        223,
+        252
       ]
     },
     {
@@ -1280,11 +1503,21 @@
     },
     {
       "code": 6013,
+      "name": "RandomnessAlreadyFulfilled",
+      "msg": "Randomness has already been fulfilled for this round"
+    },
+    {
+      "code": 6014,
+      "name": "RandomnessMissing",
+      "msg": "Matching cannot run until the VRF callback has delivered randomness"
+    },
+    {
+      "code": 6015,
       "name": "InvalidTickBudget",
       "msg": "Tick budget must be at least 1"
     },
     {
-      "code": 6014,
+      "code": 6016,
       "name": "MathOverflow",
       "msg": "Arithmetic overflow"
     }
@@ -1375,6 +1608,27 @@
           {
             "name": "index",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RandomnessFulfilled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -1535,6 +1789,21 @@
           {
             "name": "history_len",
             "type": "u8"
+          },
+          {
+            "name": "total_proposals",
+            "docs": [
+              "Total proposals made across every round. A public measure of how much",
+              "work the matching actually took, without revealing who proposed."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "settled_ts",
+            "docs": [
+              "When the matching converged. Zero until it does."
+            ],
+            "type": "i64"
           },
           {
             "name": "bump",

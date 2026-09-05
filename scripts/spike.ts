@@ -33,6 +33,10 @@ const TEE_RPC = "https://devnet-tee.magicblock.app";
 const TEE_VALIDATOR = new PublicKey(
   "MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo",
 );
+/** The VRF queue that serves ephemeral rollups. The round lives here. */
+const EPHEMERAL_QUEUE = new PublicKey(
+  "5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc",
+);
 
 const ROUND_SEED = Buffer.from("round");
 const PARTICIPANT_SEED = Buffer.from("participant");
@@ -227,6 +231,18 @@ async function main() {
     .rpc();
   ok(`match state ${matchState.toBase58()} (private, no members)`);
 
+  // Randomness is requested here rather than at settle time so the oracle has
+  // the whole open window to answer. Matching refuses to run without it.
+  await erAuthorityProgram.methods
+    .requestRoundRandomness(roundId)
+    .accountsPartial({
+      payer: authority.publicKey,
+      round,
+      oracleQueue: EPHEMERAL_QUEUE,
+    })
+    .rpc();
+  ok("VRF requested against the ephemeral queue");
+
   const prefsOf: Record<string, PublicKey> = {};
   for (const p of people) {
     const key = `${p.side}-${p.idx}`;
@@ -319,8 +335,29 @@ async function main() {
   }
 
   // ---------------------------------------------------------------------
-  stage(7, "Close, ingest, and run the matching one tick at a time");
+  stage(7, "Wait for the VRF callback");
+  {
+    const started = Date.now();
+    let fulfilled = false;
+    while (Date.now() - started < 60_000) {
+      const st: any = await (erAuthorityProgram.account as any).round.fetch(round);
+      if (st.randomnessFulfilled) {
+        fulfilled = true;
+        ok(
+          `randomness landed after ${Date.now() - started} ms: ` +
+            Buffer.from(st.randomness).toString("hex").slice(0, 16) + "…",
+        );
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    if (!fulfilled) {
+      fail("VRF callback never arrived — matching will refuse to run");
+      process.exit(1);
+    }
+  }
 
+  stage(8, "Close, ingest, and run the matching");
   console.log("   waiting for the deadline...");
   while (Math.floor(Date.now() / 1000) < deadline.toNumber()) {
     await new Promise((r) => setTimeout(r, 2000));
@@ -349,7 +386,7 @@ async function main() {
   }
   ok(`rankings ingested into private working memory (${people.length} lists)`);
 
-  const fmtPairs = (pairs: number[]) =>
+  const fmtPairs = (pairs: number[]): string =>
     pairs
       .slice(0, FOUNDERS)
       .map((b, f) => (b === 255 ? `F${f}:—` : `F${f}↔B${b}`))
@@ -404,6 +441,37 @@ async function main() {
     ok(`recorded ${historyLen} intermediate frames (round is transparent)`);
     ok(`client wall clock: ${elapsed} ms (one round-trip, not ${state.tick})`);
     console.log(`   explorer: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+    ok(`total proposals recorded on chain: ${state.totalProposals}`);
+  }
+
+  // ---------------------------------------------------------------------
+  stage(9, "Commit the round back to L1");
+
+  await erAuthorityProgram.methods
+    .undelegateRound(roundId)
+    .accountsPartial({ payer: authority.publicKey, round })
+    .rpc();
+  ok("undelegate submitted");
+
+  // The commit is asynchronous: the rollup hands the account back to the
+  // delegation program, which writes it to L1 a moment later.
+  {
+    const started = Date.now();
+    let back = false;
+    while (Date.now() - started < 60_000) {
+      const info = await l1.getAccountInfo(round);
+      if (info && info.owner.equals(PROGRAM_ID)) {
+        const st: any = await (l1Program.account as any).round.fetch(round);
+        ok(
+          `round is back on L1 after ${Date.now() - started} ms · ` +
+            `${fmtPairs(Array.from(st.pairs))}`,
+        );
+        back = true;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    if (!back) fail("round never came back to L1 within 60s");
   }
 
   console.log("\n\x1b[1mSpike complete.\x1b[0m");

@@ -28,6 +28,10 @@ pub enum ErrorCode {
     ProfileTooLong,
     #[msg("Session token is missing, expired, or not authorized for this wallet")]
     InvalidSession,
+    #[msg("Randomness has already been fulfilled for this round")]
+    RandomnessAlreadyFulfilled,
+    #[msg("Matching cannot run until the VRF callback has delivered randomness")]
+    RandomnessMissing,
     #[msg("Tick budget must be at least 1")]
     InvalidTickBudget,
     #[msg("Arithmetic overflow")]

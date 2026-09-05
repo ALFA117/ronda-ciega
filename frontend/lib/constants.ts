@@ -14,6 +14,11 @@ export const TEE_VALIDATOR = new PublicKey(
   "MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo",
 );
 
+/** MagicBlock VRF queue that serves ephemeral rollups. */
+export const EPHEMERAL_QUEUE = new PublicKey(
+  "5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc",
+);
+
 export const ROUND_SEED = Buffer.from("round");
 export const PARTICIPANT_SEED = Buffer.from("participant");
 export const PREFERENCES_SEED = Buffer.from("preferences");
