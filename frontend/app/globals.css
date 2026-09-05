@@ -38,7 +38,7 @@
      for "not matched yet". Both need their own value per theme: a 50%-opacity
      muted grey that reads as dim on near-black lands at 1.9:1 on paper. */
   --on-sealed: #06121a;
-  --text-dim: #4e5c73;
+  --text-dim: #708298;
 }
 
 
@@ -69,7 +69,7 @@
   --chart-2: #b45309;
 
   --on-sealed: #ffffff;
-  --text-dim: #6b7484;
+  --text-dim: #68717f;
 }
 
 @layer base {

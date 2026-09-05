@@ -22,3 +22,4 @@ frontend/.next
 frontend/out
 frontend/build
 frontend/.vercel
+frontend/tsconfig.tsbuildinfo

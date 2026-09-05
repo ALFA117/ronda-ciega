@@ -56,7 +56,7 @@ export function LocaleToggle() {
           key={l}
           onClick={() => setLocale(l)}
           aria-pressed={locale === l}
-          className={`relative z-10 h-full cursor-pointer rounded-md px-2.5 font-mono text-2xs uppercase transition-colors ${
+          className={`relative z-10 flex h-full min-h-[34px] min-w-[34px] cursor-pointer items-center justify-center rounded-md px-2.5 font-mono text-2xs uppercase transition-colors ${
             locale === l ? "text-onSealed" : "text-muted hover:text-chalk"
           }`}
         >
