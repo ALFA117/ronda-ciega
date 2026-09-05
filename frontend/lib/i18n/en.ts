@@ -231,6 +231,13 @@ export const en: Dictionary = {
     devnetNote: "Devnet. No real money moves.",
   },
 
+  preflight: {
+    wrongNetwork:
+        "Your wallet is not on Devnet. Switch before signing — the program does not exist on another cluster.",
+    lowBalance:
+        "Very little devnet SOL left. Top up at faucet.solana.com before creating a round or joining.",
+  },
+
   common: {
     loading: "Loading…",
     error: "Something failed",

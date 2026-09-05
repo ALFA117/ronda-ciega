@@ -40,7 +40,9 @@ export function MatchGraph({
 }) {
   const reduce = useReducedMotion();
   const rows = Math.max(left.length, right.length);
-  const height = rows * ROW;
+  // A round with nobody on one side still renders a frame rather than a
+  // zero-height box that looks like a broken component.
+  const height = Math.max(rows, 1) * ROW;
   const yOf = (i: number) => i * ROW + ROW / 2;
 
   const links = left

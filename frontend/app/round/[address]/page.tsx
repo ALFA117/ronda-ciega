@@ -8,6 +8,8 @@ import { RankingBuilder } from "@/components/RankingBuilder";
 import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
 import { Deadline } from "@/components/Deadline";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PreflightBanner } from "@/components/Preflight";
 import { springLayout } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import {
@@ -53,6 +55,7 @@ export default function RoundPage({ params }: { params: { address: string } }) {
 
   return (
     <div className="space-y-8">
+      <PreflightBanner />
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -98,11 +101,13 @@ export default function RoundPage({ params }: { params: { address: string } }) {
             exit={reduce ? undefined : { opacity: 0 }}
             transition={springLayout}
           >
-            <MatchTheater
-              round={round}
-              participants={participants}
-              meWallet={wallet.publicKey?.toBase58()}
-            />
+            <ErrorBoundary>
+              <MatchTheater
+                round={round}
+                participants={participants}
+                meWallet={wallet.publicKey?.toBase58()}
+              />
+            </ErrorBoundary>
           </motion.div>
         )}
       </AnimatePresence>

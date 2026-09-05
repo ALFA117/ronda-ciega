@@ -24,7 +24,26 @@ import {
 import { CreateRound } from "@/components/CreateRound";
 import { HeroVisual } from "@/components/HeroVisual";
 import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
-import { ConvergenceChart, LatencyChart } from "@/components/charts/Charts";
+import dynamic from "next/dynamic";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PreflightBanner } from "@/components/Preflight";
+
+// Charts sit below the fold and pull their own code. Deferring them keeps the
+// first paint to what the reader actually sees.
+const ConvergenceChart = dynamic(
+  () => import("@/components/charts/Charts").then((m) => m.ConvergenceChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+const LatencyChart = dynamic(
+  () => import("@/components/charts/Charts").then((m) => m.LatencyChart),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+
+function ChartSkeleton() {
+  return (
+    <div className="h-56 animate-pulse rounded-xl border border-edge bg-surface/40" />
+  );
+}
 
 /** A section header, so every band of the page announces itself the same way. */
 function SectionHead({ label, title }: { label: string; title: string }) {
@@ -64,6 +83,7 @@ export default function Home() {
 
   return (
     <div className="space-y-24 sm:space-y-28">
+      <PreflightBanner />
       {/* Hero. `overflow-hidden` contains the aurora, which is deliberately
           wider than its box and would otherwise push the page sideways. */}
       <section className="relative aurora grid items-center gap-10 overflow-hidden lg:grid-cols-[1.05fr_1fr]">
@@ -161,16 +181,20 @@ export default function Home() {
         <SectionHead label={t.stats.label} title={t.example.title} />
         <div className="grid gap-3 lg:grid-cols-2">
           <Reveal>
-            {showcase ? (
-              <ConvergenceChart round={showcase} />
-            ) : (
-              <Panel className="p-5">
-                <Note>{t.stats.empty}</Note>
-              </Panel>
-            )}
+            <ErrorBoundary>
+              {showcase ? (
+                <ConvergenceChart round={showcase} />
+              ) : (
+                <Panel className="p-5">
+                  <Note>{t.stats.empty}</Note>
+                </Panel>
+              )}
+            </ErrorBoundary>
           </Reveal>
           <Reveal delay={0.08}>
-            <LatencyChart />
+            <ErrorBoundary>
+              <LatencyChart />
+            </ErrorBoundary>
           </Reveal>
         </div>
       </section>

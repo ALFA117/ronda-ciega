@@ -230,6 +230,13 @@ export const es = {
     devnetNote: "Devnet. No se mueve dinero real.",
   },
 
+  preflight: {
+    wrongNetwork:
+        "Tu wallet no está en Devnet. Cámbiala antes de firmar: aquí el programa no existe en otra red.",
+    lowBalance:
+        "Te queda muy poco SOL de devnet. Consigue más en faucet.solana.com antes de crear una ronda o entrar.",
+  },
+
   common: {
     loading: "Cargando…",
     error: "Algo falló",
