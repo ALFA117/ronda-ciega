@@ -13,6 +13,13 @@ import {
 } from "@/lib/program";
 import { publicTeeConnection } from "@/lib/tee";
 
+/**
+ * Sentinel for "there is no round at this address", so the page can say that
+ * in the reader's language instead of surfacing whatever the SDK threw. A
+ * mistyped URL should not leak "Invalid public key input" at a visitor.
+ */
+export const NOT_FOUND = "__not_found__";
+
 export interface RoundView {
   round: RoundAccount | null;
   participants: ParticipantAccount[];
@@ -39,8 +46,16 @@ export function useRound(address: string): RoundView {
   const subscription = useRef<{ conn: Connection; id: number } | null>(null);
 
   const refresh = useCallback(async () => {
+    let key: PublicKey;
     try {
-      const key = new PublicKey(address);
+      key = new PublicKey(address);
+    } catch {
+      setError(NOT_FOUND);
+      setLoading(false);
+      return;
+    }
+
+    try {
       const l1 = new Connection(DEVNET_RPC, "confirmed");
 
       // A delegated account is owned by the delegation program on L1, and its
@@ -74,6 +89,8 @@ export function useRound(address: string): RoundView {
       // gap and keep the last good state on screen rather than blanking it.
       if (msg.includes("429") || /rate/i.test(msg)) {
         pollMs.current = Math.min(pollMs.current * 2, MAX_POLL);
+      } else if (/could not find|account does not exist|not found/i.test(msg)) {
+        setError(NOT_FOUND);
       } else {
         setError(msg);
       }

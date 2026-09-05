@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRound } from "@/hooks/useRound";
+import { NOT_FOUND, useRound } from "@/hooks/useRound";
 import { JoinForm } from "@/components/JoinForm";
 import { RankingBuilder } from "@/components/RankingBuilder";
 import { RoundControls } from "@/components/RoundControls";
@@ -41,9 +43,24 @@ export default function RoundPage({ params }: { params: { address: string } }) {
   }
 
   if (error || !round) {
+    // A missing or mistyped round is an expected outcome, not a failure to
+    // report in raw SDK words.
+    const missing = !error || error === NOT_FOUND;
     return (
-      <Panel className="p-6">
-        <ErrorText>{error || t.round.notFound}</ErrorText>
+      <Panel className="mx-auto max-w-lg space-y-4 p-8 text-center">
+        <Label>{missing ? "404" : t.common.error}</Label>
+        {missing ? (
+          <p className="text-sm text-muted">{t.round.notFound}</p>
+        ) : (
+          <ErrorText>{error}</ErrorText>
+        )}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 font-mono text-sm text-sealed transition-colors hover:text-chalk"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+          Ronda Ciega
+        </Link>
       </Panel>
     );
   }
