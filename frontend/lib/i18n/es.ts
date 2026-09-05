@@ -27,6 +27,13 @@ export const es = {
     receivers: "builders eligen",
   },
 
+  band: {
+    matching: "Matching completo, de reloj de pared",
+    vrf: "En llegar la aleatoriedad verificable",
+    oneTx: "Transacción del rollup para todo el matching",
+    leaked: "Listas de preferencias publicadas. Nunca.",
+  },
+
   problem: {
     label: "El problema",
     title: "Nadie declara a quién quiere de verdad",

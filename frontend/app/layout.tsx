@@ -51,7 +51,7 @@ export default function RootLayout({
             light-mode user sees a dark flash. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className="min-h-dvh font-sans">
+      <body className="grain min-h-dvh font-sans">
         <Providers>
           <Nav />
           <main className="mx-auto w-full max-w-5xl px-5 pb-32 sm:px-8">

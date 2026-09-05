@@ -28,6 +28,13 @@ export const en: Dictionary = {
     receivers: "builders choose",
   },
 
+  band: {
+    matching: "Whole matching, wall clock",
+    vrf: "For verifiable randomness to land",
+    oneTx: "Rollup transaction for the entire matching",
+    leaked: "Preference lists published. Ever.",
+  },
+
   problem: {
     label: "The problem",
     title: "Nobody states who they actually want",

@@ -39,6 +39,19 @@
      muted grey that reads as dim on near-black lands at 1.9:1 on paper. */
   --on-sealed: #06121a;
   --text-dim: #708298;
+
+  /* Depth. A dark UI with one flat surface everywhere reads as unfinished;
+     what makes it feel built is a hairline of light on the top edge of every
+     raised thing, and shadows that actually sit under them. */
+  --card-top: rgba(255, 255, 255, 0.07);
+  --card-wash: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.028) 0%,
+    rgba(255, 255, 255, 0) 42%
+  );
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.45), 0 18px 40px -18px rgba(0, 0, 0, 0.75);
+  --grain-opacity: 0.035;
 }
 
 
@@ -70,6 +83,19 @@
 
   --on-sealed: #ffffff;
   --text-dim: #68717f;
+
+  /* Light mode gets real shadows instead of borrowed highlights. A white
+     hairline on a white card is invisible; depth on paper comes from the
+     shadow under the card, so the wash inverts and the grain drops. */
+  --card-top: rgba(255, 255, 255, 0.9);
+  --card-wash: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(15, 23, 42, 0.012) 100%
+  );
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 20px -12px rgba(16, 24, 40, 0.16);
+  --shadow-lift: 0 2px 6px rgba(16, 24, 40, 0.07), 0 20px 44px -20px rgba(16, 24, 40, 0.24);
+  --grain-opacity: 0.02;
 }
 
 @layer base {
@@ -103,6 +129,36 @@
 }
 
 @layer utilities {
+  /* A single grain layer over the whole page. Dark surfaces band badly on
+     cheap panels and gradients look like posters without it; at 3.5% it is
+     invisible until you remove it. */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* The raised-surface recipe: wash, hairline, shadow. Used by every panel so
+     depth is consistent instead of decided per component. */
+  .surface-raised {
+    background-image: var(--card-wash);
+    box-shadow: inset 0 1px 0 0 var(--card-top), var(--shadow-card);
+  }
+
+  .surface-lift {
+    box-shadow: inset 0 1px 0 0 var(--card-top), var(--shadow-lift);
+  }
+
+  /* Section numbers and rules: editorial rhythm, so the page has structure
+     rather than a stack of evenly spaced boxes. */
+  .rule-left {
+    border-left: 1px solid var(--edge);
+  }
+
   /* Tabular figures for anything that counts, so numbers don't jitter as
      they change during the replay. */
   .tnum {
@@ -146,6 +202,10 @@
 
   :root[data-theme="light"] .glow-sealed {
     text-shadow: none;
+  }
+
+  .wire-glow {
+    filter: drop-shadow(0 0 4px rgba(var(--sealed-rgb), 0.45));
   }
 
   .glow-sealed {

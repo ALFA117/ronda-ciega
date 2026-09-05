@@ -23,6 +23,7 @@ import {
 } from "@/components/ui";
 import { CreateRound } from "@/components/CreateRound";
 import { HeroVisual } from "@/components/HeroVisual";
+import { StatBand } from "@/components/StatBand";
 import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -140,6 +141,9 @@ export default function Home() {
           <HeroVisual />
         </Reveal>
       </section>
+
+      {/* Measured, before anything is claimed */}
+      <StatBand />
 
       {/* Problem — three short cards, no prose */}
       <section className="space-y-6">

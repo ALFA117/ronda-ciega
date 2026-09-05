@@ -53,7 +53,10 @@ export function MatchGraph({
 
   return (
     <div className="relative w-full" style={{ height }}>
-      <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+      <svg
+        className="wire-glow pointer-events-none absolute inset-0 h-full w-full"
+        aria-hidden
+      >
         <AnimatePresence>
           {links.map((l) => (
             <motion.g

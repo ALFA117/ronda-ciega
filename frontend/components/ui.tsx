@@ -19,7 +19,7 @@ export function Panel({
 }) {
   return (
     <div
-      className={`rounded-xl border ${
+      className={`surface-raised rounded-xl border ${
         sealed ? "border-sealed/25 sealed-hatch" : "border-edge"
       } bg-surface/70 ${className}`}
     >
