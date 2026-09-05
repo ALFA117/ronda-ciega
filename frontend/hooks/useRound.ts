@@ -43,7 +43,6 @@ export function useRound(address: string): RoundView {
 
   const pollMs = useRef(BASE_POLL);
   const timer = useRef<number | null>(null);
-  const subscription = useRef<{ conn: Connection; id: number } | null>(null);
 
   const refresh = useCallback(async () => {
     let key: PublicKey;
@@ -154,10 +153,8 @@ export function useRound(address: string): RoundView {
       return;
     }
 
-    subscription.current = { conn, id };
     return () => {
       conn.removeAccountChangeListener(id).catch(() => {});
-      subscription.current = null;
     };
   }, [address, delegated]);
 

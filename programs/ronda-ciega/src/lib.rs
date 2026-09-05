@@ -426,12 +426,47 @@ pub mod ronda_ciega {
 
         let round_key = ctx.accounts.round.key();
         let match_state_info = ctx.accounts.match_state.to_account_info();
+        require_keys_eq!(
+            *match_state_info.owner,
+            crate::ID,
+            ErrorCode::InvalidPreferencesAccount
+        );
         let mut ms: MatchState = read_account(&match_state_info)?;
         let mut ingested: u8 = 0;
 
         for info in ctx.remaining_accounts.iter() {
+            // `remaining_accounts` carries no Anchor constraints, so everything
+            // about these has to be checked by hand. Deserializing only proves
+            // the first eight bytes match a discriminator, which anyone can
+            // write into an account they own.
+            require_keys_eq!(
+                *info.owner,
+                crate::ID,
+                ErrorCode::InvalidPreferencesAccount
+            );
+
             let prefs: Preferences = read_account(info)?;
             require_keys_eq!(prefs.round, round_key, ErrorCode::WrongRound);
+
+            // Bind the contents to the address. Without this, a caller could
+            // hand over an account holding a fabricated `index` and `side` and
+            // overwrite somebody else's ranking in the working memory. The
+            // stored bump makes this one hash instead of a 255-step search.
+            let expected = Pubkey::create_program_address(
+                &[
+                    PREFERENCES_SEED,
+                    round_key.as_ref(),
+                    prefs.owner.as_ref(),
+                    &[prefs.bump],
+                ],
+                &crate::ID,
+            )
+            .map_err(|_| error!(ErrorCode::InvalidPreferencesAccount))?;
+            require_keys_eq!(
+                info.key(),
+                expected,
+                ErrorCode::InvalidPreferencesAccount
+            );
 
             let idx = prefs.index as usize;
             require!(idx < MAX_PER_SIDE, ErrorCode::InvalidRanking);

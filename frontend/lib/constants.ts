@@ -27,18 +27,7 @@ export const MATCH_STATE_SEED = Buffer.from("match_state");
 /** Matches `NONE` in the program: "no index here". */
 export const NONE = 255;
 
-export const MAX_PER_SIDE = 16;
-
 export type Side = "founder" | "builder";
 
-export const SIDE_LABEL: Record<Side, string> = {
-  founder: "Founder",
-  builder: "Builder",
-};
-
-export const SIDE_BLURB: Record<Side, string> = {
-  founder: "Producto, go-to-market, distribución. Este lado propone.",
-  builder: "Perfil técnico. Este lado recibe propuestas y elige.",
-};
 
 export { idl };

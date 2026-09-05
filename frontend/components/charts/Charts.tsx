@@ -181,26 +181,3 @@ export function LatencyChart({
   );
 }
 
-/** A number that is the whole story needs no plot around it. */
-export function StatTile({
-  value,
-  label,
-  tone = "sealed",
-}: {
-  value: string;
-  label: string;
-  tone?: "sealed" | "chalk";
-}) {
-  return (
-    <div className="rounded-xl border border-edge bg-surface/70 p-5">
-      <div
-        className={`tnum font-mono text-xl ${
-          tone === "sealed" ? "text-sealed" : "text-chalk"
-        }`}
-      >
-        {value}
-      </div>
-      <div className="mt-1 text-xs text-muted">{label}</div>
-    </div>
-  );
-}

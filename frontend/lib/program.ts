@@ -1,6 +1,6 @@
 import { AnchorProvider, Program, Idl } from "@coral-xyz/anchor";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
-import { idl, NONE } from "./constants";
+import { idl } from "./constants";
 
 export interface WalletLike {
   publicKey: PublicKey;
@@ -107,4 +107,3 @@ export function framesFor(round: RoundAccount): number[][] {
   return frames;
 }
 
-export const isPaired = (v: number) => v !== NONE;

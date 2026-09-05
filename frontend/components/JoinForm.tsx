@@ -6,7 +6,7 @@ import { SystemProgram } from "@solana/web3.js";
 import BN from "bn.js";
 import { getProgram } from "@/lib/program";
 import { participantPda } from "@/lib/pdas";
-import { SIDE_BLURB, SIDE_LABEL, Side } from "@/lib/constants";
+import { Side } from "@/lib/constants";
 import { RoundAccount } from "@/lib/program";
 import { useT } from "@/lib/i18n";
 import { Button, Label, Note, Panel } from "./ui";

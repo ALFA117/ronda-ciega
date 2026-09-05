@@ -50,13 +50,15 @@ listas; ninguna wallet, ningún RPC y ni el propio validador puede leerlas.
 1. **Te registras** en una ronda, en uno de dos lados: `builder` (perfil técnico) o `founder`
    (producto / go-to-market). Tu perfil es público: nombre, rol, país, link. Es lo mismo que ya
    publicas en el directorio de builders.
-2. **Mandas tu ranking privado** de la gente del otro lado. Esa lista se escribe en una cuenta
-   delegada al ER privado, con permiso `is_private: true` y un único miembro: tú. Nadie más la lee,
-   ni siquiera el operador del rollup.
+2. **Mandas tu ranking privado** de la gente del otro lado. Esa cuenta **se crea dentro del ER**,
+   no se delega desde L1: nunca existió en L1 y nunca vuelve. Lleva permiso `is_private: true` con
+   un único miembro wallet, tú. Nadie más la lee.
 3. **La ronda cierra** al llegar el deadline.
-4. **El matching corre en vivo, ronda por ronda**, dentro del ER. Cada tick es una transacción:
-   los no emparejados proponen a su siguiente opción, cada receptor retiene tentativamente a su
-   mejor propuesta y rechaza el resto. La UI anima cada tick — se ve el algoritmo resolverse.
+4. **El matching corre dentro del ER**, en **una sola transacción** que ejecuta todas las rondas de
+   propuestas y graba un frame por ronda: los no emparejados proponen a su siguiente opción, cada
+   receptor retiene tentativamente a su mejor propuesta y rechaza el resto. La UI reproduce esos
+   frames. (Existe también `tick`, una ronda por transacción, para inspeccionarlo paso a paso —
+   ver §5c sobre por qué no es el camino por defecto.)
 5. **Solo se publican los pares finales.** Las listas de preferencias se cierran sin revelarse.
 
 ## 4. Por qué dos lados y no uno
@@ -78,17 +80,20 @@ Gale–Shapley se describe como O(n²), y meter ese loop completo en una sola in
 choca con el compute budget. Pero el algoritmo **ya es iterativo por naturaleza**: procede en
 rondas de propuestas, y el estado entre rondas cabe en unos pocos bytes por participante.
 
-Ejecutando **una ronda de propuestas por transacción del ER**:
+Ejecutando **una ronda de propuestas a la vez**:
 
-- cada transacción es O(n) y no se acerca al límite de compute;
-- el estado intermedio (`holds` tentativos, puntero de cada proponente) vive en la cuenta de la
-  ronda, que también es privada;
-- y a 10 ms por bloque, las rondas de un pool de 32 personas se resuelven en menos de un segundo
-  **con cada paso visible**.
+- cada ronda es O(n) y no se acerca al límite de compute;
+- el estado intermedio (`holds` tentativos, puntero de cada proponente) vive en `MatchState`, que
+  también es privado;
+- y el bucle completo cabe holgadamente en una transacción para un pool de 16 por lado.
 
-El riesgo técnico y la feature del demo son la misma cosa. Esto es lo que el ER aporta que un L1
-no puede: no es "más barato", es que la granularidad del cómputo se vuelve la granularidad de la
-animación.
+Guardar el ranking **inverso** de cada receptor (`builder_rank[b][f]` = posición del founder *f* en
+la lista del builder *b*) es lo que mantiene cada ronda en O(n): decidir si un builder prefiere al
+nuevo proponente sobre el que retiene es un lookup de array, no un recorrido.
+
+El riesgo técnico y la feature del demo terminaron siendo la misma cosa: la granularidad del
+cómputo es la granularidad de la animación. §5c explica por qué esas rondas acabaron dentro de una
+sola transacción en vez de una cada una.
 
 ## 5b. La animación filtra preferencias, y por eso es opt-in
 
@@ -141,6 +146,10 @@ el mismo escalón del ranking de un receptor —y con listas cortas y rankings p
 hay que romper el empate. Romperlo por índice de cuenta significa que registrarse temprano te da
 ventaja, y eso es exactamente el tipo de sesgo que el sistema dice eliminar.
 
+**El matching se niega a correr sin ella.** `run_matching` y `tick` devuelven `RandomnessMissing`
+antes que liquidar una ronda por orden de registro. No es una validación defensiva: es la única
+forma de que el desempate no premie a quien llegó primero.
+
 El desempate se resuelve con **MagicBlock VRF**: aleatoriedad verificable, solicitada al abrir la
 ronda, con la semilla publicada al final para que cualquiera reproduzca el resultado sin ver una
 sola preferencia.
@@ -174,6 +183,18 @@ Honestidad sobre los límites, porque el jurado son los ingenieros que escribier
 
 Ciclo: crear en L1 → delegar al ER TEE → correr rondas → `commit_and_undelegate` solo de `Round` y
 `Pairing`. `Preferences` y `MatchState` se cierran en el ER **sin commitear a L1**.
+
+## 8b. Qué se valida al ingerir las listas
+
+`seal_preferences` recibe las cuentas `Preferences` por `remaining_accounts`, que no llevan ninguna
+restricción de Anchor. Deserializar solo prueba que los primeros ocho bytes coinciden con un
+discriminador, y eso lo puede escribir cualquiera en una cuenta suya. Así que se comprueba a mano:
+
+1. la cuenta la posee este programa,
+2. su dirección es exactamente el PDA de `(ronda, dueño)`, usando el bump guardado.
+
+Sin (2), quien llame podría pasar una cuenta con un `index` y un `side` fabricados y sobrescribir el
+ranking de otra persona dentro de la memoria de trabajo.
 
 ## 9. Entregables del hackathon
 

@@ -17,7 +17,6 @@ export const es = {
     subline: "sin que nadie sepa que lo dijiste.",
     lede: "Matching estable donde las listas de preferencias nunca se publican. Ni al cerrar, ni después, ni para nadie.",
     cta: "Ver rondas",
-    ctaHow: "Cómo funciona",
     sealed: "listas selladas",
     stable: "estable",
     round: "ronda",
@@ -90,14 +89,8 @@ export const es = {
     },
   },
 
-  example: {
-    label: "Un ejemplo",
-    title: "Cuatro personas, tres rondas",
-    body: "Ana y Cami quieren al mismo builder. Eli prefiere a Cami. Ana queda desplazada en la ronda 2 y cae a su segunda opción. Nadie se entera de las listas — solo del resultado.",
-    tickLabel: "ronda",
-  },
-
   limits: {
+    title: "Lo que este sistema no promete",
     label: "Lo que no prometemos",
     items: [
       {
@@ -120,8 +113,8 @@ export const es = {
   },
 
   stats: {
+    title: "Estos números salieron de corridas reales",
     label: "Medido en devnet",
-    proposalsPerTick: "Propuestas por ronda",
     convergence: "Convergencia",
     matched: "emparejados",
     unmatched: "sin par",
@@ -245,11 +238,7 @@ export const es = {
   },
 
   common: {
-    loading: "Cargando…",
     error: "Algo falló",
-    copy: "Copiar",
-    copied: "Copiado",
-    close: "Cerrar",
   },
 };
 

@@ -1503,21 +1503,26 @@
     },
     {
       "code": 6013,
+      "name": "InvalidPreferencesAccount",
+      "msg": "Preferences account is not owned by this program or is not at its expected address"
+    },
+    {
+      "code": 6014,
       "name": "RandomnessAlreadyFulfilled",
       "msg": "Randomness has already been fulfilled for this round"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "RandomnessMissing",
       "msg": "Matching cannot run until the VRF callback has delivered randomness"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "InvalidTickBudget",
       "msg": "Tick budget must be at least 1"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "MathOverflow",
       "msg": "Arithmetic overflow"
     }

@@ -18,7 +18,6 @@ export const en: Dictionary = {
     subline: "without anyone knowing you said it.",
     lede: "Stable matching where preference lists are never published. Not at the deadline, not afterwards, not to anyone.",
     cta: "See rounds",
-    ctaHow: "How it works",
     sealed: "sealed lists",
     stable: "stable",
     round: "round",
@@ -91,14 +90,8 @@ export const en: Dictionary = {
     },
   },
 
-  example: {
-    label: "An example",
-    title: "Four people, three rounds",
-    body: "Ana and Cami both want the same builder. Eli prefers Cami. Ana is displaced in round 2 and falls to her second choice. Nobody learns the lists — only the outcome.",
-    tickLabel: "round",
-  },
-
   limits: {
+    title: "What this system does not promise",
     label: "What we don't promise",
     items: [
       {
@@ -121,8 +114,8 @@ export const en: Dictionary = {
   },
 
   stats: {
+    title: "These numbers came off real runs",
     label: "Measured on devnet",
-    proposalsPerTick: "Proposals per round",
     convergence: "Convergence",
     matched: "matched",
     unmatched: "unmatched",
@@ -246,10 +239,6 @@ export const en: Dictionary = {
   },
 
   common: {
-    loading: "Loading…",
     error: "Something failed",
-    copy: "Copy",
-    copied: "Copied",
-    close: "Close",
   },
 };

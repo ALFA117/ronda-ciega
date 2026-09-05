@@ -182,7 +182,7 @@ export default function Home() {
 
       {/* Measured, not claimed */}
       <section className="space-y-6">
-        <SectionHead label={t.stats.label} title={t.example.title} />
+        <SectionHead label={t.stats.label} title={t.stats.title} />
         <div className="grid gap-3 lg:grid-cols-2">
           <Reveal>
             <ErrorBoundary>
@@ -205,7 +205,7 @@ export default function Home() {
 
       {/* Limits, stated up front rather than buried in a README */}
       <section className="space-y-6">
-        <SectionHead label={t.limits.label} title={t.limits.label} />
+        <SectionHead label={t.limits.label} title={t.limits.title} />
         <StaggerList className="grid gap-3 sm:grid-cols-2">
           {t.limits.items.map((l) => (
             <StaggerItem key={l.title}>
