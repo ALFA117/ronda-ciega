@@ -30,13 +30,15 @@ export function Nav() {
     >
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-5 py-4 sm:px-8">
         <Link href="/" className="group flex items-baseline gap-3" aria-label={t.nav.home}>
-          <span className="text-sm font-medium tracking-tight">Ronda Ciega</span>
+          <span className="whitespace-nowrap text-sm font-medium tracking-tight">
+            Ronda Ciega
+          </span>
           <span className="hidden font-mono text-2xs text-muted transition-colors group-hover:text-sealed sm:inline">
             {t.nav.tagline}
           </span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <span className="hidden items-center gap-1.5 rounded-lg border border-edge px-2.5 py-2 font-mono text-2xs text-muted lg:inline-flex">
             <span className="h-1.5 w-1.5 rounded-full bg-open" aria-hidden />
             {t.nav.network}

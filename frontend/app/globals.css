@@ -248,6 +248,19 @@
   font-family: var(--font-mono), ui-monospace, monospace !important;
   transition: background 180ms ease, border-color 180ms ease !important;
 }
+.wallet-adapter-button {
+  white-space: nowrap !important;
+}
+
+/* At 375px the nav holds a wordmark, two toggles and the wallet button. The
+   wallet label is the one that can afford to get smaller. */
+@media (max-width: 420px) {
+  .wallet-adapter-button {
+    font-size: 11px !important;
+    padding: 0 10px !important;
+  }
+}
+
 .wallet-adapter-button:not([disabled]):hover {
   background: var(--surface-2) !important;
   border-color: var(--sealed) !important;
