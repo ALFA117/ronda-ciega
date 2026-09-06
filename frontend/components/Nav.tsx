@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import { easeEnter, springPanel, springSnappy } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import { useActiveSection } from "@/hooks/useActiveSection";
@@ -100,10 +100,17 @@ export function Nav() {
             ))}
           </nav>
 
+          {/* Below sm the bar cannot hold the wallet button and the language
+              toggle without running off the right edge of a phone, so both
+              move into the sheet, where they get full-size rows. */}
           <div className="ml-auto flex shrink-0 items-center gap-2.5">
-            <LocaleToggle />
+            <div className="hidden sm:block">
+              <LocaleToggle />
+            </div>
             <ThemeToggle />
-            <WalletMultiButton />
+            <div className="hidden sm:block">
+              <WalletMultiButton />
+            </div>
 
             <motion.button
               onClick={() => setOpen(true)}
@@ -165,6 +172,27 @@ export function Nav() {
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </motion.button>
+              </div>
+
+              {/* The palette's keyboard shortcut does not exist on a phone,
+                  so this is how it is reached there. */}
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  window.dispatchEvent(new Event("open-palette"));
+                }}
+                className="mb-2 flex h-12 w-full items-center gap-3 rounded-xl bg-surface2 px-3 font-mono text-sm text-muted transition-colors hover:text-chalk"
+              >
+                <Search className="h-4 w-4" aria-hidden />
+                {t.palette.placeholder}
+              </button>
+
+              {/* The bar drops these below sm; this is where they live there. */}
+              <div className="mb-2 flex items-center gap-2 sm:hidden">
+                <LocaleToggle />
+                <div className="wallet-block min-w-0 flex-1">
+                  <WalletMultiButton />
+                </div>
               </div>
 
               <ul className="grid gap-1">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
+import { CommandPalette } from "@/components/CommandPalette";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
           >
             {children}
           </main>
+          <CommandPalette />
         </Providers>
       </body>
     </html>

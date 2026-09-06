@@ -14,6 +14,7 @@ import { CreateRound } from "@/components/CreateRound";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
 import { StatBand } from "@/components/StatBand";
+import { Ticker, pickTickerRound } from "@/components/Ticker";
 import { RoundRow } from "@/components/RoundRow";
 import { Footer } from "@/components/Footer";
 import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
@@ -54,11 +55,18 @@ export default function Home() {
   // Only a settled transparent round has real frames to chart. None yet means
   // the chart says so rather than inventing a series.
   const showcase = rounds?.find((r) => r.status === "settled" && r.transparent);
+  const latest = pickTickerRound(rounds);
 
   return (
     <>
       <PreflightBanner />
       <Hero />
+
+      {latest && (
+        <div className="mt-8">
+          <Ticker round={latest} />
+        </div>
+      )}
 
       <div className="mt-8">
         <StatBand />

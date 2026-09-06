@@ -246,7 +246,18 @@ export const es = {
         "Te queda muy poco SOL de devnet. Consigue más en faucet.solana.com antes de crear una ronda o entrar.",
   },
 
+  palette: {
+    open: "Buscar",
+    placeholder: "Salta a una sección o a una ronda…",
+    empty: "Nada coincide",
+  },
+
+  ticker: {
+    label: "Último par",
+  },
+
   common: {
+    loading: "Cargando…",
     close: "Cerrar",
     error: "Algo falló",
   },

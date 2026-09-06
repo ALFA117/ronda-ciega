@@ -48,7 +48,7 @@ export function LocaleToggle() {
 
   return (
     <div
-      className="glass relative flex h-11 shrink-0 items-center rounded-xl p-0.5 sm:h-10 sm:p-1"
+      className="glass relative flex h-12 shrink-0 items-center rounded-xl p-0 sm:h-10 sm:p-1"
       role="group"
       aria-label={t.nav.language}
     >
@@ -59,7 +59,7 @@ export function LocaleToggle() {
           aria-pressed={locale === l}
           whileTap={reduce ? undefined : { scale: 0.92 }}
           transition={springSnappy}
-          className={`relative z-10 flex h-full min-w-[34px] cursor-pointer items-center justify-center rounded-lg px-2 font-mono text-2xs uppercase transition-colors ${
+          className={`relative z-10 flex h-full min-w-[44px] cursor-pointer sm:min-w-[34px] items-center justify-center rounded-lg px-2 font-mono text-2xs uppercase transition-colors ${
             locale === l ? "text-chalk" : "text-muted hover:text-chalk"
           }`}
         >

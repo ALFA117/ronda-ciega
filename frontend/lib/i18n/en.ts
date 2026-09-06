@@ -247,7 +247,18 @@ export const en: Dictionary = {
         "Very little devnet SOL left. Top up at faucet.solana.com before creating a round or joining.",
   },
 
+  palette: {
+    open: "Search",
+    placeholder: "Jump to a section or a round…",
+    empty: "Nothing matches",
+  },
+
+  ticker: {
+    label: "Latest pair",
+  },
+
   common: {
+    loading: "Loading…",
     close: "Close",
     error: "Something failed",
   },
