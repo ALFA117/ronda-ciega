@@ -364,6 +364,21 @@ export const en: Dictionary = {
     profilesNote: "The control: same query, different account size.",
     showCommand: "Show the command and run it yourself",
   },
+  privacy: {
+    title: "What this round does not publish",
+    lede:
+      "A private round has no trace to inspect: that is the product. It does leave something checkable, of the negative kind. Each list has an address derived from the round and its owner wallet, so anyone can compute them. Ask Solana for them.",
+    run: "Look for the lists on L1",
+    running: "Looking…",
+    checked: "Addresses checked",
+    found: "Found on L1",
+    passed:
+      "Not one exists. They were written inside the enclave and destroyed there, without ever touching L1.",
+    failed:
+      "At least one turned up on L1. That would be a leak and must never happen.",
+    showAddresses: "Show the addresses and check them yourself",
+  },
+
   verify: {
     title: "Check it yourself",
     lede:

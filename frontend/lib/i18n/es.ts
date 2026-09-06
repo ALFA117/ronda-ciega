@@ -296,6 +296,21 @@ export const es = {
     unstable: "Inestable. Si ves esto, hay un error y quiero saberlo.",
   },
 
+  privacy: {
+    title: "Lo que esta ronda no publica",
+    lede:
+      "Una ronda privada no tiene traza que revisar: ese es el producto. Pero sí deja algo comprobable, del tipo negativo. La dirección de cada lista se deriva de la ronda y de la billetera de su dueño, así que cualquiera puede calcularlas. Pregúntale a Solana por ellas.",
+    run: "Buscar las listas en L1",
+    running: "Buscando…",
+    checked: "Direcciones consultadas",
+    found: "Encontradas en L1",
+    passed:
+      "Ninguna existe. Se escribieron dentro del enclave y ahí se destruyeron, sin tocar L1 en ningún momento.",
+    failed:
+      "Apareció al menos una en L1. Eso sería una fuga y no debería ocurrir nunca.",
+    showAddresses: "Ver las direcciones y comprobarlas por tu cuenta",
+  },
+
   verify: {
     title: "Compruébalo tú mismo",
     lede:

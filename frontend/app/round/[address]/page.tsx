@@ -11,6 +11,7 @@ import { RankingBuilder } from "@/components/RankingBuilder";
 import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
 import { VerifyPanel } from "@/components/VerifyPanel";
+import { PrivacyPanel } from "@/components/PrivacyPanel";
 import { Deadline } from "@/components/Deadline";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StickySummary } from "@/components/StickySummary";
@@ -146,6 +147,11 @@ export default function RoundPage({ params }: { params: { address: string } }) {
           reader's own browser. Renders nothing on a private round. */}
       <ErrorBoundary>
         <VerifyPanel round={round} />
+      </ErrorBoundary>
+
+      {/* The private counterpart: nothing to verify, and that is checkable. */}
+      <ErrorBoundary>
+        <PrivacyPanel round={round} participants={participants} />
       </ErrorBoundary>
 
       <RoundControls
