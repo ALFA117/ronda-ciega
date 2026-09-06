@@ -40,7 +40,7 @@ export async function fetchRounds(
     }
   }
 
-  rounds.sort((a, b) => Number(b.roundId - a.roundId));
+  rounds.sort(byInterest);
   return { rounds, skipped };
 }
 
@@ -53,4 +53,33 @@ export async function fetchRounds(
  */
 export function pickTickerRound(rounds: RoundAccount[] | null): RoundAccount | undefined {
   return rounds?.find((r) => r.status === "settled" && r.pairs.some((b) => b !== NONE));
+}
+
+/**
+ * How much there is to look at, 2 down to 0.
+ *
+ * Devnet keeps every round ever opened, and test runs leave behind stubs with
+ * one participant and no lists. Sorted purely by recency those land on top and
+ * bury the rounds that actually finished. Nothing is hidden — a round with
+ * nothing in it is simply not the first thing a visitor should meet.
+ */
+function interest(r: RoundAccount): number {
+  if (r.status === "settled" && r.pairs.some((b) => b !== NONE)) return 2;
+  if (r.rankingCount > 0 || r.founderCount + r.builderCount >= 4) return 1;
+  return 0;
+}
+
+/**
+ * Rounds with results first, then rounds under way, then empty ones. Within a
+ * group the bigger market leads: a 6x6 round shows the algorithm doing
+ * something a 2x2 round cannot, and that is what a first-time visitor should
+ * open. Ties fall to the most recent.
+ */
+export function byInterest(a: RoundAccount, b: RoundAccount): number {
+  const tier = interest(b) - interest(a);
+  if (tier !== 0) return tier;
+  const size =
+    b.founderCount + b.builderCount - (a.founderCount + a.builderCount);
+  if (size !== 0) return size;
+  return Number(b.roundId - a.roundId);
 }

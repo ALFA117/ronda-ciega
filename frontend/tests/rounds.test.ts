@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { PublicKey } from "@solana/web3.js";
 import { NONE } from "../lib/constants.ts";
-import { pickTickerRound } from "../lib/rounds.ts";
+import { byInterest, pickTickerRound } from "../lib/rounds.ts";
 import type { RoundAccount } from "../lib/program.ts";
 
 function round(over: Partial<RoundAccount> = {}): RoundAccount {
@@ -60,5 +60,89 @@ describe("Elección de la ronda para el ticker", () => {
     const nueva = round({ roundId: 20n, pairs: [0, ...new Array(15).fill(NONE)] });
     const vieja = round({ roundId: 2n, pairs: [1, ...new Array(15).fill(NONE)] });
     assert.equal(pickTickerRound([nueva, vieja])?.roundId, 20n);
+  });
+});
+
+describe("Orden de la lista de rondas", () => {
+  const paired = [0, 1, ...new Array(14).fill(NONE)];
+
+  test("las rondas con resultado van primero", () => {
+    const vacia = round({ roundId: 99n, status: "open" });
+    const conResultado = round({ roundId: 1n, status: "settled", pairs: paired });
+    const ordenadas = [vacia, conResultado].sort(byInterest);
+    assert.equal(ordenadas[0].roundId, 1n, "la ronda vacía más nueva no debe encabezar");
+  });
+
+  test("una ronda en curso va antes que una vacía", () => {
+    const vacia = round({ roundId: 99n, status: "open", founderCount: 1, builderCount: 0 });
+    const enCurso = round({
+      roundId: 50n,
+      status: "open",
+      founderCount: 3,
+      builderCount: 3,
+      rankingCount: 2,
+    });
+    assert.equal([vacia, enCurso].sort(byInterest)[0].roundId, 50n);
+  });
+
+  test("dentro del mismo grupo manda la más reciente", () => {
+    const vieja = round({ roundId: 2n, status: "settled", pairs: paired });
+    const nueva = round({ roundId: 80n, status: "settled", pairs: paired });
+    assert.equal([vieja, nueva].sort(byInterest)[0].roundId, 80n);
+  });
+
+  test("cerrada sin ningún par no alcanza el nivel de 'con resultado'", () => {
+    // Settled but everyone unmatched: there is nothing to look at, so it must
+    // not outrank a round that did pair people — even a much older one.
+    const sinPares = round({ roundId: 70n, status: "settled" });
+    const conPares = round({ roundId: 3n, status: "settled", pairs: paired });
+    assert.equal([sinPares, conPares].sort(byInterest)[0].roundId, 3n);
+  });
+
+  test("el orden es estable y total (no depende del orden de entrada)", () => {
+    const rs = [
+      round({ roundId: 5n, status: "open" }),
+      round({ roundId: 9n, status: "settled", pairs: paired }),
+      round({ roundId: 7n, status: "open", rankingCount: 3 }),
+    ];
+    const a = [...rs].sort(byInterest).map((r) => r.roundId);
+    const b = [...rs].reverse().sort(byInterest).map((r) => r.roundId);
+    assert.deepEqual(a, b);
+    assert.deepEqual(a, [9n, 7n, 5n]);
+  });
+});
+
+describe("Dentro del mismo grupo manda el tamaño", () => {
+  const paired = [0, 1, ...new Array(14).fill(NONE)];
+
+  test("una ronda grande va antes que una chica más nueva", () => {
+    const chicaNueva = round({
+      roundId: 900n, status: "settled", pairs: paired,
+      founderCount: 2, builderCount: 2,
+    });
+    const grandeVieja = round({
+      roundId: 4n, status: "settled", pairs: paired,
+      founderCount: 6, builderCount: 6,
+    });
+    assert.equal([chicaNueva, grandeVieja].sort(byInterest)[0].roundId, 4n);
+  });
+
+  test("a igual tamaño manda la más reciente", () => {
+    const a = round({ roundId: 5n, status: "settled", pairs: paired });
+    const b = round({ roundId: 60n, status: "settled", pairs: paired });
+    assert.equal([a, b].sort(byInterest)[0].roundId, 60n);
+  });
+
+  test("el tamaño nunca supera al grupo", () => {
+    // A huge round with nothing in it still loses to a small finished one.
+    const grandeVacia = round({
+      roundId: 900n, status: "open", founderCount: 8, builderCount: 8,
+      rankingCount: 0,
+    });
+    const chicaLista = round({
+      roundId: 2n, status: "settled", pairs: paired,
+      founderCount: 2, builderCount: 2,
+    });
+    assert.equal([grandeVacia, chicaLista].sort(byInterest)[0].roundId, 2n);
   });
 });

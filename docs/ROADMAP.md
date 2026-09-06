@@ -8,11 +8,11 @@ Cada número de este documento salió de una corrida, no de una estimación.
 
 | Programa | | Interfaz | | Pruebas que pasan |  |
 |---|---|---|---|---|---|
-| Instrucciones | 14 | Rutas | 2 | Unitarias | 36 |
-| Códigos de error | 19 | Componentes | 30 | Caminos negativos | 11 |
-| Estados de ronda | 4 | Hooks | 5 | Casos de interfaz | 18 |
-| Máximo por lado | 16 | Idiomas | ES · EN | Comprobaciones fijas | 47 |
-| Cuadros de historial | 24 | Temas | claro · oscuro | Etapas extremo a extremo | 10 |
+| Instrucciones | 14 | Rutas | 2 | Unitarias | 44 |
+| Códigos de error | 19 | Componentes | 30 | Negativos en L1 | 12 |
+| Estados de ronda | 4 | Hooks | 5 | Negativos en el rollup | 26 |
+| Máximo por lado | 16 | Idiomas | ES · EN | Casos de interfaz | 18 |
+| Cuadros de historial | 24 | Temas | claro · oscuro | Comprobaciones fijas | 47 |
 
 Medido contra devnet desde México:
 
@@ -22,14 +22,35 @@ Medido contra devnet desde México:
 | Una transacción por ronda de propuestas | 0.9–1.6 s cada una |
 | Llegada del VRF que rompe empates | ~230 ms |
 
-### Cobertura de errores: 6 de 19
+### Cobertura de errores: 16 de 19
 
-Probados contra devnet (`npm run negative`): `DeadlineInPast`,
+Alcanzados desde L1 (`npm run negative`): `DeadlineInPast`,
 `NotEnoughParticipants`, `ProfileTooLong`, `RoundStillOpen`, `RoundClosed`,
-`WrongRoundStatus`.
+`WrongRoundStatus`, y `SideFull` con `FULL=1`, que llena un lado con 16
+personas y prueba al decimoséptimo.
 
-Los trece restantes solo se ejecutan sobre una ronda ya delegada al rollup, así
-que exigen montar el ciclo completo con el TEE — tarea 1.9.
+Alcanzados dentro del rollup (`npm run negative:rollup`): `InvalidRanking`,
+`DuplicateInRanking`, `WrongRound`, `AlreadySealed`, `AlreadyClosed`,
+`InvalidPreferencesAccount`, `RandomnessMissing`, `RandomnessAlreadyFulfilled`,
+`InvalidTickBudget`.
+
+Los tres que quedan no son deuda pendiente: son hallazgos.
+
+**`InvalidSession` es inalcanzable.** La cuenta `participant` está atada por
+semillas a la billetera que firma, así que Anchor rechaza con el código 2006
+antes de que corra el cuerpo de la instrucción. La comprobación interna es
+defensiva, no operante. Hay un test que fija ese comportamiento, para que si
+algún día se relaja la restricción de semillas se sepa que el cuerpo pasó a ser
+lo único que sostiene.
+
+**`SealIncomplete` está declarado y nunca se lanza.** La condición que nombra sí
+está protegida, pero por la transición de estado: la ronda solo pasa a
+`Matching` cuando `sealed_count` alcanza a `ranking_count`, y `run_matching`
+exige `Matching`. El test sella 3 de 4 listas y comprueba que el emparejamiento
+se niega.
+
+**`MathOverflow` protege sumas sobre contadores acotados** por `MAX_PER_SIDE`;
+no hay entrada que lo alcance.
 
 ## Q1 · Oct–Dic 2026 — que lo pueda operar alguien más
 
@@ -68,7 +89,11 @@ consultan `prefers-reduced-motion`.
 
 **Pruebas**
 
-1.9 **Los trece errores que faltan**, con una suite que delega de verdad.
+1.9 ~~**Los trece errores que faltan**, con una suite que delega de verdad.~~
+**Hecho.** `npm run negative:rollup` monta el ciclo completo con el TEE —abrir,
+registrar, delegar, memoria privada— y provoca cada guarda del rollup: 26 casos.
+De los trece, nueve quedaron cubiertos, `SideFull` resultó alcanzable desde L1, y
+los tres restantes no son alcanzables por construcción (ver arriba).
 
 1.10 **Integración continua**: unitarias, tipos y compilación en cada push. Las
 negativas y el extremo a extremo se quedan manuales — cuestan SOL y dependen de
@@ -142,9 +167,11 @@ lista. Lo secreto es el orden completo, no el par.
 ## Cómo correr lo que ya existe
 
 ```bash
-cd frontend && npm test      # 36 unitarias, sin red
+cd frontend && npm test      # 44 unitarias, sin red
 npm run verify               # 47 comprobaciones fijas y en vivo
-npm run negative             # 11 caminos negativos contra devnet (~0.005 SOL)
+npm run negative             # 11 caminos negativos en L1 (~0.005 SOL)
+FULL=1 npm run negative      # + el caso SideFull, 16 registros (~0.1 SOL)
+npm run negative:rollup      # 26 casos dentro del TEE (~0.15 SOL, 3 min)
 npm run spike                # 10 etapas extremo a extremo con el TEE
 ```
 

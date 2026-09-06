@@ -202,7 +202,10 @@ async function main() {
   // One live round, deliberately short-lived, to drive the rest.
   const roundId = new anchor.BN(Date.now() + 2);
   const round = roundPda(authority.publicKey, roundId);
-  const deadline = Math.floor(Date.now() / 1000) + 25;
+  // Filling a side needs far longer than the short fixture deadline, so the
+  // opt-in run gets a window it can actually finish inside.
+  const deadline =
+    Math.floor(Date.now() / 1000) + (process.env.FULL === "1" ? 200 : 25);
 
   group("ronda de prueba");
   await accepts("se abre la ronda", async () =>
@@ -259,6 +262,102 @@ async function main() {
       })
       .rpc(),
   );
+
+  // ------------------------------------------------------------------
+  // Filling a side takes seventeen wallets, so it is opt-in: it costs about
+  // 0.1 SOL in fees and rent even after the leftovers are swept back, and it
+  // takes a couple of minutes against the public devnet RPC.
+  if (process.env.FULL === "1") {
+    group("join_round — cupo lleno (FULL=1)");
+
+    const crowd: Keypair[] = [];
+    for (let i = 0; i < 16; i++) crowd.push(Keypair.generate());
+
+    // One transfer per transaction batch keeps it under the size limit.
+    for (let i = 0; i < crowd.length; i += 8) {
+      const tx = new anchor.web3.Transaction();
+      for (const kp of crowd.slice(i, i + 8)) {
+        tx.add(
+          SystemProgram.transfer({
+            fromPubkey: authority.publicKey,
+            toPubkey: kp.publicKey,
+            lamports: 0.03 * LAMPORTS_PER_SOL,
+          }),
+        );
+      }
+      await anchor.web3.sendAndConfirmTransaction(l1, tx, [authority], {
+        commitment: "confirmed",
+      });
+    }
+    console.log("        16 billeteras fondeadas");
+
+    // Sixteen builders fills that side exactly (the authority joined as a
+    // founder). Driving sixteen separate providers rate-limits the public
+    // devnet RPC into 429s within seconds, so the joins are batched: one
+    // transaction carries four instructions and four signers, which is four
+    // round-trips instead of sixteen.
+    let joined = 0;
+    for (let i = 0; i < crowd.length; i += 4) {
+      const batch = crowd.slice(i, i + 4);
+      const tx = new anchor.web3.Transaction();
+      for (const kp of batch) {
+        tx.add(
+          await program.methods
+            .joinRound(roundId, { builder: {} }, "b" + joined++, "https://r.io")
+            .accounts({
+              round,
+              participant: participantPda(round, kp.publicKey),
+              wallet: kp.publicKey,
+              systemProgram: SystemProgram.programId,
+            })
+            .instruction(),
+        );
+      }
+      await anchor.web3.sendAndConfirmTransaction(l1, tx, batch, {
+        commitment: "confirmed",
+      });
+      await sleep(600);
+    }
+    console.log("        " + joined + "/16 builders dentro");
+
+    const seventeenth = await freshWallet(l1, authority, 0.03 * LAMPORTS_PER_SOL);
+    await refuses("el decimoséptimo del lado", "SideFull", async () =>
+      programFor(l1, seventeenth)
+        .methods.joinRound(roundId, { builder: {} }, "sobra", "https://r.io")
+        .accountsPartial({
+          wallet: seventeenth.publicKey,
+          round,
+          participant: participantPda(round, seventeenth.publicKey),
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc(),
+    );
+
+    // Sweep what is left back rather than stranding it in burner wallets.
+    let swept = 0;
+    for (const kp of [...crowd, seventeenth]) {
+      const bal = await l1.getBalance(kp.publicKey);
+      if (bal <= 5000) continue;
+      try {
+        const tx = new anchor.web3.Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: kp.publicKey,
+            toPubkey: authority.publicKey,
+            lamports: bal - 5000,
+          }),
+        );
+        await anchor.web3.sendAndConfirmTransaction(l1, tx, [kp], {
+          commitment: "confirmed",
+        });
+        swept += bal - 5000;
+      } catch {
+        /* best effort */
+      }
+    }
+    console.log(
+      "        devueltos " + (swept / LAMPORTS_PER_SOL).toFixed(3) + " SOL",
+    );
+  }
 
   // ------------------------------------------------------------------
   group("close_round — orden y quórum");
