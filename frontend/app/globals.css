@@ -48,6 +48,19 @@
   /* Ghost numerals in the section spine. Barely there on purpose: they are
      rhythm, not information. */
   --ghost: rgba(234, 242, 255, 0.05);
+
+  /* Liquid glass. The sheen is what sells it: a bright top edge plus a
+     moving specular band, over a blurred and saturated backdrop. */
+  --glass-bg: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.13) 0%,
+    rgba(255, 255, 255, 0.04) 55%,
+    rgba(255, 255, 255, 0.07) 100%
+  );
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-inset: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 26px -10px rgba(0, 0, 0, 0.7);
+  --glass-sheen: rgba(255, 255, 255, 0.35);
 }
 
 /* Light theme on warm paper rather than blue-grey. A light mode that is only
@@ -56,27 +69,27 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f7f5f1;
-  --bg-deep: #efece6;
-  --surface: #ffffff;
-  --surface-2: #f2efe9;
-  --edge: #e0dbd1;
-  --edge-strong: #bdb5a7;
-  --text: #14120f;
-  --text-muted: #5d5850;
+  --bg: #eae7e0;
+  --bg-deep: #e0dcd3;
+  --surface: #f4f2ed;
+  --surface-2: #e2ded5;
+  --edge: #d5cfc4;
+  --edge-strong: #b3ab9c;
+  --text: #1b1916;
+  --text-muted: #565049;
 
-  --sealed: #0e7490;
-  --sealed-dim: #155e75;
-  --open: #a21caf;
+  --sealed: #0d6d88;
+  --sealed-dim: #0a566c;
+  --open: #98189f;
 
-  --sealed-rgb: 14, 116, 144;
-  --open-rgb: 162, 28, 175;
+  --sealed-rgb: 13, 109, 136;
+  --open-rgb: 152, 24, 159;
 
-  --chart-1: #0086ad;
-  --chart-2: #b45309;
+  --chart-1: #00789c;
+  --chart-2: #a34a08;
 
   --on-sealed: #ffffff;
-  --text-dim: #6b665e;
+  --text-dim: #6a645b;
 
   --card-top: rgba(255, 255, 255, 0.9);
   --card-wash: linear-gradient(
@@ -89,6 +102,17 @@
   --grain-opacity: 0.022;
 
   --ghost: rgba(20, 18, 15, 0.055);
+
+  --glass-bg: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0.38) 55%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  --glass-border: rgba(27, 25, 22, 0.12);
+  --glass-inset: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 8px 22px -12px rgba(27, 25, 22, 0.3);
+  --glass-sheen: rgba(255, 255, 255, 0.85);
 }
 
 @layer base {
@@ -131,6 +155,88 @@
 }
 
 @layer utilities {
+  /* Liquid glass.
+     `backdrop-filter` is the whole effect — without it this is just a
+     translucent rectangle — so it is paired with the -webkit- prefix for
+     Safari, and the saturate() is what keeps colour alive behind the blur
+     instead of going milky. */
+  .glass {
+    position: relative;
+    background-image: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 0 var(--glass-inset), var(--glass-shadow);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* The specular band. Sits above the fill, below the label, and sweeps on
+     hover — the cue that the surface is glass and not paint. */
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      var(--glass-sheen) 48%,
+      transparent 62%
+    );
+    opacity: 0;
+    transform: translateX(-120%);
+    transition: opacity 260ms ease, transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .glass:hover::after {
+    opacity: 0.5;
+    transform: translateX(120%);
+  }
+
+  /* Tinted variants. The accent goes through the glass rather than sitting
+     on it, so the colour reads as lit rather than painted. */
+  .glass-sealed {
+    background-image:
+      linear-gradient(
+        160deg,
+        rgba(var(--sealed-rgb), 0.32) 0%,
+        rgba(var(--sealed-rgb), 0.14) 60%,
+        rgba(var(--sealed-rgb), 0.24) 100%
+      ),
+      var(--glass-bg);
+    border-color: rgba(var(--sealed-rgb), 0.5);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-inset),
+      0 6px 22px -10px rgba(var(--sealed-rgb), 0.55),
+      var(--glass-shadow);
+  }
+
+  .glass-open {
+    background-image:
+      linear-gradient(
+        160deg,
+        rgba(var(--open-rgb), 0.3) 0%,
+        rgba(var(--open-rgb), 0.12) 60%,
+        rgba(var(--open-rgb), 0.22) 100%
+      ),
+      var(--glass-bg);
+    border-color: rgba(var(--open-rgb), 0.5);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-inset),
+      0 6px 22px -10px rgba(var(--open-rgb), 0.5),
+      var(--glass-shadow);
+  }
+
+  /* Where backdrop-filter is unavailable the glass would read as a
+     near-invisible rectangle, so fall back to an opaque surface. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass {
+      background-color: var(--surface);
+    }
+  }
+
   .tnum {
     font-variant-numeric: tabular-nums;
   }
@@ -288,14 +394,21 @@
 .wallet-adapter-button {
   background: var(--surface) !important;
   border: 1px solid var(--edge) !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   font-size: 13px !important;
-  height: 38px !important;
+  /* Touch minimum on phones; a cursor does not need it. */
+  height: 44px !important;
   padding: 0 14px !important;
   color: var(--text) !important;
   white-space: nowrap !important;
   font-family: var(--font-mono), ui-monospace, monospace !important;
   transition: background 180ms ease, border-color 180ms ease !important;
+}
+
+@media (min-width: 640px) {
+  .wallet-adapter-button {
+    height: 40px !important;
+  }
 }
 
 @media (max-width: 420px) {

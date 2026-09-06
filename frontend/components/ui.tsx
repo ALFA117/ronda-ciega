@@ -19,7 +19,7 @@ export function Panel({
 }) {
   return (
     <div
-      className={`surface-raised rounded-xl border ${
+      className={`surface-raised rounded-2xl border ${
         sealed ? "border-sealed/25 sealed-hatch" : "border-edge"
       } bg-surface/70 ${className}`}
     >
@@ -36,6 +36,17 @@ export function Label({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Glass button.
+ *
+ * Press is a spring rather than a duration so it interrupts cleanly when
+ * someone taps twice, and the scale stays inside 0.95–1.05 — bigger reads as
+ * janky on a touch screen where the finger already covers the control. The
+ * colour lives *in* the glass, so it reads as lit rather than painted.
+ *
+ * Default height is 44px on touch and 40px from `sm` up: the touch minimum
+ * matters on the device that has fingers, not on the one with a cursor.
+ */
 export function Button({
   children,
   onClick,
@@ -44,37 +55,72 @@ export function Button({
   variant = "primary",
   type = "button",
   full = false,
+  size = "md",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   busy?: boolean;
-  variant?: "primary" | "ghost" | "sealed";
+  variant?: "primary" | "ghost" | "sealed" | "open";
   type?: "button" | "submit";
   full?: boolean;
+  size?: "sm" | "md";
 }) {
   const reduce = useReducedMotion();
-  const styles = {
-    primary: "bg-chalk text-bg hover:bg-white",
-    ghost: "border border-edge text-chalk hover:border-edgeStrong hover:bg-surface2",
-    sealed:
-      "border border-sealed/40 bg-sealed/10 text-sealed hover:bg-sealed/20 hover:border-sealed/60",
+
+  const tint = {
+    primary: "glass-sealed text-chalk",
+    sealed: "glass-sealed text-chalk",
+    open: "glass-open text-chalk",
+    ghost: "text-chalk",
   }[variant];
+
+  const dims =
+    size === "sm" ? "h-10 px-3.5 text-2xs sm:h-9" : "h-11 px-5 text-sm sm:h-10";
 
   return (
     <motion.button
       type={type}
       onClick={onClick}
       disabled={disabled || busy}
-      // Scale stays inside 0.95-1.05; anything larger reads as janky.
       whileHover={reduce || disabled ? undefined : { scale: 1.02 }}
-      whileTap={reduce || disabled ? undefined : { scale: 0.97 }}
+      whileTap={reduce || disabled ? undefined : { scale: 0.96 }}
       transition={springSnappy}
-      className={`inline-flex h-10 min-w-[44px] cursor-pointer items-center justify-center gap-2 rounded-lg px-4 font-mono text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${styles} ${
+      className={`glass ${tint} ${dims} inline-flex min-w-[44px] cursor-pointer items-center justify-center gap-2 rounded-xl font-mono transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         full ? "w-full" : ""
       }`}
     >
       {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
+      {children}
+    </motion.button>
+  );
+}
+
+/** Square glass control for an icon. Meets the 44px touch minimum. */
+export function IconButton({
+  children,
+  onClick,
+  label,
+  active = false,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  label: string;
+  active?: boolean;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.button
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      whileHover={reduce ? undefined : { scale: 1.05 }}
+      whileTap={reduce ? undefined : { scale: 0.93 }}
+      transition={springSnappy}
+      className={`glass ${
+        active ? "glass-sealed text-chalk" : "text-muted hover:text-chalk"
+      } flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl sm:h-10 sm:w-10`}
+    >
       {children}
     </motion.button>
   );
@@ -151,7 +197,7 @@ export function ErrorText({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Fades a block in the first time it scrolls into view. */
+/** Fades a block in the first time it is on screen. */
 export function Reveal({
   children,
   className = "",
@@ -178,7 +224,6 @@ export function Reveal({
   );
 }
 
-/** Staggered container for lists that appear together. */
 export function StaggerList({
   children,
   className = "",

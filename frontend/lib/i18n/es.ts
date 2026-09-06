@@ -164,6 +164,7 @@ export const es = {
     play: "Continuar",
     goToTick: "Ir a la ronda",
     deadline: "Cierra en",
+    swipeHint: "Desliza para ver ronda por ronda",
     closed: "Cerrada",
   },
 
@@ -196,6 +197,8 @@ export const es = {
     sealedNote:
       "Tu ranking está en una cuenta que solo tu wallet puede leer. No hay instrucción en el programa que la revele, ni al cerrar la ronda ni después. Puedes reemplazarla mientras la ronda siga abierta.",
     change: "Cambiar mi lista",
+    dragHint: "Mantén y arrastra para reordenar",
+    tapToAdd: "Toca para añadir a tu lista",
     nobody: "Todavía no hay nadie del otro lado a quien rankear.",
   },
 

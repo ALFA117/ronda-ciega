@@ -6,7 +6,7 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { framesFor, ParticipantAccount, RoundAccount } from "@/lib/program";
 import { useT } from "@/lib/i18n";
 import { MatchGraph } from "./MatchGraph";
-import { Label, Note, Panel } from "./ui";
+import { IconButton, Label, Note, Panel } from "./ui";
 
 /**
  * Replays the matching frame by frame.
@@ -69,7 +69,7 @@ export function MatchTheater({
               {t.stats.tick} {Math.min(frame + 1, round.tick)} / {round.tick}
             </span>
             <div className="flex items-center gap-1">
-              <ControlButton
+              <IconButton
                 label={atEnd ? t.round.replay : playing ? t.round.pause : t.round.play}
                 onClick={() => {
                   if (atEnd) {
@@ -98,7 +98,7 @@ export function MatchTheater({
                     )}
                   </motion.span>
                 </AnimatePresence>
-              </ControlButton>
+              </IconButton>
             </div>
           </div>
         )}
@@ -115,7 +115,7 @@ export function MatchTheater({
               }}
               aria-label={`${t.round.goToTick} ${i + 1}`}
               aria-current={i === frame}
-              className="group h-6 flex-1 cursor-pointer"
+              className="group h-11 flex-1 cursor-pointer sm:h-8"
             >
               <span
                 className={`block h-1 rounded-full transition-colors ${
@@ -127,13 +127,39 @@ export function MatchTheater({
         </div>
       )}
 
-      <div className="px-2 py-5 sm:px-5">
+      {/* Swipe to step through the rounds. Constrained with elastic
+          overshoot rather than free drag: unconstrained drag on a page reads
+          as broken, and the elastic tells the finger it reached the end. */}
+      <motion.div
+        className="touch-pan-y px-2 py-5 sm:px-5"
+        drag={scrubbable ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.14}
+        dragMomentum={false}
+        onDragEnd={(_, info) => {
+          if (!scrubbable) return;
+          const threshold = 56;
+          if (info.offset.x < -threshold) {
+            setPlaying(false);
+            setFrame((f) => Math.min(f + 1, frames.length - 1));
+          } else if (info.offset.x > threshold) {
+            setPlaying(false);
+            setFrame((f) => Math.max(f - 1, 0));
+          }
+        }}
+      >
         <MatchGraph
           left={founders.map(node)}
           right={builders.map(node)}
           pairs={pairs}
         />
-      </div>
+
+        {scrubbable && (
+          <p className="mt-4 text-center font-mono text-[10px] text-muted sm:hidden">
+            {t.round.swipeHint}
+          </p>
+        )}
+      </motion.div>
 
       <div className="space-y-3 border-t border-edge/70 px-5 py-4">
         <div className="flex items-center justify-between font-mono text-2xs text-muted">
@@ -163,30 +189,5 @@ export function MatchTheater({
         </AnimatePresence>
       </div>
     </Panel>
-  );
-}
-
-function ControlButton({
-  children,
-  onClick,
-  label,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  label: string;
-}) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.button
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      whileHover={reduce ? undefined : { scale: 1.05 }}
-      whileTap={reduce ? undefined : { scale: 0.94 }}
-      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-edge text-muted transition-colors hover:border-edgeStrong hover:text-chalk"
-    >
-      {children}
-    </motion.button>
   );
 }

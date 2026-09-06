@@ -66,10 +66,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
               exit={reduce ? undefined : { opacity: 0, scale: 0.96 }}
               transition={springPanel}
-              className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border px-4 py-3 backdrop-blur-md ${
-                t.tone === "ok"
-                  ? "border-sealed/40 bg-surface/95"
-                  : "border-red-500/40 bg-surface/95"
+              // Flick it away. The same gesture people already use on every
+              // notification they have ever dismissed.
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.5}
+              onDragEnd={(_, info) => {
+                if (Math.abs(info.offset.x) > 90) dismiss(t.id);
+              }}
+              className={`glass pointer-events-auto flex w-full max-w-sm cursor-grab touch-pan-y items-start gap-3 rounded-2xl px-4 py-3 active:cursor-grabbing ${
+                t.tone === "ok" ? "glass-sealed" : "border-red-500/40"
               }`}
             >
               {t.tone === "ok" ? (

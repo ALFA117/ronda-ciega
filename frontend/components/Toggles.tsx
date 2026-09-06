@@ -17,9 +17,9 @@ export function ThemeToggle() {
       aria-label={t.nav.theme}
       title={t.nav.theme}
       whileHover={reduce ? undefined : { scale: 1.05 }}
-      whileTap={reduce ? undefined : { scale: 0.94 }}
+      whileTap={reduce ? undefined : { scale: 0.92 }}
       transition={springSnappy}
-      className="flex h-[38px] w-[38px] cursor-pointer items-center justify-center rounded-lg border border-edge text-muted transition-colors hover:border-sealed hover:text-chalk"
+      className="glass flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:text-chalk sm:h-10 sm:w-10"
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
@@ -43,34 +43,37 @@ export function ThemeToggle() {
 
 export function LocaleToggle() {
   const { locale, setLocale } = useLocale();
+  const reduce = useReducedMotion();
   const t = useT();
 
   return (
     <div
-      className="relative flex h-[38px] items-center rounded-lg border border-edge p-0.5"
+      className="glass relative flex h-11 shrink-0 items-center rounded-xl p-0.5 sm:h-10 sm:p-1"
       role="group"
       aria-label={t.nav.language}
     >
       {(["es", "en"] as const).map((l) => (
-        <button
+        <motion.button
           key={l}
           onClick={() => setLocale(l)}
           aria-pressed={locale === l}
-          className={`relative z-10 flex h-full min-h-[34px] min-w-[34px] cursor-pointer items-center justify-center rounded-md px-2.5 font-mono text-2xs uppercase transition-colors ${
-            locale === l ? "text-onSealed" : "text-muted hover:text-chalk"
+          whileTap={reduce ? undefined : { scale: 0.92 }}
+          transition={springSnappy}
+          className={`relative z-10 flex h-full min-w-[34px] cursor-pointer items-center justify-center rounded-lg px-2 font-mono text-2xs uppercase transition-colors ${
+            locale === l ? "text-chalk" : "text-muted hover:text-chalk"
           }`}
         >
           {locale === l && (
             // One shared element slides between the two options instead of two
-            // backgrounds fading in and out.
+            // backgrounds crossfading.
             <motion.span
               layoutId="locale-pill"
-              className="absolute inset-0 -z-10 rounded-md bg-sealed"
+              className="glass glass-sealed absolute inset-0 -z-10 rounded-lg"
               transition={{ type: "spring", stiffness: 380, damping: 30 }}
             />
           )}
           {l}
-        </button>
+        </motion.button>
       ))}
     </div>
   );

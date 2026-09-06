@@ -59,7 +59,7 @@ export default function RootLayout({
           <Nav />
           <main
             id="main"
-            className="mx-auto w-full max-w-6xl px-5 pb-24 sm:px-8"
+            className="mx-auto w-full max-w-6xl px-4 pb-24 sm:px-8"
           >
             {children}
           </main>

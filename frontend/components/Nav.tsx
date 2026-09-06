@@ -7,66 +7,63 @@ import { easeEnter } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import { LocaleToggle, ThemeToggle } from "./Toggles";
 
-// The wallet button reads browser globals, so it can't be server-rendered.
 const WalletMultiButton = dynamic(
   async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
   {
     ssr: false,
-    loading: () => (
-      <div className="h-[38px] w-[132px] rounded-lg border border-edge bg-surface" />
-    ),
+    loading: () => <div className="glass h-11 w-[132px] rounded-xl sm:h-10" />,
   },
 );
 
+/**
+ * A single floating glass bar rather than a full-width band with a rule under
+ * it. The old header pushed the page down and read as a separate slab; this
+ * one hovers over the content it belongs to, and the gap below it is a third
+ * of what it was.
+ */
 export function Nav() {
   const t = useT();
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={easeEnter}
-      className="sticky top-0 z-40 mb-14 border-b border-edge/60 bg-bg/80 backdrop-blur-md"
+      className="sticky top-0 z-40 mb-6 px-3 pt-3 sm:px-5 sm:pt-4"
     >
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-5 py-4 sm:px-8">
-        <Link href="/" className="group flex items-baseline gap-3" aria-label={t.nav.home}>
+      <div className="glass mx-auto flex w-full max-w-6xl items-center gap-2 rounded-2xl px-3 py-2 sm:px-4">
+        <Link
+          href="/"
+          className="mr-auto flex items-baseline gap-2.5 rounded-lg"
+          aria-label={t.nav.home}
+        >
           <span className="whitespace-nowrap text-sm font-medium tracking-tight">
             Ronda Ciega
           </span>
-          <span className="hidden font-mono text-2xs text-muted transition-colors group-hover:text-sealed sm:inline">
+          <span className="hidden font-mono text-2xs text-muted lg:inline">
             {t.nav.tagline}
           </span>
         </Link>
 
-        <nav className="ml-8 hidden items-center gap-6 xl:flex" aria-label="Secciones">
+        <nav className="mr-2 hidden items-center gap-5 xl:flex" aria-label="Secciones">
           {[
-            { href: "#como-funciona", key: "solution" },
-            { href: "#commit-reveal", key: "compare" },
-            { href: "#rondas", key: "rounds" },
+            { href: "#como-funciona", text: t.solution.label },
+            { href: "#commit-reveal", text: t.compare.label },
+            { href: "#rondas", text: t.rounds.label },
           ].map((l) => (
             <Link
               key={l.href}
               href={l.href}
               className="font-mono text-2xs text-muted transition-colors hover:text-chalk"
             >
-              {l.key === "solution"
-                ? t.solution.label
-                : l.key === "compare"
-                  ? t.compare.label
-                  : t.rounds.label}
+              {l.text}
             </Link>
           ))}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <span className="hidden items-center gap-1.5 rounded-lg border border-edge px-2.5 py-2 font-mono text-2xs text-muted lg:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-open" aria-hidden />
-            {t.nav.network}
-          </span>
-          <LocaleToggle />
-          <ThemeToggle />
-          <WalletMultiButton />
-        </div>
+        <LocaleToggle />
+        <ThemeToggle />
+        <WalletMultiButton />
       </div>
     </motion.header>
   );
