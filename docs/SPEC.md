@@ -186,6 +186,11 @@ Ciclo: crear en L1 → delegar al ER TEE → correr rondas → `commit_and_undel
 `close_match_state` —cierran el permiso, cierran la cuenta y devuelven la renta a la ronda que la
 patrocinó— **sin commitear nunca a L1**.
 
+El orden importa: cerrar necesita la ronda como patrocinadora de la renta, y una vez comiteada de
+vuelta a L1 el rollup ya no puede escribirla. Devolverla primero deja huérfana cada cuenta de
+ranking dentro del enclave. La UI hace ambas cosas en una sola acción para que no se pueda
+equivocar con un clic.
+
 El cierre es permissionless una vez liquidada la ronda. No hay nada que ganar llamándolo: quien
 llama no puede leer el dato de todas formas, y destruirlo es lo que se le prometió al participante.
 

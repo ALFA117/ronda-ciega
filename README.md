@@ -144,6 +144,10 @@ return the rent to the round that sponsored it. They are never delegated from L1
 committed to it — there is no instruction anywhere in the program that moves a ranking out of the
 enclave.
 
+Order matters: closing needs the round as its rent sponsor, and once the round is committed back
+to L1 the rollup can no longer write it. Undelegating first orphans every ranking account inside
+the enclave. The UI does both in one action so it cannot be got wrong by clicking.
+
 Closing is permissionless once a round has settled. There is nothing to gain by calling it: the
 data is unreadable to the caller either way, and destroying it is what the participant was
 promised.

@@ -141,9 +141,54 @@ export function RoundControls({
       say(sig);
     });
 
-  const undelegate = () =>
-    run("undelegate", async () => {
+  /**
+   * Destroy the private accounts, then hand the round back to L1.
+   *
+   * The order is not cosmetic. Closing needs the round as its rent sponsor,
+   * and once the round is committed back the rollup can no longer write it —
+   * undelegating first leaves every ranking account orphaned in the enclave.
+   * The button does both so nobody can get that wrong by clicking.
+   */
+  const finish = () =>
+    run("finish", async () => {
       const erProgram = await er();
+
+      let closed = 0;
+      for (const p of participants) {
+        const prefs = preferencesPda(round.address, p.wallet);
+        try {
+          await erProgram.methods
+            .closePreferences(roundId)
+            .accountsPartial({
+              payer: wallet.publicKey!,
+              owner: p.wallet,
+              round: round.address,
+              preferences: prefs,
+              preferencesPermission: permissionPdaFromAccount(prefs),
+            })
+            .rpc();
+          closed++;
+        } catch {
+          // Already closed, or never sealed a list. Neither is a failure.
+        }
+      }
+      say(`${closed} ${t.controls.rankingsDestroyed}`);
+
+      try {
+        await erProgram.methods
+          .closeMatchState(roundId)
+          .accountsPartial({
+            payer: wallet.publicKey!,
+            round: round.address,
+            matchState,
+            matchStatePermission: permissionPdaFromAccount(matchState),
+          })
+          .rpc();
+        say(t.controls.memoryDestroyed);
+      } catch {
+        /* already gone */
+      }
+
       await erProgram.methods
         .undelegateRound(roundId)
         .accountsPartial({ payer: wallet.publicKey!, round: round.address })
@@ -180,7 +225,7 @@ export function RoundControls({
           </Button>
         )}
         {delegated && round.status === "settled" && (
-          <Button variant="ghost" onClick={undelegate} busy={busy === "undelegate"}>
+          <Button variant="ghost" onClick={finish} busy={busy === "finish"}>
             {t.controls.undelegate}
           </Button>
         )}

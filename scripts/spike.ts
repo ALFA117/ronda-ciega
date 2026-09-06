@@ -445,37 +445,7 @@ async function main() {
   }
 
   // ---------------------------------------------------------------------
-  stage(9, "Commit the round back to L1");
-
-  await erAuthorityProgram.methods
-    .undelegateRound(roundId)
-    .accountsPartial({ payer: authority.publicKey, round })
-    .rpc();
-  ok("undelegate submitted");
-
-  // The commit is asynchronous: the rollup hands the account back to the
-  // delegation program, which writes it to L1 a moment later.
-  {
-    const started = Date.now();
-    let back = false;
-    while (Date.now() - started < 60_000) {
-      const info = await l1.getAccountInfo(round);
-      if (info && info.owner.equals(PROGRAM_ID)) {
-        const st: any = await (l1Program.account as any).round.fetch(round);
-        ok(
-          `round is back on L1 after ${Date.now() - started} ms · ` +
-            `${fmtPairs(Array.from(st.pairs))}`,
-        );
-        back = true;
-        break;
-      }
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    if (!back) fail("round never came back to L1 within 60s");
-  }
-
-  // ---------------------------------------------------------------------
-  stage(10, "Destroy the rankings");
+  stage(9, "Destroy the rankings");
 
   {
     let closed = 0;
@@ -524,6 +494,36 @@ async function main() {
     else fail("a ranking exists on L1 — it should never have been committed");
   }
 
+
+  // ---------------------------------------------------------------------
+  stage(10, "Commit the round back to L1");
+
+  await erAuthorityProgram.methods
+    .undelegateRound(roundId)
+    .accountsPartial({ payer: authority.publicKey, round })
+    .rpc();
+  ok("undelegate submitted");
+
+  // The commit is asynchronous: the rollup hands the account back to the
+  // delegation program, which writes it to L1 a moment later.
+  {
+    const started = Date.now();
+    let back = false;
+    while (Date.now() - started < 60_000) {
+      const info = await l1.getAccountInfo(round);
+      if (info && info.owner.equals(PROGRAM_ID)) {
+        const st: any = await (l1Program.account as any).round.fetch(round);
+        ok(
+          `round is back on L1 after ${Date.now() - started} ms · ` +
+            `${fmtPairs(Array.from(st.pairs))}`,
+        );
+        back = true;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    if (!back) fail("round never came back to L1 within 60s");
+  }
 
   console.log("\n\x1b[1mSpike complete.\x1b[0m");
 }
