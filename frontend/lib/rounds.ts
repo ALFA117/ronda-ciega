@@ -63,9 +63,17 @@ export function pickTickerRound(rounds: RoundAccount[] | null): RoundAccount | u
  * bury the rounds that actually finished. Nothing is hidden — a round with
  * nothing in it is simply not the first thing a visitor should meet.
  */
-function interest(r: RoundAccount): number {
+export function interest(r: RoundAccount): number {
   if (r.status === "settled" && r.pairs.some((b) => b !== NONE)) return 2;
-  if (r.rankingCount > 0 || r.founderCount + r.builderCount >= 4) return 1;
+  // "Under way" means it could actually close: lists are in, or both sides
+  // have reached the minimum. Counting participants across both sides called a
+  // round with one founder and sixteen builders busy, when it can never settle.
+  if (
+    r.rankingCount > 0 ||
+    (r.founderCount >= r.minPerSide && r.builderCount >= r.minPerSide)
+  ) {
+    return 1;
+  }
   return 0;
 }
 

@@ -18,7 +18,7 @@ import { Ticker } from "@/components/Ticker";
 import { StartPanel } from "@/components/StartPanel";
 import { Playground } from "@/components/Playground";
 import { LedgerProof } from "@/components/LedgerProof";
-import { RoundRow } from "@/components/RoundRow";
+import { RoundList } from "@/components/RoundList";
 import { Footer } from "@/components/Footer";
 import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
 
@@ -214,11 +214,7 @@ export default function Home() {
           </Panel>
         )}
 
-        <div className="border-t border-edge">
-          {rounds?.map((r) => (
-            <RoundRow key={r.address.toBase58()} round={r} />
-          ))}
-        </div>
+        {rounds && rounds.length > 0 && <RoundList rounds={rounds} />}
       </Section>
 
       <Footer />

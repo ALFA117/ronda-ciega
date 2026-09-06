@@ -147,6 +147,10 @@ export const en: Dictionary = {
     founders: "founders",
     builders: "builders",
     peek: "Preview the outcome",
+    emptyRounds: "empty rounds from test runs",
+    hideEmpty: "Hide the empty ones",
+    emptyNote:
+      "Devnet keeps every round ever opened. These are left over from running the test suites: no lists, never settled. They are folded away, not removed.",
     sealedLists: "sealed lists",
   },
 

@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { PublicKey } from "@solana/web3.js";
 import { NONE } from "../lib/constants.ts";
-import { byInterest, pickTickerRound } from "../lib/rounds.ts";
+import { byInterest, interest, pickTickerRound } from "../lib/rounds.ts";
 import type { RoundAccount } from "../lib/program.ts";
 
 function round(over: Partial<RoundAccount> = {}): RoundAccount {
@@ -144,5 +144,38 @@ describe("Dentro del mismo grupo manda el tamaño", () => {
       founderCount: 2, builderCount: 2,
     });
     assert.equal([grandeVacia, chicaLista].sort(byInterest)[0].roundId, 2n);
+  });
+});
+
+describe("Qué cuenta como ronda en curso", () => {
+  test("una ronda que no puede cerrar no está en curso", () => {
+    // 1 founder and 16 builders is seventeen people and a round that can never
+    // settle: the minimum is per side, not a total.
+    const imposible = round({
+      roundId: 900n, status: "open",
+      founderCount: 1, builderCount: 16, minPerSide: 2, rankingCount: 0,
+    });
+    assert.equal(interest(imposible), 0);
+  });
+
+  test("ambos lados en el mínimo sí está en curso", () => {
+    const viable = round({
+      status: "open", founderCount: 2, builderCount: 2, minPerSide: 2, rankingCount: 0,
+    });
+    assert.equal(interest(viable), 1);
+  });
+
+  test("con listas selladas cuenta aunque falte gente", () => {
+    const conListas = round({
+      status: "open", founderCount: 1, builderCount: 1, minPerSide: 2, rankingCount: 2,
+    });
+    assert.equal(interest(conListas), 1);
+  });
+
+  test("una ronda cerrada con pares sigue siendo la de mayor interés", () => {
+    const settled = round({
+      status: "settled", pairs: [0, 1, ...new Array(14).fill(NONE)],
+    });
+    assert.equal(interest(settled), 2);
   });
 });

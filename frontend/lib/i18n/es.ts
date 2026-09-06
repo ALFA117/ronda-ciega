@@ -146,6 +146,10 @@ export const es = {
     founders: "founders",
     builders: "builders",
     peek: "Ver el resultado sin entrar",
+    emptyRounds: "rondas vacías de pruebas",
+    hideEmpty: "Ocultar las vacías",
+    emptyNote:
+      "Devnet conserva toda ronda que se haya abierto. Estas quedaron de correr las suites de prueba: sin listas y sin cerrar. No se borran — se pliegan.",
     sealedLists: "listas selladas",
   },
 
