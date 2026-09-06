@@ -130,7 +130,18 @@
     scroll-behavior: smooth;
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  /* Starts at the visible end, so a run that never happens costs nothing.
+   Used by Collapse, where the content must be readable either way. */
+@keyframes rc-fade-in {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: rc-fade-in 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
     }

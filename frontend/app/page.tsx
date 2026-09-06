@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Connection } from "@solana/web3.js";
 import { DEVNET_RPC } from "@/lib/constants";
 import { getReadProgram, RoundAccount } from "@/lib/program";
@@ -146,10 +148,17 @@ export default function Home() {
         wide
       >
         {/* The claim the whole project rests on, counted rather than asserted. */}
-        <div className="mb-4">
+        <div className="mb-4 space-y-3">
           <ErrorBoundary>
             <LedgerProof />
           </ErrorBoundary>
+          <Link
+            href="/proof"
+            className="glass inline-flex h-11 items-center gap-2 rounded-xl px-4 font-mono text-2xs text-chalk transition-colors hover:text-sealed"
+          >
+            {t.proof.title}
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">

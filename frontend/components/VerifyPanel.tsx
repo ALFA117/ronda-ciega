@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Check, ShieldCheck, X } from "lucide-react";
 import { framesFor, type RoundAccount } from "@/lib/program";
 import { verifyRound } from "@/lib/verify-round";
 import { useT } from "@/lib/i18n";
-import { springPanel } from "@/lib/motion";
 
 /**
  * Recompute the round in the reader's browser, against the chain's own answer.
@@ -73,19 +72,17 @@ export function VerifyPanel({ round }: { round: RoundAccount }) {
         </button>
       </div>
 
-      <AnimatePresence>
-        {result && (
-          <motion.div
-            initial={reduce ? undefined : { opacity: 0, height: 0 }}
-            animate={reduce ? undefined : { opacity: 1, height: "auto" }}
-            transition={springPanel}
-            className="overflow-hidden"
-          >
+      {/* No entrance animation on the evidence itself. Animating height from
+          zero leaves the result clipped to nothing if the animation never runs
+          — a throttled tab, a recording overlay, reduced motion handled badly
+          — and a proof that is invisible is worse than no proof. */}
+      {result && (
+        <div>
             <ul className="mt-5 divide-y divide-edge border-y border-edge">
               {result.checks.map((c, i) => (
                 <motion.li
                   key={c.id}
-                  initial={reduce ? undefined : { opacity: 0, x: -6 }}
+                  initial={false}
                   animate={reduce ? undefined : { opacity: 1, x: 0 }}
                   transition={{ delay: reduce ? 0 : i * 0.09 }}
                   className="flex items-center gap-3 py-2.5"
@@ -105,15 +102,14 @@ export function VerifyPanel({ round }: { round: RoundAccount }) {
               ))}
             </ul>
 
-            <p className="mt-4 text-xs leading-relaxed text-muted">
-              <span className={result.allPassed ? "text-sealed" : "text-open"}>
-                {result.allPassed ? t.verify.passed : t.verify.failed}
-              </span>{" "}
-              {t.verify.limit}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <p className="mt-4 text-xs leading-relaxed text-muted">
+            <span className={result.allPassed ? "text-sealed" : "text-open"}>
+              {result.allPassed ? t.verify.passed : t.verify.failed}
+            </span>{" "}
+            {t.verify.limit}
+          </p>
+        </div>
+      )}
     </section>
   );
 }

@@ -9,6 +9,7 @@ import { RoundAccount } from "@/lib/program";
 import { useT } from "@/lib/i18n";
 import { useParticipants } from "@/hooks/useParticipants";
 import { springPanel } from "@/lib/motion";
+import { Collapse } from "./Collapse";
 import { StatusPill, Tag } from "./ui";
 
 /**
@@ -175,21 +176,11 @@ export function RoundRow({ round }: { round: RoundAccount }) {
         </button>
       </div>
 
-      <AnimatePresence initial={false}>
-        {peek && (
-          <motion.div
-            initial={reduce ? undefined : { height: 0, opacity: 0 }}
-            animate={reduce ? undefined : { height: "auto", opacity: 1 }}
-            exit={reduce ? undefined : { height: 0, opacity: 0 }}
-            transition={springPanel}
-            className="overflow-hidden"
-          >
-            <div className="pb-5 pl-[76px] pr-2">
-              <Preview round={round} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Collapse open={peek}>
+        <div className="pb-5 pl-[76px] pr-2">
+          <Preview round={round} />
+        </div>
+      </Collapse>
     </div>
   );
 }

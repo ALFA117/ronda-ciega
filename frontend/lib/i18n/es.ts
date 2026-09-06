@@ -165,6 +165,7 @@ export const es = {
       "Esta ronda no es transparente, así que no hay nada que animar: los estados intermedios nunca salieron del enclave. Lo de arriba es todo lo que existe públicamente.",
     settled:
       "Emparejamiento estable: nadie puede mejorar cambiando de par. Las listas siguen dentro del enclave y no se van a publicar nunca.",
+    notFoundNote: "Esa dirección no corresponde a ninguna ronda de este programa.",
     notFound: "Ronda no encontrada",
     you: "tú",
     replay: "Repetir",
@@ -309,6 +310,61 @@ export const es = {
     failed: "No cuadra.",
     limit:
       "Lo que esto no comprueba, y no puede: si las listas ocultas se respetaron. Eso exigiría las listas, y las listas se destruyeron sin publicarse. Ese es el trato — proceso y resultado verificables, entradas no.",
+  },
+
+  proof: {
+    label: "Pruebas",
+    title: "No tienes que creerme nada de esto",
+    lede:
+      "Cada comprobación de aquí corre en tu máquina, sobre datos públicos, sin billetera. La última sección dice lo que ninguna de ellas puede establecer.",
+    stability: {
+      title: "La garantía de estabilidad, comprobada aquí",
+      lede:
+        "Genera cuatrocientos mercados con listas al azar, corre el mismo algoritmo que corre en cadena, y busca en cada resultado un par bloqueante: dos personas que preferirían dejarse por estar juntas. Si existe uno solo, la promesa es falsa.",
+      run: "Correr 400 mercados",
+      running: "Corriendo…",
+      cases: "Mercados",
+      blocking: "Pares bloqueantes",
+      deepest: "Rondas, la más larga",
+      time: "Tiempo",
+      passed:
+        "Ni un par bloqueante en cuatrocientos mercados. Eso es lo que significa estable, y es la única promesa de este proyecto que es matemática y no de ingeniería.",
+      failed:
+        "Apareció un par bloqueante. Eso es un error y quiero saberlo — el código está en el repositorio, en lib/matching.ts.",
+    },
+    round: {
+      title: "Una ronda concreta, contra la cadena",
+      lede:
+        "Solo las rondas transparentes publican su traza. Elige una y compárala con lo que dice Solana.",
+      pick: "Ronda",
+      none: "Todavía no hay ninguna ronda transparente cerrada que comprobar.",
+    },
+    limits: {
+      title: "Lo que nada de esto demuestra",
+      items: [
+        {
+          title: "Que se respetaron las listas",
+          body:
+            "Haría falta tener las listas, y se destruyeron sin publicarse. Puedes verificar el proceso y el resultado; las entradas no.",
+        },
+        {
+          title: "Que el enclave es honesto",
+          body:
+            "La garantía es de hardware: confías en la atestación del TEE de MagicBlock, no en mí. Si esa atestación se rompe, se rompe la privacidad.",
+        },
+        {
+          title: "Que cada wallet es una persona",
+          body:
+            "No hay verificación de identidad. Alguien puede registrar varias. Es un problema de identidad, no de emparejamiento.",
+        },
+        {
+          title: "Que un pool chico no filtra",
+          body:
+            "Con pocas personas por lado, los pares publicados revelan el resto por eliminación. Se mitiga con un mínimo; no se elimina.",
+        },
+      ],
+      explorer: "Ver el programa en el explorador",
+    },
   },
 
   ledger: {

@@ -12,7 +12,7 @@ export default function NotFound() {
     <Panel className="mx-auto max-w-lg space-y-5 p-8 text-center">
       <Label>404</Label>
       <h1 className="text-xl font-medium tracking-tight">{t.round.notFound}</h1>
-      <Note>{t.rounds.empty}</Note>
+      <Note>{t.round.notFoundNote}</Note>
       <Link
         href="/"
         className="inline-flex items-center gap-2 font-mono text-sm text-sealed transition-colors hover:text-chalk"

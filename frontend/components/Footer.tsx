@@ -6,6 +6,7 @@ import { PROGRAM_ID } from "@/lib/constants";
 import { useT } from "@/lib/i18n";
 
 const LINKS = [
+  { label: "Proof", href: "/proof" },
   { label: "GitHub", href: "https://github.com/ALFA117/ronda-ciega" },
   {
     label: "Program",

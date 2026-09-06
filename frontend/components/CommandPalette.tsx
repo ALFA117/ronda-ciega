@@ -134,6 +134,16 @@ export function CommandPalette() {
       { id: "medido", label: t.stats.label, kind: "section", go: jump("medido") },
       { id: "limites", label: t.limits.label, kind: "section", go: jump("limites") },
       { id: "rondas", label: t.rounds.label, kind: "section", go: jump("rondas") },
+      {
+        id: "proof",
+        label: t.proof.label,
+        hint: "/proof",
+        kind: "section",
+        go: () => {
+          close();
+          router.push("/proof");
+        },
+      },
     ];
 
     const roundItems: Item[] = (rounds ?? []).map((r) => ({

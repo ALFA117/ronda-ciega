@@ -166,6 +166,7 @@ export const en: Dictionary = {
       "This round isn't transparent, so there's nothing to animate: the intermediate states never left the enclave. What's above is everything that exists publicly.",
     settled:
       "Stable matching: nobody can do better by switching. The lists are still inside the enclave and will never be published.",
+    notFoundNote: "That address is not a round of this program.",
     notFound: "Round not found",
     you: "you",
     replay: "Replay",
@@ -294,6 +295,61 @@ export const en: Dictionary = {
     reset: "Reset",
     stable: "Stable: no pair would both rather leave their match for each other.",
     unstable: "Unstable. If you see this there is a bug and I want to hear about it.",
+  },
+
+  proof: {
+    label: "Proof",
+    title: "You do not have to take my word for any of this",
+    lede:
+      "Every check here runs on your machine, against public data, without a wallet. The last section says what none of them can establish.",
+    stability: {
+      title: "The stability guarantee, checked here",
+      lede:
+        "Generate four hundred markets with random lists, run the same algorithm the chain runs, and look in each result for a blocking pair: two people who would both rather leave their match for each other. One is enough to make the promise false.",
+      run: "Run 400 markets",
+      running: "Running…",
+      cases: "Markets",
+      blocking: "Blocking pairs",
+      deepest: "Rounds, deepest",
+      time: "Time",
+      passed:
+        "Not one blocking pair in four hundred markets. That is what stable means, and it is the only promise here that is mathematical rather than engineering.",
+      failed:
+        "A blocking pair turned up. That is a bug and I want to hear about it — the code is in the repository, at lib/matching.ts.",
+    },
+    round: {
+      title: "One real round, against the chain",
+      lede:
+        "Only transparent rounds publish their trace. Pick one and compare it with what Solana says.",
+      pick: "Round",
+      none: "No settled transparent round to check yet.",
+    },
+    limits: {
+      title: "What none of this proves",
+      items: [
+        {
+          title: "That the lists were respected",
+          body:
+            "It would take the lists, and they were destroyed unpublished. You can verify the process and the outcome; the inputs, no.",
+        },
+        {
+          title: "That the enclave is honest",
+          body:
+            "The guarantee is hardware: you trust the MagicBlock TEE attestation, not me. If that attestation breaks, the privacy breaks.",
+        },
+        {
+          title: "That each wallet is a person",
+          body:
+            "There is no identity check. One human can register several. That is an identity problem, not a matching one.",
+        },
+        {
+          title: "That a small pool does not leak",
+          body:
+            "With few people per side the published pairs reveal the rest by elimination. A minimum mitigates it; nothing removes it.",
+        },
+      ],
+      explorer: "See the program on the explorer",
+    },
   },
 
   ledger: {

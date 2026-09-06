@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { interest } from "@/lib/rounds";
 import type { RoundAccount } from "@/lib/program";
 import { useT } from "@/lib/i18n";
 import { springPanel } from "@/lib/motion";
+import { Collapse } from "./Collapse";
 import { RoundRow } from "./RoundRow";
 
 /**
@@ -56,26 +57,16 @@ export function RoundList({ rounds }: { rounds: RoundAccount[] }) {
               : `${empty.length} ${t.rounds.emptyRounds}`}
           </button>
 
-          <AnimatePresence initial={false}>
-            {showEmpty && (
-              <motion.div
-                initial={reduce ? undefined : { height: 0, opacity: 0 }}
-                animate={reduce ? undefined : { height: "auto", opacity: 1 }}
-                exit={reduce ? undefined : { height: 0, opacity: 0 }}
-                transition={springPanel}
-                className="overflow-hidden"
-              >
-                <p className="pb-2 pt-4 text-xs leading-relaxed text-muted">
-                  {t.rounds.emptyNote}
-                </p>
-                <div className="border-t border-edge">
-                  {empty.map((r) => (
-                    <RoundRow key={r.address.toBase58()} round={r} />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <Collapse open={showEmpty}>
+            <p className="pb-2 pt-4 text-xs leading-relaxed text-muted">
+              {t.rounds.emptyNote}
+            </p>
+            <div className="border-t border-edge">
+              {empty.map((r) => (
+                <RoundRow key={r.address.toBase58()} round={r} />
+              ))}
+            </div>
+          </Collapse>
         </div>
       )}
     </>
