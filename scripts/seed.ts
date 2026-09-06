@@ -50,38 +50,73 @@ const MATCH_STATE_SEED = Buffer.from("match_state");
  * Handles that read like people, not fixtures. `founder-0` on screen tells a
  * judge the demo is synthetic before you have said a word.
  */
-const FOUNDERS = [
+const ALL_FOUNDERS = [
   { handle: "@sofia.eth", link: "sofia.build" },
   { handle: "@marco_gtm", link: "github.com/marcogtm" },
   { handle: "@lucia.pm", link: "lucia.dev" },
   { handle: "@tomas", link: "x.com/tomasbuilds" },
+  { handle: "@vale.ops", link: "valeria.co" },
+  { handle: "@diego", link: "x.com/diegoships" },
+  { handle: "@ceci.gtm", link: "cecilia.mx" },
+  { handle: "@bruno", link: "github.com/brunolat" },
 ];
 
-const BUILDERS = [
+const ALL_BUILDERS = [
   { handle: "@karla.rs", link: "github.com/karlars" },
   { handle: "@nico_zk", link: "nico.xyz" },
   { handle: "@ana.sol", link: "github.com/anasol" },
   { handle: "@rafa", link: "x.com/rafacodes" },
+  { handle: "@ivan.anchor", link: "github.com/ivanc" },
+  { handle: "@pau_ml", link: "paula.dev" },
+  { handle: "@seba.sol", link: "github.com/sebas" },
+  { handle: "@mia.rs", link: "mia.build" },
 ];
+
+/** `POOL=6 npx ts-node scripts/seed.ts` widens the market. */
+const POOL = Math.min(Number(process.env.POOL || 4), 8);
+const FOUNDERS = ALL_FOUNDERS.slice(0, POOL);
+const BUILDERS = ALL_BUILDERS.slice(0, POOL);
 
 /**
- * Hand-picked so the replay has a story: sofia and lucia both open on karla,
- * karla prefers lucia, so sofia is displaced on tick 2 and falls to nico.
- * That displacement is the moment worth filming.
+ * Rankings.
+ *
+ * The first four are hand-picked so the replay has a story: sofia and lucia
+ * both open on karla, karla prefers lucia, so sofia is displaced on tick 2.
+ * Beyond four, lists are generated with overlapping top choices so a larger
+ * pool still produces contention rather than everyone matching on tick 1.
  */
-const FOUNDER_RANKINGS = [
-  [0, 1, 2, 3], // sofia  -> karla first
-  [1, 2, 0, 3], // marco  -> nico first
-  [0, 2, 1, 3], // lucia  -> karla first, competes with sofia
-  [3, 2, 1, 0], // tomas  -> rafa first
+const SEED_FOUNDER = [
+  [0, 1, 2, 3],
+  [1, 2, 0, 3],
+  [0, 2, 1, 3],
+  [3, 2, 1, 0],
+];
+const SEED_BUILDER = [
+  [2, 0, 1, 3],
+  [0, 1, 3, 2],
+  [1, 0, 3, 2],
+  [3, 1, 0, 2],
 ];
 
-const BUILDER_RANKINGS = [
-  [2, 0, 1, 3], // karla  -> prefers lucia over sofia
-  [0, 1, 3, 2], // nico   -> sofia first
-  [1, 0, 3, 2], // ana    -> marco first
-  [3, 1, 0, 2], // rafa   -> tomas first
-];
+function rankingFor(seed: number[][], idx: number, n: number): number[] {
+  const base = idx < seed.length ? seed[idx] : [];
+  const rest = Array.from({ length: n }, (_, i) => i)
+    // Bias later joiners toward the same early indices, so the top of the
+    // market stays contested however wide the pool gets.
+    .sort((a, b) => ((a + idx) % 3) - ((b + idx) % 3) || a - b);
+  const out: number[] = [];
+  for (const v of [...base, ...rest]) {
+    if (v < n && !out.includes(v)) out.push(v);
+  }
+  return out;
+}
+
+const FOUNDER_RANKINGS = FOUNDERS.map((_, i) =>
+  rankingFor(SEED_FOUNDER, i, BUILDERS.length),
+);
+const BUILDER_RANKINGS = BUILDERS.map((_, i) =>
+  rankingFor(SEED_BUILDER, i, FOUNDERS.length),
+);
 
 const ONLY = process.env.ONLY;
 

@@ -69,33 +69,33 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #eae7e0;
-  --bg-deep: #e0dcd3;
-  --surface: #f4f2ed;
-  --surface-2: #e2ded5;
-  --edge: #d5cfc4;
-  --edge-strong: #b3ab9c;
-  --text: #1b1916;
-  --text-muted: #565049;
+  --bg: #ddd8cc;
+  --bg-deep: #d0cabc;
+  --surface: #e7e2d6;
+  --surface-2: #d0cabc;
+  --edge: #bdb5a4;
+  --edge-strong: #9c927e;
+  --text: #211e19;
+  --text-muted: #4f4940;
 
-  --sealed: #0d6d88;
-  --sealed-dim: #0a566c;
-  --open: #98189f;
+  --sealed: #0a5b73;
+  --sealed-dim: #084457;
+  --open: #7f1486;
 
-  --sealed-rgb: 13, 109, 136;
-  --open-rgb: 152, 24, 159;
+  --sealed-rgb: 10, 91, 115;
+  --open-rgb: 127, 20, 134;
 
-  --chart-1: #00789c;
-  --chart-2: #a34a08;
+  --chart-1: #00647f;
+  --chart-2: #8a3d06;
 
   --on-sealed: #ffffff;
-  --text-dim: #6a645b;
+  --text-dim: #615a4f;
 
-  --card-top: rgba(255, 255, 255, 0.9);
+  --card-top: rgba(255, 253, 248, 0.6);
   --card-wash: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.85) 0%,
-    rgba(20, 18, 15, 0.014) 100%
+    rgba(250, 247, 240, 0.5) 0%,
+    rgba(33, 30, 25, 0.02) 100%
   );
   --shadow-card: 0 1px 2px rgba(20, 18, 15, 0.05), 0 10px 24px -14px rgba(20, 18, 15, 0.18);
   --shadow-lift: 0 2px 8px rgba(20, 18, 15, 0.07), 0 24px 50px -22px rgba(20, 18, 15, 0.26);
@@ -103,16 +103,18 @@
 
   --ghost: rgba(20, 18, 15, 0.055);
 
+  /* Warm-tinted rather than white. Glass built out of pure white on a light
+     page is a lamp, and it was undoing the darker ground underneath it. */
   --glass-bg: linear-gradient(
     160deg,
-    rgba(255, 255, 255, 0.75) 0%,
-    rgba(255, 255, 255, 0.38) 55%,
-    rgba(255, 255, 255, 0.55) 100%
+    rgba(247, 244, 236, 0.6) 0%,
+    rgba(226, 220, 206, 0.32) 55%,
+    rgba(240, 236, 226, 0.46) 100%
   );
-  --glass-border: rgba(27, 25, 22, 0.12);
-  --glass-inset: rgba(255, 255, 255, 0.9);
-  --glass-shadow: 0 8px 22px -12px rgba(27, 25, 22, 0.3);
-  --glass-sheen: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(33, 30, 25, 0.16);
+  --glass-inset: rgba(255, 253, 248, 0.55);
+  --glass-shadow: 0 8px 22px -12px rgba(33, 30, 25, 0.28);
+  --glass-sheen: rgba(255, 253, 248, 0.5);
 }
 
 @layer base {
