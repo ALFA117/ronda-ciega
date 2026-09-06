@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -26,6 +26,7 @@ export function Nav() {
   const t = useT();
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const active = useActiveSection(SECTION_IDS);
 
   const links = [
@@ -39,14 +40,48 @@ export function Nav() {
 
   // A drawer that survives a back gesture or an Escape is the difference
   // between a menu and a trap.
+  //
+  // The focus handling is the other half of that: a keyboard user who opens
+  // the sheet should land inside it, be unable to tab out behind it, and end
+  // up back on the button they pressed — not at the top of the document.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const opener = document.activeElement as HTMLElement | null;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key !== "Tab" || !sheetRef.current) return;
+      const focusable = sheetRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !sheetRef.current.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    const id = window.setTimeout(
+      () => sheetRef.current?.querySelector<HTMLElement>("button")?.focus(),
+      60,
+    );
+
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      window.clearTimeout(id);
+      opener?.focus?.();
     };
   }, [open]);
 
@@ -144,6 +179,7 @@ export function Nav() {
             />
 
             <motion.div
+              ref={sheetRef}
               role="dialog"
               aria-modal="true"
               aria-label={t.nav.menu}

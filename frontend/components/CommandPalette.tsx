@@ -38,11 +38,18 @@ export function CommandPalette() {
   const [rounds, setRounds] = useState<RoundAccount[] | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  /** Whatever had focus before the palette took it. */
+  const returnTo = useRef<HTMLElement | null>(null);
 
   const close = useCallback(() => {
     setOpen(false);
     setQuery("");
     setCursor(0);
+    // A dialog that closes onto nothing leaves a keyboard user back at the top
+    // of the document, having lost their place.
+    returnTo.current?.focus?.();
+    returnTo.current = null;
   }, []);
 
   // Open with the platform's own shortcut, close with Escape.
@@ -66,11 +73,35 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (!open) return;
+    returnTo.current = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
     const id = window.setTimeout(() => inputRef.current?.focus(), 40);
+
+    // Without this, Tab walks straight out of the dialog and into the page
+    // behind it, which is still there and still scrolled where it was.
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+        'input, button, [href], [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || !panelRef.current.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", trap);
+
     return () => {
       document.body.style.overflow = "";
       window.clearTimeout(id);
+      window.removeEventListener("keydown", trap);
     };
   }, [open]);
 
@@ -172,6 +203,7 @@ export function CommandPalette() {
             />
 
             <motion.div
+              ref={panelRef}
               role="dialog"
               aria-modal="true"
               aria-label={t.palette.open}
