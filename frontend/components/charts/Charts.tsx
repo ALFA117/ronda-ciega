@@ -24,17 +24,40 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
 
   const frames = round.transparent ? framesFor(round) : [];
   const total = round.founderCount;
-  const data = frames.map((pairs, i) => {
-    const matched = pairs.slice(0, total).filter((v) => v !== NONE).length;
-    return { tick: i + 1, matched, unmatched: total - matched };
-  });
+
+  // Round 0 is the state before anyone proposes: nobody is paired. It is not
+  // in `history` because the program records a frame per tick, but leaving it
+  // out makes the chart open mid-story — the first bar is already half full
+  // and the climb from nothing is the thing worth seeing.
+  const data =
+    frames.length > 0
+      ? [
+          { tick: 0, matched: 0, unmatched: total },
+          ...frames.map((pairs, i) => {
+            const matched = pairs.slice(0, total).filter((v) => v !== NONE).length;
+            return { tick: i + 1, matched, unmatched: total - matched };
+          }),
+        ]
+      : [];
 
   const empty = data.length === 0 || total === 0;
 
-  const W = 100;
-  const H = 132;
-  const band = empty ? 0 : W / data.length;
-  const barW = Math.min(band * 0.62, 14);
+  // Drawn at the aspect it is displayed at. The previous version stretched a
+  // 100-unit box across the full column width with preserveAspectRatio="none",
+  // which scaled the glyphs and the corner radii horizontally by about five —
+  // that distortion was the whole reason the labels looked wrong.
+  const PAD_L = 26;
+  const PAD_R = 8;
+  // Room above the tallest bar for its value label, which sits outside it.
+  const PAD_T = 24;
+  const PAD_B = 22;
+  const W = 320;
+  const H = 178;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+  const band = empty ? 0 : plotW / data.length;
+  const barW = Math.min(band * 0.56, 26);
+  const y = (v: number) => PAD_T + plotH - (total ? (v / total) * plotH : 0);
 
   return (
     <ChartFrame
@@ -49,35 +72,51 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="none"
-        className="h-36 w-full"
+        className="w-full"
+        style={{ aspectRatio: `${W} / ${H}` }}
         role="img"
         aria-label={`${t.stats.convergence}: ${data
           .map((d) => `${t.stats.tick} ${d.tick} ${d.matched}/${total}`)
           .join(", ")}`}
       >
-        {/* Recessive baseline. No gridlines: four bars do not need them. */}
-        <line
-          x1="0"
-          x2={W}
-          y1={H - 18}
-          y2={H - 18}
-          stroke="var(--edge)"
-          strokeWidth={0.5}
-          vectorEffect="non-scaling-stroke"
-        />
+        {/* Two gridlines, and each names a value the chart actually reaches:
+            zero, and the whole cohort. The top one is what the bars converge
+            on, so it is the line that carries the meaning. */}
+        {[0, total].map((v) => (
+          <g key={v}>
+            <line
+              x1={PAD_L}
+              x2={W - PAD_R}
+              y1={y(v)}
+              y2={y(v)}
+              stroke="var(--edge)"
+              strokeWidth={v === total ? 1 : 1}
+              strokeDasharray={v === total ? "3 3" : undefined}
+              vectorEffect="non-scaling-stroke"
+            />
+            <text
+              x={PAD_L - 7}
+              y={y(v) + 3.5}
+              textAnchor="end"
+              className="fill-[var(--text-dim)] font-mono"
+              style={{ fontSize: 9 }}
+            >
+              {v}
+            </text>
+          </g>
+        ))}
+
         {data.map((d, i) => {
-          const x = i * band + (band - barW) / 2;
-          const plot = H - 26;
-          const hM = total ? (d.matched / total) * plot : 0;
-          const hU = total ? (d.unmatched / total) * plot : 0;
+          const x = PAD_L + i * band + (band - barW) / 2;
+          const hM = total ? (d.matched / total) * plotH : 0;
+          const hU = total ? (d.unmatched / total) * plotH : 0;
           return (
             <g key={d.tick}>
               {hU > 0 && (
                 <motion.rect
                   x={x}
                   width={barW}
-                  y={H - 18 - hU - hM - GAP}
+                  y={y(total)}
                   rx={2}
                   fill={C2}
                   initial={reduce ? undefined : { height: 0 }}
@@ -85,32 +124,37 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
                   transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
                 />
               )}
-              <motion.rect
-                x={x}
-                width={barW}
-                y={H - 18 - hM}
-                rx={2}
-                fill={C1}
-                initial={reduce ? undefined : { height: 0 }}
-                animate={{ height: hM }}
-                transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-              />
-              {/* Direct label — the secondary encoding the palette requires. */}
+              {hM > 0 && (
+                <motion.rect
+                  x={x}
+                  width={barW}
+                  y={y(d.matched)}
+                  rx={2}
+                  fill={C1}
+                  initial={reduce ? undefined : { height: 0 }}
+                  animate={{ height: hM }}
+                  transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                />
+              )}
+              {/* The round number, on the axis. */}
               <text
                 x={x + barW / 2}
-                y={H - 6}
+                y={H - PAD_B + 14}
                 textAnchor="middle"
-                className="fill-[var(--text-muted)] font-mono"
-                style={{ fontSize: 7 }}
+                className="fill-[var(--text-dim)] font-mono"
+                style={{ fontSize: 9 }}
               >
                 {d.tick}
               </text>
+              {/* Direct value label — the secondary encoding the palette
+                  requires, and what makes the last two bars distinguishable
+                  when they are the same height. */}
               <text
                 x={x + barW / 2}
-                y={H - 22 - hM}
+                y={y(d.matched) - 5}
                 textAnchor="middle"
                 className="fill-[var(--text)] font-mono"
-                style={{ fontSize: 7 }}
+                style={{ fontSize: 9.5, fontWeight: 500 }}
               >
                 {d.matched}
               </text>
@@ -118,6 +162,8 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
           );
         })}
       </svg>
+
+      <p className="mt-1 font-mono text-2xs text-dim">{t.stats.convergenceNote}</p>
     </ChartFrame>
   );
 }

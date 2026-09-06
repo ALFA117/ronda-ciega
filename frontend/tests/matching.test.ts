@@ -8,7 +8,7 @@ import {
   buildState,
   findBlockingPair,
   runMatching,
-} from "./oracle/gale-shapley.ts";
+} from "../lib/matching.ts";
 
 /** Seeded so a failure is reproducible instead of a story about one CI run. */
 function prng(seed: number) {

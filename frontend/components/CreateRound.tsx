@@ -6,6 +6,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { SystemProgram } from "@solana/web3.js";
 import BN from "bn.js";
 import { getProgram } from "@/lib/program";
+import { classifyError } from "@/lib/errors";
 import { roundPda } from "@/lib/pdas";
 import { useT } from "@/lib/i18n";
 import { Button, Note, Panel } from "./ui";
@@ -41,8 +42,8 @@ export function CreateRound() {
         .rpc();
 
       router.push(`/round/${round.toBase58()}`);
-    } catch (e: any) {
-      setError(e.message || String(e));
+    } catch (e) {
+      setError(t.errors[classifyError(e)]);
     } finally {
       setBusy(false);
     }

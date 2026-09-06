@@ -1,12 +1,16 @@
 /**
- * A second implementation of the on-chain matching, written from the Rust
- * rather than shared with it.
+ * The matching, in TypeScript — written from the Rust rather than shared with
+ * it, and doing two jobs.
  *
- * The point of a test oracle is that it is NOT the code under test: if this
- * file and `advance_one_round` in programs/ronda-ciega/src/lib.rs agree on a
- * few thousand random inputs, a transcription error in either one has to have
- * been made twice, identically. Mirror any change to the Rust here, or the
+ * As a test oracle it is NOT the code under test: if this file and
+ * `advance_one_round` in programs/ronda-ciega/src/lib.rs agree on a few
+ * thousand random inputs, a transcription error in either one has to have been
+ * made twice, identically. Mirror any change to the Rust here, or the
  * cross-check stops meaning anything.
+ *
+ * It also drives the playground on the landing page, so a visitor can run the
+ * same algorithm the chain runs, on preferences they chose, without a wallet.
+ * The property tests over it are what make that demonstration worth trusting.
  */
 
 export const MAX_PER_SIDE = 16;

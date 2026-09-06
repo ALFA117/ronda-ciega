@@ -120,6 +120,7 @@ export const en: Dictionary = {
     title: "These numbers came off real runs",
     label: "Measured on devnet",
     convergence: "Convergence",
+    convergenceNote: "Each proposal round, starting from nobody paired.",
     matched: "matched",
     unmatched: "unmatched",
     latency: "Matching latency",
@@ -238,6 +239,52 @@ export const en: Dictionary = {
     submit: "Create",
     cancel: "Cancel",
     devnetNote: "Devnet. No real money moves.",
+  },
+
+  start: {
+    title: "Ready to open your round",
+    wallet: "Wallet",
+    notConnected: "not connected",
+    balance: "Devnet balance",
+    network: "Network",
+    networkNote:
+      "Your wallet has to be on Devnet too. On Mainnet the signature fails with a simulation error, because this program does not exist there.",
+    faucet: "Get devnet SOL",
+    whatHappens: "What happens next",
+    steps: [
+      "You share the round link.",
+      "Everyone joins and writes their list inside the enclave.",
+      "At the deadline the algorithm runs in one transaction.",
+      "The pairings come out. The lists are destroyed unpublished.",
+    ],
+    lowBalanceCta: "You need at least 0.05 devnet SOL to open a round.",
+  },
+
+  errors: {
+    rejected: "You cancelled the signature. Nothing was created.",
+    wrongNetwork:
+      "Your wallet is on another network. Switch it to Devnet and try again: this program does not exist on Mainnet, which is why the simulation fails.",
+    lowBalance:
+      "Not enough devnet SOL to pay the accounts rent. Get some at faucet.solana.com.",
+    blockhash: "The network took too long. Try again.",
+    unknown: "The round could not be created.",
+  },
+
+  play: {
+    label: "Try it",
+    title: "Run the algorithm yourself",
+    lede:
+      "Four founders, four builders, random lists. This is the same implementation that verifies the on-chain program, not an imitation of it. No wallet, no transaction.",
+    legend: "The letters are each person's order of preference.",
+    round: "Round",
+    matched: "Paired",
+    proposals: "Proposals",
+    run: "Run",
+    step: "One round",
+    shuffle: "New lists",
+    reset: "Reset",
+    stable: "Stable: no pair would both rather leave their match for each other.",
+    unstable: "Unstable. If you see this there is a bug and I want to hear about it.",
   },
 
   preflight: {

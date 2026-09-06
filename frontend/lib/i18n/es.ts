@@ -119,6 +119,7 @@ export const es = {
     title: "Estos números salieron de corridas reales",
     label: "Medido en devnet",
     convergence: "Convergencia",
+    convergenceNote: "Cada ronda de propuestas, desde que nadie tiene par.",
     matched: "emparejados",
     unmatched: "sin par",
     latency: "Latencia del matching",
@@ -237,6 +238,52 @@ export const es = {
     submit: "Crear",
     cancel: "Cancelar",
     devnetNote: "Devnet. No se mueve dinero real.",
+  },
+
+  start: {
+    title: "Listo para abrir tu ronda",
+    wallet: "Billetera",
+    notConnected: "sin conectar",
+    balance: "Saldo en devnet",
+    network: "Red",
+    networkNote:
+      "Tu billetera también tiene que estar en Devnet. Si está en Mainnet, la firma falla con un error de simulación: el programa no existe en esa red.",
+    faucet: "Conseguir SOL de devnet",
+    whatHappens: "Lo que pasa después",
+    steps: [
+      "Compartes el enlace de la ronda.",
+      "Cada quien entra y escribe su lista dentro del enclave.",
+      "Al cerrar, el algoritmo corre en una transacción.",
+      "Salen los pares. Las listas se destruyen sin publicarse.",
+    ],
+    lowBalanceCta: "Necesitas al menos 0.05 SOL de devnet para crear una ronda.",
+  },
+
+  errors: {
+    rejected: "Cancelaste la firma. No se creó nada.",
+    wrongNetwork:
+      "Tu billetera está en otra red. Cámbiala a Devnet y vuelve a intentar: en Mainnet este programa no existe, y por eso la simulación falla.",
+    lowBalance:
+      "Te falta SOL de devnet para pagar la renta de las cuentas. Consíguelo en faucet.solana.com.",
+    blockhash: "La red tardó de más. Vuelve a intentar.",
+    unknown: "No se pudo crear la ronda.",
+  },
+
+  play: {
+    label: "Pruébalo",
+    title: "Corre el algoritmo tú mismo",
+    lede:
+      "Cuatro founders, cuatro builders, listas al azar. Es la misma implementación que verifica al programa en cadena, no una imitación. Sin billetera y sin transacción.",
+    legend: "Las letras son el orden de preferencia de cada quien.",
+    round: "Ronda",
+    matched: "Con par",
+    proposals: "Propuestas",
+    run: "Correr",
+    step: "Una ronda",
+    shuffle: "Otras listas",
+    reset: "Reiniciar",
+    stable: "Estable: no existe ninguna pareja que prefiera dejarse por estar junta.",
+    unstable: "Inestable. Si ves esto, hay un error y quiero saberlo.",
   },
 
   preflight: {

@@ -15,6 +15,8 @@ import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
 import { StatBand } from "@/components/StatBand";
 import { Ticker } from "@/components/Ticker";
+import { StartPanel } from "@/components/StartPanel";
+import { Playground } from "@/components/Playground";
 import { RoundRow } from "@/components/RoundRow";
 import { Footer } from "@/components/Footer";
 import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
@@ -68,6 +70,12 @@ export default function Home() {
         </div>
       )}
 
+      {/* A connected wallet came here to do something. Renders nothing when
+          no wallet is connected, so the pitch is untouched for a first read. */}
+      <div className="mt-8">
+        <StartPanel />
+      </div>
+
       <div className="mt-8">
         <StatBand />
       </div>
@@ -107,8 +115,20 @@ export default function Home() {
         <FlowDiagram />
       </Section>
 
+      {/* The one place the mechanism can be operated rather than described. */}
       <Section
         index="03"
+        label={t.play.label}
+        title={t.play.title}
+        lede={t.play.lede}
+        id="probar"
+        wide
+      >
+        <Playground />
+      </Section>
+
+      <Section
+        index="04"
         label={t.compare.label}
         title={t.compare.title}
         id="commit-reveal"
@@ -118,7 +138,7 @@ export default function Home() {
       </Section>
 
       <Section
-        index="04"
+        index="05"
         label={t.stats.label}
         title={t.stats.title}
         id="medido"
@@ -141,7 +161,7 @@ export default function Home() {
       </Section>
 
       <Section
-        index="05"
+        index="06"
         label={t.limits.label}
         title={t.limits.title}
         id="limites"
@@ -159,7 +179,7 @@ export default function Home() {
       </Section>
 
       <Section
-        index="06"
+        index="07"
         label={t.rounds.label}
         title={t.rounds.note}
         id="rondas"

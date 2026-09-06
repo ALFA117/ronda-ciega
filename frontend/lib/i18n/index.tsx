@@ -22,13 +22,14 @@ interface LocaleCtx {
   t: Dictionary;
 }
 
-const Ctx = createContext<LocaleCtx>({ locale: "es", setLocale: () => {}, t: es });
+const Ctx = createContext<LocaleCtx>({ locale: "en", setLocale: () => {}, t: en });
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  // Spanish on the server and on the first paint, so the markup the client
-  // hydrates against always matches. The stored or browser preference is
-  // applied in an effect instead of during render.
-  const [locale, setLocaleState] = useState<Locale>("es");
+  // English on the server and on the first paint, so the markup the client
+  // hydrates against always matches, and so a visitor from anywhere can read
+  // the page. A stored choice or a Spanish browser switches it in an effect
+  // rather than during render.
+  const [locale, setLocaleState] = useState<Locale>("en");
 
   useEffect(() => {
     let next: Locale | null = null;
@@ -38,10 +39,10 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* private mode, blocked storage — fall through to the browser hint */
     }
-    if (!next && typeof navigator !== "undefined") {
-      next = navigator.language.toLowerCase().startsWith("es") ? "es" : "en";
-    }
-    if (next && next !== "es") setLocaleState(next);
+    // No browser sniffing. This is a global competition and the page has to
+    // read the same way for whoever opens it; a visitor who wants Spanish has
+    // the toggle, and that choice is what gets remembered.
+    if (next && next !== "en") setLocaleState(next);
   }, []);
 
   useEffect(() => {

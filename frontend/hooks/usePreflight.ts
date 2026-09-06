@@ -16,13 +16,15 @@ export interface Preflight {
 }
 
 /**
- * Catches the two failures that otherwise surface as an opaque wallet error
- * after the user has already committed to an action: a wallet still on
- * mainnet, and a balance too small to pay rent.
+ * Balance, and a sanity check on the cluster this app is configured against.
  *
- * Network is inferred from the genesis hash rather than trusted from the
- * wallet, because adapters report the wallet's *selected* cluster
- * inconsistently across versions.
+ * `wrongNetwork` compares the genesis hash of OUR connection, which only
+ * moves if NEXT_PUBLIC_DEVNET_RPC is pointed somewhere else by mistake. It
+ * does NOT detect the wallet being on mainnet — that was the original intent
+ * and it never worked, because the app always dials devnet and so the check
+ * compared devnet against itself. No adapter reports the wallet's selected
+ * cluster reliably, so that requirement is stated up front in StartPanel and
+ * the failure it causes is translated by `classifyError` afterwards.
  */
 export function usePreflight(): Preflight {
   const { connection } = useConnection();

@@ -112,10 +112,18 @@
         )
         .filter((i) => parseFloat(getComputedStyle(i).fontSize) < 16)
         .map((i) => i.placeholder || i.type);
+      // A checkbox inside a label is tapped through the label — the box can be
+      // 20px and still have a 300px target. Measuring the input alone reported
+      // a problem that does not exist for anyone using the page.
+      const target = (e) => {
+        const lab = e.closest("label");
+        return (lab ?? e).getBoundingClientRect();
+      };
       const small = [...document.querySelectorAll("button, input, select")]
         .filter((e) => {
-          const r = e.getBoundingClientRect();
-          return r.width > 0 && r.height < 44;
+          const own = e.getBoundingClientRect();
+          if (own.width === 0) return false;
+          return target(e).height < 44;
         })
         .map((e) => (e.textContent || e.ariaLabel || e.type || "?").trim().slice(0, 14));
       return {
@@ -126,7 +134,15 @@
 
     // ------------------------------------------------------------------ nav
     async secciones() {
-      const ids = ["problema", "como-funciona", "commit-reveal", "medido", "limites", "rondas"];
+      const ids = [
+        "problema",
+        "como-funciona",
+        "probar",
+        "commit-reveal",
+        "medido",
+        "limites",
+        "rondas",
+      ];
       const missing = ids.filter((id) => !document.getElementById(id));
       return { pass: !missing.length, detail: { faltan: missing, total: ids.length } };
     },
@@ -139,7 +155,7 @@
       if (innerWidth >= 1280) {
         const links = document.querySelectorAll("header nav a").length;
         return {
-          pass: links === 6 && !shown,
+          pass: links === 7 && !shown,
           detail: { enlaces: links, botonMenuVisible: !!shown },
         };
       }
@@ -158,7 +174,7 @@
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       await sleep(500);
       return {
-        pass: inside && links === 6 && !encimados.length && wallet && idioma === 2,
+        pass: inside && links === 7 && !encimados.length && wallet && idioma === 2,
         detail: {
           dentroDelViewport: inside,
           enlaces: links,
@@ -275,18 +291,25 @@
     async idioma() {
       const group = document.querySelector("[role=group]");
       if (!group) return { pass: false, detail: "no hay selector de idioma visible" };
-      const [es, en] = [...group.querySelectorAll("button")];
+      // Direction-agnostic: the page now starts in English, and asserting a
+      // fixed starting language is how this case broke the day that changed.
+      const start = document.documentElement.lang === "es" ? "es" : "en";
+      const other = start === "es" ? "en" : "es";
+      const btn = (code) =>
+        [...group.querySelectorAll("button")].find(
+          (b) => b.textContent.trim().toLowerCase() === code,
+        );
       const before = document.body.innerText.slice(0, 300);
-      en.click();
+      btn(other).click();
       await sleep(600);
       const changed = document.body.innerText.slice(0, 300) !== before;
       const lang = document.documentElement.lang;
-      es.click();
+      btn(start).click();
       await sleep(500);
       const back = document.body.innerText.slice(0, 300) === before;
       return {
-        pass: changed && lang === "en" && back,
-        detail: { cambia: changed, htmlLang: lang, vuelveAEspañol: back },
+        pass: changed && lang === other && back,
+        detail: { desde: start, hacia: other, cambia: changed, htmlLang: lang, vuelve: back },
       };
     },
 

@@ -188,6 +188,10 @@
     content: "";
     position: absolute;
     inset: 0;
+    /* Clip to the parent shape directly. With this, a glass container that
+       has to let a dropdown escape can turn off overflow without the sheen
+       spilling past its rounded corners. */
+    border-radius: inherit;
     z-index: -1;
     background: linear-gradient(
       105deg,
@@ -204,6 +208,13 @@
   .glass:hover::after {
     opacity: 0.5;
     transform: translateX(120%);
+  }
+
+  /* For a glass container that holds an absolutely-positioned child which
+     must hang outside it — the wallet menu under the nav bar. Without this the
+     menu is clipped to the bar and cannot be clicked at all. */
+  .glass-spill {
+    overflow: visible;
   }
 
   /* Tinted variants. The accent goes through the glass rather than sitting
@@ -445,6 +456,36 @@
   background: var(--surface-2) !important;
   border-color: var(--sealed) !important;
 }
+/* The wallet menu ships hardcoded dark colours (#2c2d30, white text) and a
+   font this project does not use, so in light mode it arrives as a black box
+   from another site. Restyled onto the same tokens as everything else. */
+.wallet-adapter-dropdown-list {
+  background: var(--surface) !important;
+  border: 1px solid var(--edge) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--glass-shadow) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  padding: 6px !important;
+  grid-row-gap: 2px !important;
+  min-width: 180px;
+}
+
+.wallet-adapter-dropdown-list-item {
+  color: var(--text) !important;
+  background: transparent !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  height: 40px !important;
+  justify-content: flex-start !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+}
+
+.wallet-adapter-dropdown-list-item:not([disabled]):hover {
+  background: var(--surface-2) !important;
+  color: var(--sealed) !important;
+}
+
 .wallet-adapter-modal-wrapper {
   background: var(--surface) !important;
   border: 1px solid var(--edge) !important;

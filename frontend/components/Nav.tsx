@@ -20,7 +20,15 @@ const WalletMultiButton = dynamic(
 
 /** Must stay in step with `links` below: a tracked section with no link
  * leaves the highlight nowhere to go while the reader is inside it. */
-const SECTION_IDS = ["problema", "como-funciona", "commit-reveal", "medido", "limites", "rondas"];
+const SECTION_IDS = [
+  "problema",
+  "como-funciona",
+  "probar",
+  "commit-reveal",
+  "medido",
+  "limites",
+  "rondas",
+];
 
 export function Nav() {
   const t = useT();
@@ -32,6 +40,7 @@ export function Nav() {
   const links = [
     { id: "problema", text: t.problem.label },
     { id: "como-funciona", text: t.solution.label },
+    { id: "probar", text: t.play.label },
     { id: "commit-reveal", text: t.compare.label },
     { id: "medido", text: t.stats.label },
     { id: "limites", text: t.limits.label },
@@ -93,7 +102,7 @@ export function Nav() {
         transition={easeEnter}
         className="sticky top-0 z-40 mb-6 px-3 pt-3 sm:px-5 sm:pt-4"
       >
-        <div className="glass mx-auto flex w-full max-w-6xl items-center gap-3 rounded-2xl px-3 py-2 sm:px-4">
+        <div className="glass glass-spill mx-auto flex w-full max-w-6xl items-center gap-3 rounded-2xl px-3 py-2 sm:px-4">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2.5 rounded-lg"
