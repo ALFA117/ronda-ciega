@@ -266,11 +266,14 @@
 
   /* The numeral that anchors each section: large, nearly invisible, behind
      the content. Rhythm rather than information. */
+  /* Sits in the flow beside or above the label, never behind it. Smaller
+     than when it was a background element, because in the flow it has to
+     earn its space rather than hide in the margin. */
   .ghost-num {
-    font-size: clamp(4rem, 11vw, 9rem);
-    line-height: 0.8;
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    line-height: 0.85;
     font-weight: 500;
-    letter-spacing: -0.05em;
+    letter-spacing: -0.045em;
     color: var(--ghost);
     user-select: none;
   }

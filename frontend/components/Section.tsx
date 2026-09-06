@@ -8,10 +8,10 @@ import { easeEnter } from "@/lib/motion";
 /**
  * A band of the page.
  *
- * The previous landing was a stack of identically sized bordered cards, which
- * is what makes a page read as a template. Sections here carry a full-bleed
- * hairline instead of a box, a large ghost numeral for rhythm, and a two
- * column head that puts the label in the margin rather than above the title.
+ * The numeral used to be absolutely positioned behind the head, which put it
+ * straight on top of the section label at every width — six overlaps, one per
+ * section. It now sits in the flow above the label, so it cannot collide with
+ * anything no matter how the text wraps. Rhythm without a stacking bug.
  */
 export function Section({
   index,
@@ -35,37 +35,31 @@ export function Section({
   const shown = useOnScreen(ref, 90);
 
   return (
-    <section id={id} className="bleed-rule scroll-mt-24 pt-14 sm:pt-20">
-      <div ref={ref} className="relative">
-        {/* Behind the head, bleeding off the left edge on wide screens. */}
-        <div
-          aria-hidden
-          className="ghost-num pointer-events-none absolute -top-6 left-0 select-none lg:-left-2"
-        >
-          {index}
+    <section id={id} className="bleed-rule scroll-mt-28 pt-12 sm:pt-16 lg:pt-20">
+      <motion.div
+        ref={ref}
+        className="grid gap-x-8 gap-y-5 lg:grid-cols-[12rem_1fr]"
+        initial={reduce ? undefined : { opacity: 0, y: 18 }}
+        animate={reduce || shown ? { opacity: 1, y: 0 } : undefined}
+        transition={easeEnter}
+      >
+        <div className="flex items-baseline gap-3 lg:block">
+          <span aria-hidden className="ghost-num block leading-none">
+            {index}
+          </span>
+          <span className="font-mono text-2xs uppercase tracking-[0.2em] text-muted lg:mt-3 lg:block">
+            {label}
+          </span>
         </div>
 
-        <motion.div
-          className="relative grid gap-6 lg:grid-cols-[13rem_1fr]"
-          initial={reduce ? undefined : { opacity: 0, y: 18 }}
-          animate={reduce || shown ? { opacity: 1, y: 0 } : undefined}
-          transition={easeEnter}
-        >
-          <div className="pt-1">
-            <span className="font-mono text-2xs uppercase tracking-[0.2em] text-muted">
-              {label}
-            </span>
-          </div>
+        <div className={wide ? "" : "max-w-3xl"}>
+          <h2 className="display-sm [text-wrap:balance]">{title}</h2>
+          {lede && <p className="lede mt-5 max-w-prose text-muted">{lede}</p>}
+        </div>
+      </motion.div>
 
-          <div className={wide ? "" : "max-w-3xl"}>
-            <h2 className="display-sm [text-wrap:balance]">{title}</h2>
-            {lede && (
-              <p className="lede mt-5 max-w-prose text-muted">{lede}</p>
-            )}
-          </div>
-        </motion.div>
-
-        <div className={`mt-10 ${wide ? "" : "lg:pl-[13rem]"}`}>{children}</div>
+      <div className={`mt-10 sm:mt-12 ${wide ? "" : "lg:pl-[15rem]"}`}>
+        {children}
       </div>
     </section>
   );

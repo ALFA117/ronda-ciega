@@ -68,7 +68,7 @@ export function CreateRound() {
             min={1}
             value={minutes}
             onChange={(e) => setMinutes(Number(e.target.value))}
-            className="h-9 w-24 rounded-md border border-edge bg-bg px-3 font-mono text-sm outline-none focus:border-muted"
+            className="glass h-11 w-24 rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
           />
           <span className="font-mono text-xs text-muted">{t.create.minutes}</span>
         </div>
@@ -79,7 +79,7 @@ export function CreateRound() {
           type="checkbox"
           checked={transparent}
           onChange={(e) => setTransparent(e.target.checked)}
-          className="mt-1 accent-open"
+          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-[color:var(--open)]"
         />
         <span className="space-y-1">
           <span className="block font-mono text-xs text-open">

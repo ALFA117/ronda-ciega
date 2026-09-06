@@ -90,7 +90,7 @@ export function JoinForm({
             maxLength={32}
             onChange={(e) => setHandle(e.target.value)}
             placeholder="@tu_handle"
-            className="h-9 w-full rounded-md border border-edge bg-bg px-3 font-mono text-sm outline-none focus:border-muted"
+            className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
           />
         </div>
         <div className="space-y-2">
@@ -100,7 +100,7 @@ export function JoinForm({
             maxLength={96}
             onChange={(e) => setLink(e.target.value)}
             placeholder="github.com/…"
-            className="h-9 w-full rounded-md border border-edge bg-bg px-3 font-mono text-sm outline-none focus:border-muted"
+            className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
           />
         </div>
       </div>

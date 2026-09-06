@@ -131,6 +131,33 @@ for (const [name, theme] of [
   else bad(`${name} chart series collapse under deuteranopia (${dist.toFixed(1)})`);
 }
 
+head("Mobile form fields");
+{
+  // iOS zooms the whole page when a focused text input is under 16px, and
+  // leaves the user pinching back out. Our own type scale defines `text-base`
+  // as 15px, so "base" is not safe here — the size has to be explicit.
+  const RISKY = /text-(xs|sm|2xs|base)/;
+  const files = ["JoinForm", "CreateRound"].map((n) =>
+    join(HERE, "..", "frontend", "components", `${n}.tsx`),
+  );
+  for (const file of files) {
+    const src = readFileSync(file, "utf8");
+    const inputs = [...src.matchAll(/<input[\s\S]{0,600}?\/>/g)].map((m) => m[0]);
+    const name = file.slice(file.lastIndexOf("components"));
+    if (!inputs.length) {
+      ok(`${name} has no inputs`);
+      continue;
+    }
+    const risky = inputs.filter((i) => RISKY.test(i));
+    if (risky.length === 0) ok(`${name}: ${inputs.length} field(s) at a zoom-safe size`);
+    else bad(`${name}: ${risky.length} field(s) under 16px — iOS will zoom on focus`);
+
+    const short = inputs.filter((i) => /h-[1-9]|h-10/.test(i));
+    if (short.length === 0) ok(`${name}: field height meets the touch minimum`);
+    else bad(`${name}: ${short.length} field(s) under 44px tall on touch`);
+  }
+}
+
 // --------------------------------------------------------------- live ---
 head(`Live routes at ${BASE}`);
 const routes = [
