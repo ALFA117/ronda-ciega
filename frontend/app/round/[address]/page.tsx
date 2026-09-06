@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useRef } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { NOT_FOUND, useRound } from "@/hooks/useRound";
@@ -11,6 +12,7 @@ import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
 import { Deadline } from "@/components/Deadline";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { StickySummary } from "@/components/StickySummary";
 import { PreflightBanner } from "@/components/Preflight";
 import { springLayout } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
@@ -29,6 +31,7 @@ export default function RoundPage({ params }: { params: { address: string } }) {
   const wallet = useWallet();
   const t = useT();
   const reduce = useReducedMotion();
+  const headerRef = useRef<HTMLElement>(null);
   const { round, participants, delegated, loading, error, refresh } = useRound(
     params.address,
   );
@@ -73,7 +76,10 @@ export default function RoundPage({ params }: { params: { address: string } }) {
   return (
     <div className="space-y-8">
       <PreflightBanner />
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header
+        ref={headerRef}
+        className="flex flex-wrap items-start justify-between gap-4"
+      >
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="tnum font-mono text-base">
@@ -96,6 +102,12 @@ export default function RoundPage({ params }: { params: { address: string } }) {
           <Explorer address={round.address.toBase58()} />
         </div>
       </header>
+
+      <StickySummary
+        round={round}
+        participants={participants}
+        anchor={headerRef}
+      />
 
       {round.transparent && (
         <Reveal>

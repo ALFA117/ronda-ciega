@@ -145,6 +145,7 @@ export const en: Dictionary = {
     empty: "No rounds yet. Create one to try the whole flow.",
     founders: "founders",
     builders: "builders",
+    peek: "Preview the outcome",
     sealedLists: "sealed lists",
   },
 

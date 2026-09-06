@@ -144,6 +144,7 @@ export const es = {
     empty: "Todavía no hay rondas. Crea una para probar el flujo completo.",
     founders: "founders",
     builders: "builders",
+    peek: "Ver el resultado sin entrar",
     sealedLists: "listas selladas",
   },
 
