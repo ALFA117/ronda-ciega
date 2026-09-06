@@ -78,9 +78,14 @@ jobs:
       # This job exists because the program cannot be built where it is
       # developed: `anchor build` panics on native Windows, so until now
       # nothing verified that a Rust change compiles until it was deployed.
+      # Pinned to the version that actually produced the deployed binary.
+      # The SBF build uses the Rust that ships inside platform-tools, not the
+      # runner's: on v2.1.0 that is Cargo 1.79, which cannot parse a
+      # dependency requiring edition2024 and fails before compiling a line of
+      # our code. v4.1.2 carries platform-tools v1.54, which can.
       - name: Install the Solana toolchain
         run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
+          sh -c "$(curl -sSfL https://release.anza.xyz/v4.1.2/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
 
       - name: Versions
