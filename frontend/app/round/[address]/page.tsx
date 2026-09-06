@@ -170,7 +170,7 @@ export default function RoundPage({ params }: { params: { address: string } }) {
             exit={reduce ? undefined : { opacity: 0, y: -8 }}
             transition={springLayout}
           >
-            <JoinForm round={round} onJoined={refresh} />
+            <JoinForm round={round} delegated={delegated} onJoined={refresh} />
           </motion.div>
         )}
 

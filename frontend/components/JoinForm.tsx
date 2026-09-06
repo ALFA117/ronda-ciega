@@ -5,6 +5,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { SystemProgram } from "@solana/web3.js";
 import BN from "bn.js";
 import { getProgram } from "@/lib/program";
+import { teeConnection } from "@/lib/tee";
 import { participantPda } from "@/lib/pdas";
 import { Side } from "@/lib/constants";
 import { RoundAccount } from "@/lib/program";
@@ -14,9 +15,15 @@ import { Button, Label, Note, Panel } from "./ui";
 
 export function JoinForm({
   round,
+  delegated,
   onJoined,
 }: {
   round: RoundAccount;
+  /** Once the round is delegated its account lives on the rollup, so a join
+   *  has to be sent there. Addressed to L1 it targets an account L1 no longer
+   *  owns: the wallet simulates it, sees a failure it cannot explain, and
+   *  blocks the signature — which is what a user actually experiences. */
+  delegated: boolean;
   onJoined: () => void;
 }) {
   const { connection } = useConnection();
@@ -33,7 +40,10 @@ export function JoinForm({
     setBusy(true);
     setError(null);
     try {
-      const program = getProgram(connection, wallet as any);
+      const conn = delegated
+        ? await teeConnection(wallet.publicKey, (m) => wallet.signMessage!(m))
+        : connection;
+      const program = getProgram(conn, wallet as any);
       await program.methods
         .joinRound(
           new BN(round.roundId.toString()),
