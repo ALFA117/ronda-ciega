@@ -42,8 +42,8 @@ mod state;
 
 use error::ErrorCode;
 use state::{
-    MatchState, Participant, Preferences, Round, RoundStatus, Side, MAX_HANDLE_LEN, MAX_LINK_LEN,
-    MAX_HISTORY, MAX_PER_SIDE, NONE, UNRANKED,
+    MatchState, Participant, Preferences, Round, RoundStatus, Side, MAX_HANDLE_LEN, MAX_HISTORY,
+    MAX_LINK_LEN, MAX_PER_SIDE, NONE, UNRANKED,
 };
 
 declare_id!("5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R");
@@ -86,13 +86,11 @@ pub mod ronda_ciega {
         );
         require!(min_per_side >= 2, ErrorCode::NotEnoughParticipants);
 
-        let prefund = ephemeral_rollups_sdk::ephemeral_accounts::rent(
-            (8 + MatchState::LEN) as u32,
-        )
-        .checked_add(ephemeral_rollups_sdk::ephemeral_accounts::rent(
-            EphemeralPermission::size_of(1) as u32,
-        ))
-        .ok_or(ErrorCode::MathOverflow)?;
+        let prefund = ephemeral_rollups_sdk::ephemeral_accounts::rent((8 + MatchState::LEN) as u32)
+            .checked_add(ephemeral_rollups_sdk::ephemeral_accounts::rent(
+                EphemeralPermission::size_of(1) as u32,
+            ))
+            .ok_or(ErrorCode::MathOverflow)?;
 
         anchor_lang::system_program::transfer(
             CpiContext::new(
@@ -167,13 +165,12 @@ pub mod ronda_ciega {
         };
         require!((index as usize) < MAX_PER_SIDE, ErrorCode::SideFull);
 
-        let prefund = ephemeral_rollups_sdk::ephemeral_accounts::rent(
-            (8 + Preferences::LEN) as u32,
-        )
-        .checked_add(ephemeral_rollups_sdk::ephemeral_accounts::rent(
-            EphemeralPermission::size_of(PREFERENCES_PERMISSION_MEMBERS) as u32,
-        ))
-        .ok_or(ErrorCode::MathOverflow)?;
+        let prefund =
+            ephemeral_rollups_sdk::ephemeral_accounts::rent((8 + Preferences::LEN) as u32)
+                .checked_add(ephemeral_rollups_sdk::ephemeral_accounts::rent(
+                    EphemeralPermission::size_of(PREFERENCES_PERMISSION_MEMBERS) as u32,
+                ))
+                .ok_or(ErrorCode::MathOverflow)?;
 
         anchor_lang::system_program::transfer(
             CpiContext::new(
@@ -359,10 +356,7 @@ pub mod ronda_ciega {
                 permission_program: ctx.accounts.permission_program.to_account_info(),
                 args: EphemeralMembersArgs {
                     is_private: true,
-                    members: vec![
-                        permission_member(wallet_key),
-                        permission_member(round_key),
-                    ],
+                    members: vec![permission_member(wallet_key), permission_member(round_key)],
                 },
             }
             .invoke_signed(&[&round_seeds.as_slice_refs(), prefs_seeds])?;
@@ -390,14 +384,16 @@ pub mod ronda_ciega {
     pub fn close_round(ctx: Context<CloseRound>, round_id: u64) -> Result<()> {
         let round = &mut ctx.accounts.round;
         require_eq!(round.round_id, round_id);
-        require!(round.status == RoundStatus::Open, ErrorCode::WrongRoundStatus);
+        require!(
+            round.status == RoundStatus::Open,
+            ErrorCode::WrongRoundStatus
+        );
         require!(
             Clock::get()?.unix_timestamp >= round.deadline_ts,
             ErrorCode::RoundStillOpen
         );
         require!(
-            round.founder_count >= round.min_per_side
-                && round.builder_count >= round.min_per_side,
+            round.founder_count >= round.min_per_side && round.builder_count >= round.min_per_side,
             ErrorCode::NotEnoughParticipants
         );
 
@@ -439,11 +435,7 @@ pub mod ronda_ciega {
             // about these has to be checked by hand. Deserializing only proves
             // the first eight bytes match a discriminator, which anyone can
             // write into an account they own.
-            require_keys_eq!(
-                *info.owner,
-                crate::ID,
-                ErrorCode::InvalidPreferencesAccount
-            );
+            require_keys_eq!(*info.owner, crate::ID, ErrorCode::InvalidPreferencesAccount);
 
             let prefs: Preferences = read_account(info)?;
             require_keys_eq!(prefs.round, round_key, ErrorCode::WrongRound);
@@ -462,11 +454,7 @@ pub mod ronda_ciega {
                 &crate::ID,
             )
             .map_err(|_| error!(ErrorCode::InvalidPreferencesAccount))?;
-            require_keys_eq!(
-                info.key(),
-                expected,
-                ErrorCode::InvalidPreferencesAccount
-            );
+            require_keys_eq!(info.key(), expected, ErrorCode::InvalidPreferencesAccount);
 
             let idx = prefs.index as usize;
             require!(idx < MAX_PER_SIDE, ErrorCode::InvalidRanking);
@@ -718,7 +706,10 @@ pub mod ronda_ciega {
         ctx.accounts
             .invoke_signed_vrf(&ctx.accounts.payer.to_account_info(), &ix)?;
 
-        msg!("Randomness requested for round {}", ctx.accounts.round.key());
+        msg!(
+            "Randomness requested for round {}",
+            ctx.accounts.round.key()
+        );
         Ok(())
     }
 

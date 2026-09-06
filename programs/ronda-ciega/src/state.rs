@@ -126,8 +126,7 @@ pub struct Participant {
 }
 
 impl Participant {
-    pub const LEN: usize =
-        32 + 32 + 1 + 1 + (4 + MAX_HANDLE_LEN) + (4 + MAX_LINK_LEN) + 1;
+    pub const LEN: usize = 32 + 32 + 1 + 1 + (4 + MAX_HANDLE_LEN) + (4 + MAX_LINK_LEN) + 1;
 }
 
 /// Created **inside** the ephemeral rollup, never on L1, behind a permission

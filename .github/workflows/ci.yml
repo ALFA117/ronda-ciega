@@ -1,0 +1,119 @@
+name: CI
+
+# What runs here is everything that is deterministic and free. The negative
+# suites and the end-to-end spike are deliberately absent: they cost SOL, they
+# need a funded devnet wallet, and they fail when devnet is having a bad day.
+# A pipeline that goes red for reasons unrelated to the commit is one people
+# learn to ignore, and then it protects nothing. Those stay manual, and the
+# README says so.
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend — tests, types, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 22 runs the TypeScript tests natively; the suite has no runner
+      # dependency, so anything older simply cannot execute it.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Unit tests
+        working-directory: frontend
+        run: npm test
+
+      - name: Types — application
+        working-directory: frontend
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Types — tests
+        working-directory: frontend
+        run: npm run test:types
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  design:
+    name: Design invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # verify.mjs imports nothing outside Node, so there is nothing to install.
+      # OFFLINE=1 drops the eight checks that ask the deployed site questions
+      # and keeps the 39 that read this repository: contrast in both themes,
+      # the light-mode luminance ceiling, colourblind separation of the chart
+      # pair, and the mobile field sizes.
+      - name: Contrast, tokens and mobile field sizes
+        run: OFFLINE=1 node scripts/verify.mjs
+
+  program:
+    name: Program — build, format, lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # This job exists because the program cannot be built where it is
+      # developed: `anchor build` panics on native Windows, so until now
+      # nothing verified that a Rust change compiles until it was deployed.
+      - name: Install the Solana toolchain
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v2.1.0/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Versions
+        run: |
+          solana --version
+          cargo --version
+          rustc --version
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Formatting
+        run: cargo fmt --all -- --check
+
+      # `unexpected_cfgs` fires twice inside Anchor's own `#[program]` macro
+      # expansion, on a `cfg(target_os = "solana")` that only the SBF target
+      # defines. It is not our code and not ours to fix, so it is allowed by
+      # name rather than by dropping -D warnings and losing the rest.
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings -A unexpected_cfgs
+
+      # The type check runs on the host, where it is fast and where a
+      # developer can reproduce it. The SBF build is the one that cannot run
+      # on Windows, which is the whole reason this job exists.
+      - name: Type check on the host
+        run: cargo check --all-targets
+
+      - name: Build the SBF program
+        working-directory: programs/ronda-ciega
+        run: cargo build-sbf

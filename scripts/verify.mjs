@@ -159,35 +159,45 @@ head("Mobile form fields");
 }
 
 // --------------------------------------------------------------- live ---
-head(`Live routes at ${BASE}`);
-const routes = [
-  ["/", 200],
-  ["/icon.svg", 200],
-  ["/opengraph-image", 200],
-  ["/no-such-page", 404],
-];
-for (const [path, want] of routes) {
-  try {
-    const res = await fetch(BASE + path, { redirect: "follow" });
-    if (res.status === want) ok(`${path} → ${res.status}`);
-    else bad(`${path} → ${res.status}, expected ${want}`);
-  } catch (e) {
-    bad(`${path} → ${e.message}`);
+// Everything above reads the repository and is deterministic. What follows
+// asks the deployed site questions, so it belongs to a different category:
+// it can fail for reasons that have nothing to do with the commit. CI runs
+// with OFFLINE=1, because a pipeline that goes red when Vercel hiccups is a
+// pipeline people learn to ignore.
+if (process.env.OFFLINE === "1") {
+  head("Live checks");
+  console.log("  \x1b[2mskip\x1b[0m  OFFLINE=1 — se omiten las que dependen del sitio\n");
+} else {
+  head(`Live routes at ${BASE}`);
+  const routes = [
+    ["/", 200],
+    ["/icon.svg", 200],
+    ["/opengraph-image", 200],
+    ["/no-such-page", 404],
+  ];
+  for (const [path, want] of routes) {
+    try {
+      const res = await fetch(BASE + path, { redirect: "follow" });
+      if (res.status === want) ok(`${path} → ${res.status}`);
+      else bad(`${path} → ${res.status}, expected ${want}`);
+    } catch (e) {
+      bad(`${path} → ${e.message}`);
+    }
   }
-}
 
-head("Served stylesheet carries the tokens");
-try {
-  const html = await fetch(BASE).then((r) => r.text());
-  const href = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
-  if (!href) throw new Error("no stylesheet link in the HTML");
-  const served = await fetch(BASE + href).then((r) => r.text());
-  for (const token of [light.bg, dark.bg, light["chart-1"], dark["chart-1"]]) {
-    if (served.includes(token.replace("#", ""))) ok(`stylesheet ships ${token}`);
-    else bad(`stylesheet is missing ${token}`);
+  head("Served stylesheet carries the tokens");
+  try {
+    const html = await fetch(BASE).then((r) => r.text());
+    const href = html.match(/\/_next\/static\/css\/[^"]+\.css/)?.[0];
+    if (!href) throw new Error("no stylesheet link in the HTML");
+    const served = await fetch(BASE + href).then((r) => r.text());
+    for (const token of [light.bg, dark.bg, light["chart-1"], dark["chart-1"]]) {
+      if (served.includes(token.replace("#", ""))) ok(`stylesheet ships ${token}`);
+      else bad(`stylesheet is missing ${token}`);
+    }
+  } catch (e) {
+    bad(`stylesheet check: ${e.message}`);
   }
-} catch (e) {
-  bad(`stylesheet check: ${e.message}`);
 }
 
 console.log(
