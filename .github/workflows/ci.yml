@@ -21,11 +21,11 @@ jobs:
     name: Frontend — tests, types, build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Node 22 runs the TypeScript tests natively; the suite has no runner
       # dependency, so anything older simply cannot execute it.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -55,9 +55,9 @@ jobs:
     name: Design invariants
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
@@ -73,7 +73,7 @@ jobs:
     name: Program — build, format, lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # This job exists because the program cannot be built where it is
       # developed: `anchor build` panics on native Windows, so until now
@@ -94,7 +94,7 @@ jobs:
           cargo --version
           rustc --version
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry

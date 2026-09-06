@@ -7,6 +7,8 @@ Built for [MagicBlock Solana Blitz v8](https://build.magicblock.app/?stage=blitz
 
 **Live:** [ronda-ciega.vercel.app](https://ronda-ciega.vercel.app) · Solana **Devnet**
 
+[![CI](https://github.com/ALFA117/ronda-ciega/actions/workflows/ci.yml/badge.svg)](https://github.com/ALFA117/ronda-ciega/actions/workflows/ci.yml)
+
 ---
 
 ## Why this can't be a commit-reveal
@@ -176,6 +178,45 @@ Frontend:
 
 ```bash
 cd frontend && npm install && npm run dev
+```
+
+## Tests
+
+CI runs everything that is deterministic and free — the unit suite, both type
+checks, the Next build, the design invariants, and the program itself: rustfmt,
+clippy, a host type check and the SBF build. That last one matters more than it
+looks: `anchor build` panics on native Windows, so until CI existed nothing
+verified a Rust change compiled until it was deployed.
+
+```bash
+cd frontend && npm test        # 44 unit tests, no network, ~1s
+npm run test:types             # types for the test suite
+OFFLINE=1 node scripts/verify.mjs   # the 39 checks that read the repo
+```
+
+The rest costs SOL and needs a funded devnet wallet, so it stays manual and out
+of CI. A pipeline that goes red because devnet is having a bad day is one people
+learn to ignore.
+
+```bash
+npm run verify                 # 47 checks, including the deployed site
+npm run negative               # 11 refusals the program must make, on L1
+FULL=1 npm run negative        # + SideFull: fills a side with 16 (~0.1 SOL)
+npm run negative:rollup        # 26 refusals inside the TEE (~0.15 SOL, 3 min)
+npm run spike                  # the full lifecycle, including the privacy gate
+```
+
+Sixteen of the program's nineteen error codes are exercised. The three that are
+not are documented in [docs/ROADMAP.md](docs/ROADMAP.md): one is unreachable
+behind a seeds constraint, one is declared and never raised (its invariant is
+enforced by a state transition instead), and one guards arithmetic on counters
+that cannot overflow.
+
+The eighteen UI cases run in the browser against the deployed site:
+
+```js
+new Function(await (await fetch("/ui-cases.js")).text())();
+await runUiCases();
 ```
 
 ## Layout

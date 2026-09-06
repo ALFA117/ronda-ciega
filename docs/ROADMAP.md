@@ -95,9 +95,14 @@ registrar, delegar, memoria privada— y provoca cada guarda del rollup: 26 caso
 De los trece, nueve quedaron cubiertos, `SideFull` resultó alcanzable desde L1, y
 los tres restantes no son alcanzables por construcción (ver arriba).
 
-1.10 **Integración continua**: unitarias, tipos y compilación en cada push. Las
-negativas y el extremo a extremo se quedan manuales — cuestan SOL y dependen de
-devnet, y una prueba que falla por la red enseña a ignorar fallas.
+1.10 ~~**Integración continua**~~ **Hecho.** Tres jobs en cada push:
+frontend (44 unitarias, dos type checks, build), invariantes de diseño
+(`OFFLINE=1`, las 39 que leen el repo), y programa (rustfmt, clippy, `cargo
+check` y el build SBF). Ese último es el que más rinde: `anchor build` truena en
+Windows, así que hasta ahora nada verificaba que un cambio en Rust compilara
+antes de desplegarlo. Las negativas y el extremo a extremo se quedan fuera a
+propósito — cuestan SOL y dependen de devnet, y un CI que se pone rojo por la red
+enseña a ignorar el CI.
 
 1.11 **La suite de interfaz también a 768 px.**
 
