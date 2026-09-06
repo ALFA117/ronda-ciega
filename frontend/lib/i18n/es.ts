@@ -205,7 +205,12 @@ export const es = {
     sealedNote:
       "Tu ranking está en una cuenta que solo tu wallet puede leer. No hay instrucción en el programa que la revele, ni al cerrar la ronda ni después. Puedes reemplazarla mientras la ronda siga abierta.",
     change: "Cambiar mi lista",
-    dragHint: "Mantén y arrastra para reordenar",
+    dragHint: "Arrastra, o usa las flechas para reordenar",
+    moveUp: "Subir un lugar",
+    moveDown: "Bajar un lugar",
+    reorder: "Reordenar arrastrando",
+    remove: "Quitar de mi lista",
+    position: "Posición",
     tapToAdd: "Toca para añadir a tu lista",
     nobody: "Todavía no hay nadie del otro lado a quien rankear.",
   },

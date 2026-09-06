@@ -9,6 +9,7 @@ import { matchStatePda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
 import { EPHEMERAL_QUEUE, TEE_VALIDATOR } from "@/lib/constants";
 import { useT } from "@/lib/i18n";
+import { classifyError } from "@/lib/errors";
 import { Button, Label, Note, Panel } from "./ui";
 import { useToast } from "./Toast";
 
@@ -59,7 +60,7 @@ export function RoundControls({
       await fn();
       onDone();
     } catch (e: any) {
-      const msg = e.message || String(e);
+      const msg = t.errors[classifyError(e)];
       setError(msg);
       toast(msg, "error");
     } finally {

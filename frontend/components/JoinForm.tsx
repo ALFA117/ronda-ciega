@@ -9,6 +9,7 @@ import { participantPda } from "@/lib/pdas";
 import { Side } from "@/lib/constants";
 import { RoundAccount } from "@/lib/program";
 import { useT } from "@/lib/i18n";
+import { classifyError } from "@/lib/errors";
 import { Button, Label, Note, Panel } from "./ui";
 
 export function JoinForm({
@@ -49,7 +50,7 @@ export function JoinForm({
         .rpc();
       onJoined();
     } catch (e: any) {
-      setError(e.message || String(e));
+      setError(t.errors[classifyError(e)]);
     } finally {
       setBusy(false);
     }

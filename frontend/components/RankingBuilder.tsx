@@ -9,7 +9,7 @@ import {
   useDragControls,
   useReducedMotion,
 } from "framer-motion";
-import { GripVertical, Lock, PenLine, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Lock, PenLine, Plus, X } from "lucide-react";
 import BN from "bn.js";
 import { permissionPdaFromAccount } from "@magicblock-labs/ephemeral-rollups-sdk";
 import { getProgram, ParticipantAccount, RoundAccount } from "@/lib/program";
@@ -17,27 +17,38 @@ import { participantPda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
 import { springLayout, springSnappy } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
+import { classifyError } from "@/lib/errors";
 import { Button, ErrorText, Label, Note, Panel } from "./ui";
 import { useToast } from "./Toast";
 
 /**
- * One chosen person. Drag to reorder.
+ * One chosen person, with three ways to move them.
  *
- * The grip exists because the row is also a scroll surface on a phone:
- * dragging from anywhere would fight the page scroll, so the drag starts from
- * the handle and `touch-none` is scoped to it alone.
+ * Dragging was the only way to reorder, which made this list unusable with a
+ * keyboard and awkward on a phone, where the row is also a scroll surface. The
+ * arrows are the real control — 44px, focusable, and unambiguous — and the
+ * grip stays as the faster gesture for a pointer.
+ *
+ * Every label comes from the dictionary. They used to be Spanish literals, so
+ * a screen reader in English mode read half the interface in the wrong
+ * language, which the dictionary parity test cannot see.
  */
 function ChosenRow({
   p,
   pos,
+  total,
   onRemove,
+  onMove,
 }: {
   p: ParticipantAccount;
   pos: number;
+  total: number;
   onRemove: () => void;
+  onMove: (delta: -1 | 1) => void;
 }) {
   const controls = useDragControls();
   const reduce = useReducedMotion();
+  const t = useT();
 
   return (
     <Reorder.Item
@@ -46,12 +57,14 @@ function ChosenRow({
       dragControls={controls}
       whileDrag={reduce ? undefined : { scale: 1.03, zIndex: 5 }}
       transition={springLayout}
-      className="glass glass-sealed flex touch-pan-y items-center gap-3 rounded-xl px-3 py-2.5"
+      className="glass glass-sealed flex touch-pan-y items-center gap-2 rounded-xl px-2 py-2 sm:gap-3 sm:px-3"
     >
+      {/* Pointer-only affordance: hidden from touch, where the arrows serve. */}
       <button
         onPointerDown={(e) => controls.start(e)}
-        aria-label="Reordenar"
-        className="-ml-1 flex h-9 w-7 shrink-0 cursor-grab touch-none items-center justify-center text-muted active:cursor-grabbing"
+        aria-label={t.ranking.reorder}
+        tabIndex={-1}
+        className="hidden h-11 w-6 shrink-0 cursor-grab touch-none items-center justify-center text-muted active:cursor-grabbing sm:flex"
       >
         <GripVertical className="h-4 w-4" aria-hidden />
       </button>
@@ -59,6 +72,7 @@ function ChosenRow({
       <motion.span
         layout
         transition={springSnappy}
+        aria-label={`${t.ranking.position} ${pos}`}
         className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sealed font-mono text-2xs text-onSealed"
       >
         {pos}
@@ -66,14 +80,32 @@ function ChosenRow({
 
       <span className="min-w-0 flex-1 truncate font-mono text-sm">{p.handle}</span>
 
-      <motion.button
-        onClick={onRemove}
-        aria-label={`Quitar ${p.handle}`}
-        whileTap={reduce ? undefined : { scale: 0.9 }}
-        className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-chalk"
-      >
-        <X className="h-3.5 w-3.5" aria-hidden />
-      </motion.button>
+      <div className="flex shrink-0 items-center">
+        <button
+          onClick={() => onMove(-1)}
+          disabled={pos === 1}
+          aria-label={`${t.ranking.moveUp}: ${p.handle}`}
+          className="flex h-11 w-9 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-25 sm:h-10"
+        >
+          <ChevronUp className="h-4 w-4" aria-hidden />
+        </button>
+        <button
+          onClick={() => onMove(1)}
+          disabled={pos === total}
+          aria-label={`${t.ranking.moveDown}: ${p.handle}`}
+          className="flex h-11 w-9 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-25 sm:h-10"
+        >
+          <ChevronDown className="h-4 w-4" aria-hidden />
+        </button>
+        <motion.button
+          onClick={onRemove}
+          aria-label={`${t.ranking.remove}: ${p.handle}`}
+          whileTap={reduce ? undefined : { scale: 0.9 }}
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-open sm:h-10 sm:w-10"
+        >
+          <X className="h-3.5 w-3.5" aria-hidden />
+        </motion.button>
+      </div>
     </Reorder.Item>
   );
 }
@@ -135,7 +167,7 @@ export function RankingBuilder({
       toast(t.ranking.sealed);
       onSubmitted();
     } catch (e: any) {
-      const msg = e.message || String(e);
+      const msg = t.errors[classifyError(e)];
       setError(msg);
       toast(msg, "error");
     } finally {
@@ -195,6 +227,16 @@ export function RankingBuilder({
                 key={p.address.toBase58()}
                 p={p}
                 pos={i + 1}
+                total={chosen.length}
+                onMove={(delta) =>
+                  setChosen((c) => {
+                    const to = i + delta;
+                    if (to < 0 || to >= c.length) return c;
+                    const next = [...c];
+                    [next[i], next[to]] = [next[to], next[i]];
+                    return next;
+                  })
+                }
                 onRemove={() =>
                   setChosen((c) => c.filter((x) => !x.address.equals(p.address)))
                 }

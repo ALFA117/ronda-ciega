@@ -206,7 +206,12 @@ export const en: Dictionary = {
     sealedNote:
       "Your ranking is in an account only your wallet can read. There is no instruction in the program that reveals it, not at the deadline and not after. You can replace it while the round is open.",
     change: "Change my list",
-    dragHint: "Hold and drag to reorder",
+    dragHint: "Drag, or use the arrows to reorder",
+    moveUp: "Move up one place",
+    moveDown: "Move down one place",
+    reorder: "Reorder by dragging",
+    remove: "Remove from my list",
+    position: "Position",
     tapToAdd: "Tap to add to your list",
     nobody: "Nobody on the other side to rank yet.",
   },

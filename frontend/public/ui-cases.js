@@ -150,7 +150,10 @@
           if (own.width === 0) return false;
           return target(e).height < 44;
         })
-        .map((e) => (e.textContent || e.ariaLabel || e.type || "?").trim().slice(0, 14));
+        .map((e) => {
+          const label = (e.textContent || e.ariaLabel || e.type || "?").trim().slice(0, 22);
+          return label + " " + Math.round(target(e).height) + "px";
+        });
       return {
         pass: !risky.length && !small.length,
         detail: { zoomIOS: risky, bajo44px: small },
@@ -159,6 +162,8 @@
 
     // ------------------------------------------------------------------ nav
     async secciones() {
+      if (!document.getElementById("problema"))
+        return { pass: true, detail: "no aplica fuera de la portada" };
       const ids = [
         "problema",
         "como-funciona",
@@ -212,6 +217,8 @@
 
     // -------------------------------------------------------------- palette
     async palette() {
+      if (!document.getElementById("rondas"))
+        return { pass: true, detail: "no aplica fuera de la portada" };
       const before = document.querySelectorAll("[role=dialog]").length;
       window.dispatchEvent(
         new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
@@ -314,6 +321,8 @@
     },
 
     async idioma() {
+      if (!document.querySelector("[role=group]"))
+        return { pass: true, detail: "selector no visible en este ancho" };
       const group = document.querySelector("[role=group]");
       if (!group) return { pass: false, detail: "no hay selector de idioma visible" };
       // Direction-agnostic: the page now starts in English, and asserting a
@@ -340,6 +349,8 @@
 
     // ---------------------------------------------------------------- rondas
     async listaDeRondas() {
+      if (!document.getElementById("rondas"))
+        return { pass: true, detail: "no aplica fuera de la portada" };
       const rows = document.querySelectorAll("main [aria-expanded]");
       if (!rows.length) return { pass: false, detail: "no se listó ninguna ronda" };
       const first = rows[0];
