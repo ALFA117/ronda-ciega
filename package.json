@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "spike": "ts-node scripts/spike.ts"
+    "spike": "ts-node scripts/spike.ts",
+    "negative": "ts-node scripts/negative.ts",
+    "seed": "ts-node scripts/seed.ts",
+    "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
