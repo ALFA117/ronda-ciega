@@ -10,6 +10,7 @@ import { JoinForm } from "@/components/JoinForm";
 import { RankingBuilder } from "@/components/RankingBuilder";
 import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
+import { VerifyPanel } from "@/components/VerifyPanel";
 import { Deadline } from "@/components/Deadline";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StickySummary } from "@/components/StickySummary";
@@ -140,6 +141,12 @@ export default function RoundPage({ params }: { params: { address: string } }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* The trace this round published, checked against the chain in the
+          reader's own browser. Renders nothing on a private round. */}
+      <ErrorBoundary>
+        <VerifyPanel round={round} />
+      </ErrorBoundary>
 
       <RoundControls
         round={round}

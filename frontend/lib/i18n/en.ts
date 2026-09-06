@@ -287,6 +287,22 @@ export const en: Dictionary = {
     unstable: "Unstable. If you see this there is a bug and I want to hear about it.",
   },
 
+  verify: {
+    title: "Check it yourself",
+    lede:
+      "This round publishes its full trace. Recompute it here, in your browser, and compare it with what the chain says. You do not have to take my word for it.",
+    run: "Verify",
+    running: "Verifying…",
+    injective: "No builder is held by two founders",
+    inRange: "Every index refers to someone in this round",
+    monotone: "The number of pairs never falls",
+    matchesChain: "The trace ends exactly where the chain says",
+    passed: "It checks out.",
+    failed: "It does not check out.",
+    limit:
+      "What this cannot check: whether the hidden lists were respected. That would need the lists, and the lists were destroyed unpublished. That is the trade — a verifiable process and a verifiable outcome, not verifiable inputs.",
+  },
+
   preflight: {
     wrongNetwork:
         "Your wallet is not on Devnet. Switch before signing — the program does not exist on another cluster.",

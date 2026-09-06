@@ -286,6 +286,22 @@ export const es = {
     unstable: "Inestable. Si ves esto, hay un error y quiero saberlo.",
   },
 
+  verify: {
+    title: "Compruébalo tú mismo",
+    lede:
+      "Esta ronda publica su traza completa. Vuelve a calcularla aquí, en tu navegador, y compárala con lo que dice la cadena. No tienes que creerme.",
+    run: "Verificar",
+    running: "Verificando…",
+    injective: "Ningún builder aparece tomado por dos founders",
+    inRange: "Todos los índices existen en esta ronda",
+    monotone: "El número de emparejados nunca retrocede",
+    matchesChain: "La traza termina exactamente en el resultado en cadena",
+    passed: "Cuadra.",
+    failed: "No cuadra.",
+    limit:
+      "Lo que esto no comprueba, y no puede: si las listas ocultas se respetaron. Eso exigiría las listas, y las listas se destruyeron sin publicarse. Ese es el trato — proceso y resultado verificables, entradas no.",
+  },
+
   preflight: {
     wrongNetwork:
         "Tu wallet no está en Devnet. Cámbiala antes de firmar: aquí el programa no existe en otra red.",
