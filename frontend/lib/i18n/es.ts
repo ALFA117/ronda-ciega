@@ -302,6 +302,19 @@ export const es = {
       "Lo que esto no comprueba, y no puede: si las listas ocultas se respetaron. Eso exigiría las listas, y las listas se destruyeron sin publicarse. Ese es el trato — proceso y resultado verificables, entradas no.",
   },
 
+  ledger: {
+    title: "El cero, contado — no escrito por mí",
+    lede:
+      "Una llamada pública a Solana devnet pregunta cuántas cuentas de lista de preferencias tiene este programa. La respuesta es cero porque esas cuentas nacen dentro del enclave y ahí se destruyen. La misma llamada, con otro tamaño, devuelve los perfiles públicos: ese es el control, sin él un cero podría significar que la consulta está rota.",
+    run: "Consultar la cadena",
+    running: "Consultando…",
+    lists: "Listas de preferencias en L1",
+    listsNote: "Nunca se escribió ninguna fuera del enclave.",
+    profiles: "Perfiles públicos en L1",
+    profilesNote: "El control: la misma consulta, otro tamaño de cuenta.",
+    showCommand: "Ver el comando y correrlo tú",
+  },
+
   preflight: {
     wrongNetwork:
         "Tu wallet no está en Devnet. Cámbiala antes de firmar: aquí el programa no existe en otra red.",

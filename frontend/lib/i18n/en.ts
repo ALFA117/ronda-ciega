@@ -287,6 +287,18 @@ export const en: Dictionary = {
     unstable: "Unstable. If you see this there is a bug and I want to hear about it.",
   },
 
+  ledger: {
+    title: "The zero, counted — not written by me",
+    lede:
+      "A public call to Solana devnet asks how many preference-list accounts this program owns. The answer is zero, because those accounts are created inside the enclave and destroyed there. The same call one size along returns the public profiles: that is the control, and without it a zero could just mean the query was broken.",
+    run: "Query the chain",
+    running: "Querying…",
+    lists: "Preference lists on L1",
+    listsNote: "Not one was ever written outside the enclave.",
+    profiles: "Public profiles on L1",
+    profilesNote: "The control: same query, different account size.",
+    showCommand: "Show the command and run it yourself",
+  },
   verify: {
     title: "Check it yourself",
     lede:

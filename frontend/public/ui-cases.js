@@ -41,6 +41,23 @@
     return false;
   }
 
+  /**
+   * Is this actually painted?
+   *
+   * display and visibility are not the whole story. Content inside a closed
+   * <details> keeps a box and reports display:block, so measuring it invents
+   * overlaps against whatever follows. checkVisibility knows the difference;
+   * the closest("details:not([open])") clause is the fallback for engines
+   * that do not have it yet.
+   */
+  function painted(e) {
+    if (typeof e.checkVisibility === "function") {
+      if (!e.checkVisibility({ checkVisibilityCSS: true, contentVisibilityAuto: true }))
+        return false;
+    }
+    return !e.closest("details:not([open])");
+  }
+
   /** Leaf elements that actually carry text — the things that can collide. */
   function textLeaves() {
     return [...document.querySelectorAll("main *, header *, footer *")].filter((e) => {
@@ -48,6 +65,7 @@
       for (const c of e.children) if (c.textContent && c.textContent.trim()) return false;
       const cs = getComputedStyle(e);
       if (cs.visibility === "hidden" || cs.display === "none") return false;
+      if (!painted(e)) return false;
       const r = e.getBoundingClientRect();
       return r.width > 4 && r.height > 4;
     });
@@ -86,8 +104,15 @@
           return r.right > innerWidth + 1 || r.left < -1;
         })
         .map((e) => e.textContent.trim().slice(0, 20));
+      // A container that was given overflow-x is meant to scroll; a code block
+      // wider than its column is the design, not a defect. Only text that
+      // overflows something NOT built to scroll is clipped.
       const clipped = leaves
-        .filter((e) => e.scrollWidth > e.clientWidth + 2)
+        .filter((e) => {
+          if (e.scrollWidth <= e.clientWidth + 2) return false;
+          const ox = getComputedStyle(e).overflowX;
+          return ox !== "auto" && ox !== "scroll";
+        })
         .map((e) => e.textContent.trim().slice(0, 20));
       const sideways = document.documentElement.scrollWidth > innerWidth + 1;
       undo();

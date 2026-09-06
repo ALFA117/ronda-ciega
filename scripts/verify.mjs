@@ -158,6 +158,58 @@ head("Mobile form fields");
   }
 }
 
+// ------------------------------------------------- account sizes ---
+// The page answers "how many preference lists are on L1" by filtering a public
+// RPC call on account size. That only stays an honest question while the size
+// it filters on is the size the program actually writes, so the constant is
+// recomputed here from the Rust rather than trusted.
+head("Account sizes match the program");
+{
+  const rust = readFileSync(join(HERE, "..", "programs", "ronda-ciega", "src", "state.rs"), "utf8");
+  const facts = readFileSync(join(HERE, "..", "frontend", "lib", "chain-facts.ts"), "utf8");
+
+  // Resolve the named constants the LEN expressions refer to.
+  const consts = {};
+  for (const m of rust.matchAll(/pub const ([A-Z_]+): usize = (\d+);/g)) {
+    consts[m[1]] = Number(m[2]);
+  }
+
+  /** The arithmetic in `impl X { pub const LEN: usize = ...; }`, evaluated. */
+  const arith = (expr) => {
+    const resolved = expr.replace(/[A-Z_]{3,}/g, (k) => String(consts[k] ?? NaN));
+    // Digits, + and parentheses only: nothing else can survive to be executed.
+    if (!/^[\d+()\s*]+$/.test(resolved)) return null;
+    return Function(`return ${resolved}`)();
+  };
+
+  const rustLen = (name) => {
+    const m = rust.match(
+      new RegExp(`impl ${name} \\{\\s*pub const LEN: usize = ([^;]+);`, "m"),
+    );
+    return m ? arith(m[1]) : null;
+  };
+
+  // Anchored to its own line: an unanchored version walks past the closing
+  // paren and swallows the rest of the file, which then fails `arith` and
+  // reports a mismatch that is really a bad regex.
+  const frontLen = (key) => {
+    const m = facts.match(new RegExp(`^\\s*${key}: 8 \\+ \\((.+)\\),\\s*$`, "m"));
+    return m ? arith(m[1]) : null;
+  };
+
+  for (const [name, key] of [
+    ["Preferences", "preferences"],
+    ["Participant", "participant"],
+  ]) {
+    const a = rustLen(name);
+    const b = frontLen(key);
+    if (a === null) bad(`${name}: could not read LEN from state.rs`);
+    else if (b === null) bad(`${name}: could not read the size from chain-facts.ts`);
+    else if (a === b) ok(`${name} is ${a + 8} bytes in both places`);
+    else bad(`${name}: Rust says ${a + 8}, frontend says ${b + 8}`);
+  }
+}
+
 // --------------------------------------------------------------- live ---
 // Everything above reads the repository and is deterministic. What follows
 // asks the deployed site questions, so it belongs to a different category:

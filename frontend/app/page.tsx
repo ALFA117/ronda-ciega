@@ -17,6 +17,7 @@ import { StatBand } from "@/components/StatBand";
 import { Ticker } from "@/components/Ticker";
 import { StartPanel } from "@/components/StartPanel";
 import { Playground } from "@/components/Playground";
+import { LedgerProof } from "@/components/LedgerProof";
 import { RoundRow } from "@/components/RoundRow";
 import { Footer } from "@/components/Footer";
 import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
@@ -144,6 +145,13 @@ export default function Home() {
         id="medido"
         wide
       >
+        {/* The claim the whole project rests on, counted rather than asserted. */}
+        <div className="mb-4">
+          <ErrorBoundary>
+            <LedgerProof />
+          </ErrorBoundary>
+        </div>
+
         <div className="grid gap-4 lg:grid-cols-2">
           <ErrorBoundary>
             {showcase ? (
