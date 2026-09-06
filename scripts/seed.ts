@@ -356,6 +356,39 @@ async function seedRound(
   pairs.forEach((p) => log(p));
   ok(`history frames: ${final.historyLen} (0 means nothing to animate — that is the point)`);
 
+  // Destroy the private accounts before the round leaves. Closing needs the
+  // round as its rent sponsor, and once it is committed back to L1 the rollup
+  // can no longer write it — undelegating first orphans every ranking.
+  let closed = 0;
+  for (const p of people) {
+    const prefs = prefsOf[`${p.side}-${p.idx}`];
+    try {
+      await erProgram.methods
+        .closePreferences(roundId)
+        .accountsPartial({
+          payer: authority.publicKey,
+          owner: p.kp.publicKey,
+          round,
+          preferences: prefs,
+          preferencesPermission: permissionPdaFromAccount(prefs),
+        })
+        .rpc();
+      closed++;
+    } catch {
+      /* already gone */
+    }
+  }
+  await erProgram.methods
+    .closeMatchState(roundId)
+    .accountsPartial({
+      payer: authority.publicKey,
+      round,
+      matchState,
+      matchStatePermission: permissionPdaFromAccount(matchState),
+    })
+    .rpc();
+  ok(`${closed} rankings and the working memory destroyed inside the enclave`);
+
   await erProgram.methods
     .undelegateRound(roundId)
     .accountsPartial({ payer: authority.publicKey, round })
