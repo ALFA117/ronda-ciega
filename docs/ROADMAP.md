@@ -8,11 +8,11 @@ Cada número de este documento salió de una corrida, no de una estimación.
 
 | Programa | | Interfaz | | Pruebas que pasan |  |
 |---|---|---|---|---|---|
-| Instrucciones | 14 | Rutas | 2 | Unitarias | 44 |
+| Instrucciones | 14 | Rutas | 3 | Unitarias | 63 |
 | Códigos de error | 19 | Componentes | 30 | Negativos en L1 | 12 |
 | Estados de ronda | 4 | Hooks | 5 | Negativos en el rollup | 26 |
-| Máximo por lado | 16 | Idiomas | ES · EN | Casos de interfaz | 18 |
-| Cuadros de historial | 24 | Temas | claro · oscuro | Comprobaciones fijas | 47 |
+| Máximo por lado | 16 | Idiomas | EN · ES | Casos de interfaz | 54 |
+| Cuadros de historial | 24 | Temas | claro · oscuro | Comprobaciones fijas | 49 |
 
 Medido contra devnet desde México:
 
@@ -71,9 +71,11 @@ secuencia la ronda queda delegada y sin salida por la interfaz.
 
 **Interfaz**
 
-1.4 **Compruébalo tú mismo.** El oráculo de Gale–Shapley de las pruebas,
-corriendo en el navegador: en una ronda transparente recalcula el emparejamiento
-desde el historial público y lo compara con el resultado en cadena.
+1.4 ~~**Compruébalo tú mismo.**~~ **Hecho.** La página `/proof` y el panel de
+verificación en cada ronda transparente: cuatro comprobaciones de la traza contra
+la cadena, y la propiedad de estabilidad corriendo sobre 400 mercados en el
+navegador. En una ronda privada, el panel de privacidad deriva las direcciones de
+las listas y demuestra que ninguna existe en L1.
 
 1.5 **Recorrer una ronda sin conectar billetera.**
 
@@ -96,8 +98,8 @@ De los trece, nueve quedaron cubiertos, `SideFull` resultó alcanzable desde L1,
 los tres restantes no son alcanzables por construcción (ver arriba).
 
 1.10 ~~**Integración continua**~~ **Hecho.** Tres jobs en cada push:
-frontend (44 unitarias, dos type checks, build), invariantes de diseño
-(`OFFLINE=1`, las 39 que leen el repo), y programa (rustfmt, clippy, `cargo
+frontend (63 unitarias, dos type checks, build), invariantes de diseño
+(`OFFLINE=1`, las 41 que leen el repo), y programa (rustfmt, clippy, `cargo
 check` y el build SBF). Ese último es el que más rinde: `anchor build` truena en
 Windows, así que hasta ahora nada verificaba que un cambio en Rust compilara
 antes de desplegarlo. Las negativas y el extremo a extremo se quedan fuera a
@@ -172,15 +174,15 @@ lista. Lo secreto es el orden completo, no el par.
 ## Cómo correr lo que ya existe
 
 ```bash
-cd frontend && npm test      # 44 unitarias, sin red
-npm run verify               # 47 comprobaciones fijas y en vivo
+cd frontend && npm test      # 63 unitarias, sin red
+npm run verify               # 49 comprobaciones fijas y en vivo
 npm run negative             # 11 caminos negativos en L1 (~0.005 SOL)
 FULL=1 npm run negative      # + el caso SideFull, 16 registros (~0.1 SOL)
 npm run negative:rollup      # 26 casos dentro del TEE (~0.15 SOL, 3 min)
 npm run spike                # 10 etapas extremo a extremo con el TEE
 ```
 
-Los 18 casos de interfaz corren en el navegador, sobre el sitio desplegado:
+Los 54 casos de interfaz (9 × 3 páginas × 2 anchos) corren en el navegador, sobre el sitio desplegado:
 
 ```js
 new Function(await (await fetch("/ui-cases.js")).text())();
