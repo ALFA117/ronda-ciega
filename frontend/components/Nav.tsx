@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
-import { easeEnter } from "@/lib/motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Menu, X } from "lucide-react";
+import { easeEnter, springPanel, springSnappy } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
+import { useActiveSection } from "@/hooks/useActiveSection";
 import { LocaleToggle, ThemeToggle } from "./Toggles";
 
 const WalletMultiButton = dynamic(
@@ -15,56 +18,184 @@ const WalletMultiButton = dynamic(
   },
 );
 
-/**
- * A single floating glass bar rather than a full-width band with a rule under
- * it. The old header pushed the page down and read as a separate slab; this
- * one hovers over the content it belongs to, and the gap below it is a third
- * of what it was.
- */
+/** Must stay in step with `links` below: a tracked section with no link
+ * leaves the highlight nowhere to go while the reader is inside it. */
+const SECTION_IDS = ["problema", "como-funciona", "commit-reveal", "medido", "limites", "rondas"];
+
 export function Nav() {
   const t = useT();
+  const reduce = useReducedMotion();
+  const [open, setOpen] = useState(false);
+  const active = useActiveSection(SECTION_IDS);
+
+  const links = [
+    { id: "problema", text: t.problem.label },
+    { id: "como-funciona", text: t.solution.label },
+    { id: "commit-reveal", text: t.compare.label },
+    { id: "medido", text: t.stats.label },
+    { id: "limites", text: t.limits.label },
+    { id: "rondas", text: t.rounds.label },
+  ];
+
+  // A drawer that survives a back gesture or an Escape is the difference
+  // between a menu and a trap.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   return (
-    <motion.header
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={easeEnter}
-      className="sticky top-0 z-40 mb-6 px-3 pt-3 sm:px-5 sm:pt-4"
-    >
-      <div className="glass mx-auto flex w-full max-w-6xl items-center gap-2 rounded-2xl px-3 py-2 sm:px-4">
-        <Link
-          href="/"
-          className="mr-auto flex items-baseline gap-2.5 rounded-lg"
-          aria-label={t.nav.home}
-        >
-          <span className="whitespace-nowrap text-sm font-medium tracking-tight">
-            Ronda Ciega
-          </span>
-          <span className="hidden font-mono text-2xs text-muted lg:inline">
-            {t.nav.tagline}
-          </span>
-        </Link>
+    <>
+      <motion.header
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={easeEnter}
+        className="sticky top-0 z-40 mb-6 px-3 pt-3 sm:px-5 sm:pt-4"
+      >
+        <div className="glass mx-auto flex w-full max-w-6xl items-center gap-3 rounded-2xl px-3 py-2 sm:px-4">
+          <Link
+            href="/"
+            className="flex shrink-0 items-center gap-2.5 rounded-lg"
+            aria-label={t.nav.home}
+          >
+            <span className="whitespace-nowrap text-sm font-medium leading-none tracking-tight">
+              Ronda Ciega
+            </span>
+            <span className="hidden font-mono text-2xs leading-none text-muted lg:inline">
+              {t.nav.tagline}
+            </span>
+          </Link>
 
-        <nav className="mr-2 hidden items-center gap-5 xl:flex" aria-label="Secciones">
-          {[
-            { href: "#como-funciona", text: t.solution.label },
-            { href: "#commit-reveal", text: t.compare.label },
-            { href: "#rondas", text: t.rounds.label },
-          ].map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="font-mono text-2xs text-muted transition-colors hover:text-chalk"
+          {/* Section links, centred in the space the logo and controls leave.
+              Each carries a shared underline that slides to whichever section
+              you are reading — no click needed to know where you are. */}
+          <nav
+            className="mx-auto hidden items-center gap-1 xl:flex"
+            aria-label={t.nav.sections}
+          >
+            {links.map((l) => (
+              <Link
+                key={l.id}
+                href={`#${l.id}`}
+                aria-current={active === l.id ? "true" : undefined}
+                className={`relative rounded-lg px-3 py-2 font-mono text-2xs leading-none transition-colors ${
+                  active === l.id ? "text-chalk" : "text-muted hover:text-chalk"
+                }`}
+              >
+                {active === l.id && (
+                  <motion.span
+                    layoutId="nav-active"
+                    className="absolute inset-0 -z-10 rounded-lg bg-sealed/12"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                {l.text}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex shrink-0 items-center gap-2.5">
+            <LocaleToggle />
+            <ThemeToggle />
+            <WalletMultiButton />
+
+            <motion.button
+              onClick={() => setOpen(true)}
+              aria-label={t.nav.menu}
+              aria-expanded={open}
+              whileTap={reduce ? undefined : { scale: 0.93 }}
+              transition={springSnappy}
+              className="glass flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:text-chalk sm:h-10 sm:w-10 xl:hidden"
             >
-              {l.text}
-            </Link>
-          ))}
-        </nav>
+              <Menu className="h-4 w-4" aria-hidden />
+            </motion.button>
+          </div>
+        </div>
+      </motion.header>
 
-        <LocaleToggle />
-        <ThemeToggle />
-        <WalletMultiButton />
-      </div>
-    </motion.header>
+      {/* Below xl there were simply no section links at all. This is that
+          menu, as a sheet rather than a cramped row. */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="fixed inset-0 z-50 xl:hidden"
+            initial={reduce ? undefined : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: 1 }}
+            exit={reduce ? undefined : { opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            <div
+              className="absolute inset-0 bg-bg/70 backdrop-blur-sm"
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
+
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label={t.nav.menu}
+              className="glass absolute inset-x-3 top-3 rounded-2xl p-3 sm:inset-x-5 sm:top-4"
+              initial={reduce ? undefined : { opacity: 0, y: -14, scale: 0.98 }}
+              animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
+              exit={reduce ? undefined : { opacity: 0, y: -10, scale: 0.98 }}
+              transition={springPanel}
+              // Flick the sheet up to close it.
+              drag={reduce ? false : "y"}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.3}
+              onDragEnd={(_, info) => {
+                if (info.offset.y < -60) setOpen(false);
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between px-2">
+                <span className="font-mono text-2xs uppercase tracking-[0.18em] text-muted">
+                  {t.nav.menu}
+                </span>
+                <motion.button
+                  onClick={() => setOpen(false)}
+                  aria-label={t.common.close}
+                  whileTap={reduce ? undefined : { scale: 0.92 }}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted hover:text-chalk"
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                </motion.button>
+              </div>
+
+              <ul className="grid gap-1">
+                {links.map((l, i) => (
+                  <motion.li
+                    key={l.id}
+                    initial={reduce ? undefined : { opacity: 0, x: -10 }}
+                    animate={reduce ? undefined : { opacity: 1, x: 0 }}
+                    transition={{ delay: 0.03 * i, ...springPanel }}
+                  >
+                    <Link
+                      href={`#${l.id}`}
+                      onClick={() => setOpen(false)}
+                      className={`flex h-12 items-center justify-between rounded-xl px-3 font-mono text-sm transition-colors ${
+                        active === l.id
+                          ? "bg-sealed/12 text-chalk"
+                          : "text-muted hover:bg-surface2 hover:text-chalk"
+                      }`}
+                    >
+                      {l.text}
+                      <span className="tnum text-2xs text-muted">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                    </Link>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

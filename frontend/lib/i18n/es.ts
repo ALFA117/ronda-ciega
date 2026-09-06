@@ -9,6 +9,8 @@ export const es = {
     network: "Devnet",
     theme: "Cambiar tema",
     language: "Cambiar idioma",
+    menu: "Menú",
+    sections: "Secciones",
     home: "Ronda Ciega, inicio",
   },
 
@@ -244,6 +246,7 @@ export const es = {
   },
 
   common: {
+    close: "Cerrar",
     error: "Algo falló",
   },
 };

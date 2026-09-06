@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Check, Lock, UserPlus, Zap } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -20,6 +20,20 @@ export function FlowDiagram() {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const shown = useOnScreen(ref, 80);
+
+  // The steps light up one after another once the diagram is on screen, so
+  // the sequence reads as a sequence without anyone clicking through it.
+  const [lit, setLit] = useState(reduce ? 3 : -1);
+  useEffect(() => {
+    if (!shown || reduce) return;
+    let i = -1;
+    const id = setInterval(() => {
+      i++;
+      setLit(i);
+      if (i >= t.solution.steps.length - 1) clearInterval(id);
+    }, 420);
+    return () => clearInterval(id);
+  }, [shown, reduce, t.solution.steps.length]);
 
   return (
     <div ref={ref} className="relative">
@@ -48,15 +62,27 @@ export function FlowDiagram() {
               variants={reduce ? undefined : riseIn}
               className="relative"
             >
-              <div
+              <motion.div
+                animate={
+                  reduce
+                    ? undefined
+                    : {
+                        scale: i === lit ? 1.06 : 1,
+                        borderColor:
+                          i <= lit
+                            ? "rgba(var(--sealed-rgb), 0.55)"
+                            : "var(--edge)",
+                      }
+                }
+                transition={{ type: "spring", stiffness: 320, damping: 22 }}
                 className={`relative z-10 mb-5 flex h-[52px] w-[52px] items-center justify-center rounded-xl border ${
-                  inside
-                    ? "border-sealed/40 bg-surface sealed-hatch text-sealed"
-                    : "border-edge bg-surface text-muted"
-                } surface-raised`}
+                  inside ? "sealed-hatch" : ""
+                } surface-raised bg-surface ${
+                  i <= lit ? "text-sealed" : "text-muted"
+                }`}
               >
                 <Icon className="h-4 w-4" aria-hidden />
-              </div>
+              </motion.div>
 
               <div className="flex items-baseline gap-2">
                 <span className="tnum font-mono text-2xs text-muted">

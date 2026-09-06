@@ -10,6 +10,8 @@ export const en: Dictionary = {
     network: "Devnet",
     theme: "Toggle theme",
     language: "Change language",
+    menu: "Menu",
+    sections: "Sections",
     home: "Ronda Ciega, home",
   },
 
@@ -245,6 +247,7 @@ export const en: Dictionary = {
   },
 
   common: {
+    close: "Close",
     error: "Something failed",
   },
 };
