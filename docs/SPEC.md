@@ -182,7 +182,12 @@ Honestidad sobre los límites, porque el jurado son los ingenieros que escribier
 | `Pairing` | pública al converger | par (builder, founder), tick en que se fijó |
 
 Ciclo: crear en L1 → delegar al ER TEE → correr rondas → `commit_and_undelegate` solo de `Round` y
-`Pairing`. `Preferences` y `MatchState` se cierran en el ER **sin commitear a L1**.
+`Pairing`. `Preferences` y `MatchState` se destruyen en el ER con `close_preferences` y
+`close_match_state` —cierran el permiso, cierran la cuenta y devuelven la renta a la ronda que la
+patrocinó— **sin commitear nunca a L1**.
+
+El cierre es permissionless una vez liquidada la ronda. No hay nada que ganar llamándolo: quien
+llama no puede leer el dato de todas formas, y destruirlo es lo que se le prometió al participante.
 
 ## 8b. Qué se valida al ingerir las listas
 

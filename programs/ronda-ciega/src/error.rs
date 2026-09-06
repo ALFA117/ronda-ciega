@@ -28,6 +28,8 @@ pub enum ErrorCode {
     ProfileTooLong,
     #[msg("Session token is missing, expired, or not authorized for this wallet")]
     InvalidSession,
+    #[msg("This account has already been closed")]
+    AlreadyClosed,
     #[msg("Preferences account is not owned by this program or is not at its expected address")]
     InvalidPreferencesAccount,
     #[msg("Randomness has already been fulfilled for this round")]

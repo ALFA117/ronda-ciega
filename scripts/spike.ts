@@ -474,6 +474,57 @@ async function main() {
     if (!back) fail("round never came back to L1 within 60s");
   }
 
+  // ---------------------------------------------------------------------
+  stage(10, "Destroy the rankings");
+
+  {
+    let closed = 0;
+    for (const p of people) {
+      const prefs = prefsOf[`${p.side}-${p.idx}`];
+      try {
+        await erAuthorityProgram.methods
+          .closePreferences(roundId)
+          .accountsPartial({
+            payer: authority.publicKey,
+            owner: p.kp.publicKey,
+            round,
+            preferences: prefs,
+            preferencesPermission: permissionPdaFromAccount(prefs),
+          })
+          .rpc();
+        closed++;
+      } catch (e: any) {
+        fail(`close ${p.side}-${p.idx}: ${e.message}`);
+      }
+    }
+    ok(`${closed}/${people.length} preference accounts closed`);
+
+    await erAuthorityProgram.methods
+      .closeMatchState(roundId)
+      .accountsPartial({
+        payer: authority.publicKey,
+        round,
+        matchState,
+        matchStatePermission: permissionPdaFromAccount(matchState),
+      })
+      .rpc();
+    ok("working memory closed");
+
+    // The README claims nothing survives. Check it rather than assert it.
+    const gone = await erAuthority.getAccountInfo(prefsOf["founder-0"]);
+    const msGone = await erAuthority.getAccountInfo(matchState);
+    if (!gone || gone.data.length === 0) ok("a ranking account is gone from the rollup");
+    else fail(`ranking account still holds ${gone.data.length} bytes`);
+    if (!msGone || msGone.data.length === 0) ok("working memory is gone from the rollup");
+    else fail(`working memory still holds ${msGone.data.length} bytes`);
+
+    // And it must never have reached L1 in the first place.
+    const onL1 = await l1.getAccountInfo(prefsOf["founder-0"]);
+    if (!onL1) ok("that ranking never existed on L1");
+    else fail("a ranking exists on L1 — it should never have been committed");
+  }
+
+
   console.log("\n\x1b[1mSpike complete.\x1b[0m");
 }
 

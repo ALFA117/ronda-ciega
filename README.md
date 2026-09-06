@@ -138,8 +138,15 @@ reads the *public* round account fine, so the empty result is the permission wor
 | `Preferences` | **private, rollup only** | one person's ranking |
 | `MatchState` | **private, rollup only** | every ranking, plus the algorithm's working state |
 
-`Preferences` and `MatchState` are created inside the rollup and closed there. They are never
-delegated from L1 and never committed to it.
+`Preferences` and `MatchState` are created inside the rollup and destroyed there by
+`close_preferences` and `close_match_state`, which close the permission, close the account and
+return the rent to the round that sponsored it. They are never delegated from L1 and never
+committed to it — there is no instruction anywhere in the program that moves a ranking out of the
+enclave.
+
+Closing is permissionless once a round has settled. There is nothing to gain by calling it: the
+data is unreadable to the caller either way, and destroying it is what the participant was
+promised.
 
 ## Build
 

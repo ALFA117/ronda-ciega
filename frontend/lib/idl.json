@@ -8,6 +8,243 @@
   },
   "instructions": [
     {
+      "name": "close_match_state",
+      "docs": [
+        "Destroy the algorithm's working memory, which held every ranking in the",
+        "round. Same reasoning as `close_preferences`, and it should be the last",
+        "thing closed: while it exists the round can still be re-run."
+      ],
+      "discriminator": [
+        137,
+        37,
+        54,
+        112,
+        99,
+        200,
+        71,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "round",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round.authority",
+                "account": "Round"
+              },
+              {
+                "kind": "account",
+                "path": "round.round_id",
+                "account": "Round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "match_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  116,
+                  99,
+                  104,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "match_state_permission",
+          "writable": true
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        }
+      ],
+      "args": [
+        {
+          "name": "round_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "close_preferences",
+      "docs": [
+        "Destroy one participant's ranking.",
+        "",
+        "The README says these accounts are closed inside the rollup and never",
+        "committed. Until now only the second half of that was true — nothing",
+        "actually closed them, they simply sat in the rollup. This is the",
+        "instruction that makes the claim true: the permission is closed, the",
+        "account is closed, and the rent goes back to the round that sponsored",
+        "it. Nothing is written to L1 at any point.",
+        "",
+        "Permissionless on purpose. Anyone may clean up a settled round, and",
+        "there is nothing to gain by it: the data is unreadable to the caller",
+        "either way, and destroying it is what the participant was promised."
+      ],
+      "discriminator": [
+        38,
+        0,
+        7,
+        190,
+        201,
+        159,
+        252,
+        105
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner",
+          "docs": [
+            "checked against the stored owner."
+          ]
+        },
+        {
+          "name": "round",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round.authority",
+                "account": "Round"
+              },
+              {
+                "kind": "account",
+                "path": "round.round_id",
+                "account": "Round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "preferences",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  102,
+                  101,
+                  114,
+                  101,
+                  110,
+                  99,
+                  101,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "preferences_permission",
+          "writable": true
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        }
+      ],
+      "args": [
+        {
+          "name": "round_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "close_round",
       "docs": [
         "Deadline reached: stop taking rankings, start ingesting them."
@@ -1331,6 +1568,19 @@
   ],
   "events": [
     {
+      "name": "MatchStateClosed",
+      "discriminator": [
+        80,
+        168,
+        12,
+        205,
+        113,
+        34,
+        77,
+        29
+      ]
+    },
+    {
       "name": "MatchingStarted",
       "discriminator": [
         5,
@@ -1354,6 +1604,19 @@
         181,
         24,
         253
+      ]
+    },
+    {
+      "name": "PreferencesClosed",
+      "discriminator": [
+        115,
+        27,
+        214,
+        94,
+        253,
+        177,
+        105,
+        191
       ]
     },
     {
@@ -1503,31 +1766,48 @@
     },
     {
       "code": 6013,
+      "name": "AlreadyClosed",
+      "msg": "This account has already been closed"
+    },
+    {
+      "code": 6014,
       "name": "InvalidPreferencesAccount",
       "msg": "Preferences account is not owned by this program or is not at its expected address"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "RandomnessAlreadyFulfilled",
       "msg": "Randomness has already been fulfilled for this round"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "RandomnessMissing",
       "msg": "Matching cannot run until the VRF callback has delivered randomness"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "InvalidTickBudget",
       "msg": "Tick budget must be at least 1"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "MathOverflow",
       "msg": "Arithmetic overflow"
     }
   ],
   "types": [
+    {
+      "name": "MatchStateClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
     {
       "name": "MatchingStarted",
       "type": {
@@ -1613,6 +1893,22 @@
           {
             "name": "index",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PreferencesClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
           }
         ]
       }

@@ -21,7 +21,7 @@
 use anchor_lang::prelude::*;
 use ephemeral_rollups_sdk::{
     access_control::{
-        instructions::CreateEphemeralPermissionCpi,
+        instructions::{CloseEphemeralPermissionCpi, CreateEphemeralPermissionCpi},
         structs::{
             EphemeralMembersArgs, EphemeralPermission, Member, AUTHORITY_FLAG, TX_BALANCES_FLAG,
             TX_LOGS_FLAG, TX_MESSAGE_FLAG,
@@ -579,6 +579,112 @@ pub mod ronda_ciega {
         Ok(())
     }
 
+    /// Destroy one participant's ranking.
+    ///
+    /// The README says these accounts are closed inside the rollup and never
+    /// committed. Until now only the second half of that was true — nothing
+    /// actually closed them, they simply sat in the rollup. This is the
+    /// instruction that makes the claim true: the permission is closed, the
+    /// account is closed, and the rent goes back to the round that sponsored
+    /// it. Nothing is written to L1 at any point.
+    ///
+    /// Permissionless on purpose. Anyone may clean up a settled round, and
+    /// there is nothing to gain by it: the data is unreadable to the caller
+    /// either way, and destroying it is what the participant was promised.
+    pub fn close_preferences(ctx: Context<ClosePreferences>, round_id: u64) -> Result<()> {
+        require_eq!(ctx.accounts.round.round_id, round_id);
+        require!(
+            ctx.accounts.round.status == RoundStatus::Settled,
+            ErrorCode::WrongRoundStatus
+        );
+        require!(
+            !ctx.accounts.preferences.data_is_empty(),
+            ErrorCode::AlreadyClosed
+        );
+
+        // Bind the data to its address before touching it, for the same reason
+        // `seal_preferences` does: `remaining_accounts` and unchecked accounts
+        // carry no Anchor constraints.
+        let prefs: Preferences = read_account(&ctx.accounts.preferences.to_account_info())?;
+        let round_key = ctx.accounts.round.key();
+        require_keys_eq!(prefs.round, round_key, ErrorCode::WrongRound);
+        require_keys_eq!(
+            prefs.owner,
+            ctx.accounts.owner.key(),
+            ErrorCode::InvalidPreferencesAccount
+        );
+
+        let round_seeds = round_signer_seeds(&ctx.accounts.round);
+        let prefs_bump = [prefs.bump];
+        let owner_key = ctx.accounts.owner.key();
+        let prefs_signers: &[&[u8]] = &[
+            PREFERENCES_SEED,
+            round_key.as_ref(),
+            owner_key.as_ref(),
+            &prefs_bump,
+        ];
+
+        CloseEphemeralPermissionCpi {
+            payer: ctx.accounts.round.to_account_info(),
+            authority: ctx.accounts.preferences.to_account_info(),
+            permissioned_account: ctx.accounts.preferences.to_account_info(),
+            permission: ctx.accounts.preferences_permission.to_account_info(),
+            vault: ctx.accounts.ephemeral_vault.to_account_info(),
+            magic_program: ctx.accounts.magic_program.to_account_info(),
+            permission_program: ctx.accounts.permission_program.to_account_info(),
+            authority_is_signer: false,
+        }
+        .invoke_signed(&[&round_seeds.as_slice_refs(), prefs_signers])?;
+
+        ctx.accounts.close_ephemeral_preferences()?;
+
+        emit!(PreferencesClosed {
+            round: round_key,
+            owner: owner_key,
+        });
+        Ok(())
+    }
+
+    /// Destroy the algorithm's working memory, which held every ranking in the
+    /// round. Same reasoning as `close_preferences`, and it should be the last
+    /// thing closed: while it exists the round can still be re-run.
+    pub fn close_match_state(ctx: Context<CloseMatchState>, round_id: u64) -> Result<()> {
+        require_eq!(ctx.accounts.round.round_id, round_id);
+        require!(
+            ctx.accounts.round.status == RoundStatus::Settled,
+            ErrorCode::WrongRoundStatus
+        );
+        require!(
+            !ctx.accounts.match_state.data_is_empty(),
+            ErrorCode::AlreadyClosed
+        );
+
+        let round_key = ctx.accounts.round.key();
+        let ms: MatchState = read_account(&ctx.accounts.match_state.to_account_info())?;
+        require_keys_eq!(ms.round, round_key, ErrorCode::WrongRound);
+
+        let round_seeds = round_signer_seeds(&ctx.accounts.round);
+        let ms_bump = [ms.bump];
+        let ms_signers: &[&[u8]] = &[MATCH_STATE_SEED, round_key.as_ref(), &ms_bump];
+
+        CloseEphemeralPermissionCpi {
+            payer: ctx.accounts.round.to_account_info(),
+            authority: ctx.accounts.match_state.to_account_info(),
+            permissioned_account: ctx.accounts.match_state.to_account_info(),
+            permission: ctx.accounts.match_state_permission.to_account_info(),
+            vault: ctx.accounts.ephemeral_vault.to_account_info(),
+            magic_program: ctx.accounts.magic_program.to_account_info(),
+            permission_program: ctx.accounts.permission_program.to_account_info(),
+            authority_is_signer: false,
+        }
+        .invoke_signed(&[&round_seeds.as_slice_refs(), ms_signers])?;
+
+        ctx.accounts.close_ephemeral_match_state()?;
+
+        emit!(MatchStateClosed { round: round_key });
+        Ok(())
+    }
+
     /// Ask the oracle for the round's tie-break randomness.
     ///
     /// Requested on the rollup, against the ephemeral queue, because that is
@@ -916,6 +1022,17 @@ pub struct TickAdvanced {
 }
 
 #[event]
+pub struct PreferencesClosed {
+    pub round: Pubkey,
+    pub owner: Pubkey,
+}
+
+#[event]
+pub struct MatchStateClosed {
+    pub round: Pubkey,
+}
+
+#[event]
 pub struct RandomnessFulfilled {
     pub round: Pubkey,
     pub randomness: [u8; 32],
@@ -1089,6 +1206,79 @@ pub struct SealPreferences<'info> {
     )]
     pub match_state: UncheckedAccount<'info>,
     // remaining_accounts: the Preferences accounts to ingest this call.
+}
+
+#[ephemeral_accounts]
+#[derive(Accounts)]
+#[instruction(round_id: u64)]
+pub struct ClosePreferences<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    /// CHECK: Only used to derive the account being closed; its contents are
+    /// checked against the stored owner.
+    pub owner: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        sponsor,
+        seeds = [ROUND_SEED, round.authority.as_ref(), &round.round_id.to_le_bytes()],
+        bump = round.bump
+    )]
+    pub round: Account<'info, Round>,
+    /// CHECK: Private ephemeral PDA, read manually before closing.
+    #[account(
+        mut,
+        eph,
+        seeds = [PREFERENCES_SEED, round.key().as_ref(), owner.key().as_ref()],
+        bump
+    )]
+    pub preferences: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: Verified by the Permission Program.
+    pub preferences_permission: UncheckedAccount<'info>,
+    #[account(address = PERMISSION_PROGRAM_ID)]
+    /// CHECK: Fixed Permission Program id.
+    pub permission_program: UncheckedAccount<'info>,
+    #[account(mut, address = EPHEMERAL_VAULT_ID)]
+    /// CHECK: Verified by the Magic Program.
+    pub ephemeral_vault: UncheckedAccount<'info>,
+    #[account(address = MAGIC_PROGRAM_ID)]
+    /// CHECK: Fixed Magic Program id.
+    pub magic_program: UncheckedAccount<'info>,
+}
+
+#[ephemeral_accounts]
+#[derive(Accounts)]
+#[instruction(round_id: u64)]
+pub struct CloseMatchState<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        mut,
+        sponsor,
+        seeds = [ROUND_SEED, round.authority.as_ref(), &round.round_id.to_le_bytes()],
+        bump = round.bump
+    )]
+    pub round: Account<'info, Round>,
+    /// CHECK: Private ephemeral PDA, read manually before closing.
+    #[account(
+        mut,
+        eph,
+        seeds = [MATCH_STATE_SEED, round.key().as_ref()],
+        bump
+    )]
+    pub match_state: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: Verified by the Permission Program.
+    pub match_state_permission: UncheckedAccount<'info>,
+    #[account(address = PERMISSION_PROGRAM_ID)]
+    /// CHECK: Fixed Permission Program id.
+    pub permission_program: UncheckedAccount<'info>,
+    #[account(mut, address = EPHEMERAL_VAULT_ID)]
+    /// CHECK: Verified by the Magic Program.
+    pub ephemeral_vault: UncheckedAccount<'info>,
+    #[account(address = MAGIC_PROGRAM_ID)]
+    /// CHECK: Fixed Magic Program id.
+    pub magic_program: UncheckedAccount<'info>,
 }
 
 #[vrf]
