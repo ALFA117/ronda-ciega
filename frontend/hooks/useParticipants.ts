@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { DEVNET_RPC } from "@/lib/constants";
-import { decodeParticipant, getReadProgram, ParticipantAccount } from "@/lib/program";
+import { decodeParticipant, getReadProgram } from "@/lib/program";
+import type { ParticipantAccount } from "@/lib/program";
 
 /**
  * Participants for one round, fetched on demand and remembered.

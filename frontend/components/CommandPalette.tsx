@@ -8,6 +8,7 @@ import { CornerDownLeft, Hash, Search, Sparkles } from "lucide-react";
 import { DEVNET_RPC } from "@/lib/constants";
 import { getReadProgram, RoundAccount } from "@/lib/program";
 import { fetchRounds } from "@/lib/rounds";
+import { matches } from "@/lib/search";
 import { useT } from "@/lib/i18n";
 import { springPanel } from "@/lib/motion";
 
@@ -17,19 +18,6 @@ interface Item {
   hint?: string;
   kind: "section" | "round";
   go: () => void;
-}
-
-/** Subsequence match, so "cmrv" finds "commit-reveal". */
-function matches(haystack: string, needle: string): boolean {
-  if (!needle) return true;
-  const h = haystack.toLowerCase();
-  const n = needle.toLowerCase();
-  let i = 0;
-  for (const ch of h) {
-    if (ch === n[i]) i++;
-    if (i === n.length) return true;
-  }
-  return false;
 }
 
 /**

@@ -1,5 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
-import idl from "./idl.json";
+// The import attribute is what lets Node load this module too, so the pure
+// helpers here can be unit-tested without a bundler.
+import idl from "./idl.json" with { type: "json" };
 
 export const PROGRAM_ID = new PublicKey(idl.address);
 

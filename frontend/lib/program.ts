@@ -1,4 +1,7 @@
-import { AnchorProvider, Program, Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+// A type, not a value: importing it as one makes the module unloadable
+// outside a bundler that erases the difference.
+import type { Idl } from "@coral-xyz/anchor";
 import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { idl } from "./constants";
 

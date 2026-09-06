@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Lock } from "lucide-react";
-import { NONE } from "@/lib/constants";
 import { RoundAccount } from "@/lib/program";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useT } from "@/lib/i18n";
@@ -86,9 +85,4 @@ export function Ticker({ round }: { round: RoundAccount }) {
       />
     </Link>
   );
-}
-
-/** Nothing to show until a round has actually settled. */
-export function pickTickerRound(rounds: RoundAccount[] | null): RoundAccount | undefined {
-  return rounds?.find((r) => r.status === "settled" && r.pairs.some((b) => b !== NONE));
 }

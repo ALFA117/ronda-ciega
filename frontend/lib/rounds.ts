@@ -1,7 +1,8 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import { PROGRAM_ID } from "./constants";
-import { decodeRound, RoundAccount } from "./program";
+import { NONE, PROGRAM_ID } from "./constants";
+import { decodeRound } from "./program";
+import type { RoundAccount } from "./program";
 
 /**
  * Fetch every round, tolerating accounts written by an older layout.
@@ -41,4 +42,15 @@ export async function fetchRounds(
 
   rounds.sort((a, b) => Number(b.roundId - a.roundId));
   return { rounds, skipped };
+}
+
+/**
+ * The round the ticker should show: the most recent one that actually settled
+ * with at least one pair. Nothing to show until then — an empty ticker is
+ * worse than no ticker.
+ *
+ * Lives here rather than in the component so it can be tested without React.
+ */
+export function pickTickerRound(rounds: RoundAccount[] | null): RoundAccount | undefined {
+  return rounds?.find((r) => r.status === "settled" && r.pairs.some((b) => b !== NONE));
 }
