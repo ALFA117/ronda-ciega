@@ -200,15 +200,20 @@ export function CommandPalette() {
 
       <AnimatePresence>
         {open && (
-          <motion.div
-            className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-[12vh]"
-            initial={reduce ? undefined : { opacity: 0 }}
-            animate={reduce ? undefined : { opacity: 1 }}
-            exit={reduce ? undefined : { opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <div
+          <motion.div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-[12vh]">
+            {/* No exit animation on a modal layer.
+                AnimatePresence keeps the element mounted until its exit
+                finishes, so where no animation runs a dismissed dialog stays
+                on screen — aria-expanded already false, focus still trapped
+                inside something the person asked to close. Collapse.tsx
+                reached this same conclusion after two animated versions both
+                failed; this is the same rule applied where the stakes are a
+                modal rather than a panel. */}
+            <motion.div
               className="absolute inset-0 bg-bg/75 backdrop-blur-sm"
+              initial={reduce ? undefined : { opacity: 0 }}
+              animate={reduce ? undefined : { opacity: 1 }}
+              transition={{ duration: 0.15 }}
               onClick={close}
               aria-hidden
             />
@@ -219,9 +224,8 @@ export function CommandPalette() {
               aria-modal="true"
               aria-label={t.palette.open}
               className="glass relative w-full max-w-lg overflow-hidden rounded-2xl"
-              initial={reduce ? undefined : { opacity: 0, y: -12, scale: 0.98 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
-              exit={reduce ? undefined : { opacity: 0, y: -8, scale: 0.98 }}
+              initial={reduce ? undefined : { y: -12, scale: 0.98 }}
+              animate={reduce ? undefined : { y: 0, scale: 1 }}
               transition={springPanel}
             >
               <div className="flex items-center gap-3 border-b border-edge px-4">

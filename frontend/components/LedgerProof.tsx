@@ -77,9 +77,13 @@ export function LedgerProof() {
 
       <AnimatePresence>
         {rows && (
+          // The figures move into place; they do not appear. This panel is
+          // the counted zero the whole page rests on, and fading it in from
+          // nothing means a stalled animation leaves the reader who pressed
+          // the button looking at an empty box.
           <motion.dl
-            initial={reduce ? undefined : { opacity: 0, y: 8 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            initial={reduce ? undefined : { y: 8 }}
+            animate={reduce ? undefined : { y: 0 }}
             transition={springPanel}
             className="mt-5 grid gap-px overflow-hidden rounded-xl border border-edge bg-edge sm:grid-cols-2"
           >

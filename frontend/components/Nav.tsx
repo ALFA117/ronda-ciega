@@ -179,15 +179,20 @@ export function Nav() {
           menu, as a sheet rather than a cramped row. */}
       <AnimatePresence>
         {open && (
-          <motion.div
-            className="fixed inset-0 z-50 xl:hidden"
-            initial={reduce ? undefined : { opacity: 0 }}
-            animate={reduce ? undefined : { opacity: 1 }}
-            exit={reduce ? undefined : { opacity: 0 }}
-            transition={{ duration: 0.18 }}
-          >
-            <div
+          <motion.div className="fixed inset-0 z-50 xl:hidden">
+            {/* No exit animation on a modal layer.
+                AnimatePresence keeps the element mounted until its exit
+                finishes, so where no animation runs a dismissed dialog stays
+                on screen — aria-expanded already false, focus still trapped
+                inside something the person asked to close. Collapse.tsx
+                reached this same conclusion after two animated versions both
+                failed; this is the same rule applied where the stakes are a
+                modal rather than a panel. */}
+            <motion.div
               className="absolute inset-0 bg-bg/70 backdrop-blur-sm"
+              initial={reduce ? undefined : { opacity: 0 }}
+              animate={reduce ? undefined : { opacity: 1 }}
+              transition={{ duration: 0.18 }}
               onClick={() => setOpen(false)}
               aria-hidden
             />
@@ -198,9 +203,8 @@ export function Nav() {
               aria-modal="true"
               aria-label={t.nav.menu}
               className="glass absolute inset-x-3 top-3 rounded-2xl p-3 sm:inset-x-5 sm:top-4"
-              initial={reduce ? undefined : { opacity: 0, y: -14, scale: 0.98 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
-              exit={reduce ? undefined : { opacity: 0, y: -10, scale: 0.98 }}
+              initial={reduce ? undefined : { y: -14, scale: 0.98 }}
+              animate={reduce ? undefined : { y: 0, scale: 1 }}
               transition={springPanel}
               // Flick the sheet up to close it.
               drag={reduce ? false : "y"}
@@ -249,7 +253,7 @@ export function Nav() {
                 {links.map((l, i) => (
                   <motion.li
                     key={l.id}
-                    initial={reduce ? undefined : { opacity: 0, x: -10 }}
+                    initial={reduce ? undefined : { x: -10 }}
                     animate={reduce ? undefined : { opacity: 1, x: 0 }}
                     transition={{ delay: 0.03 * i, ...springPanel }}
                   >

@@ -465,6 +465,95 @@
       return { pass: over.length === 0, detail: { pasaronDeLargo: over } };
     },
 
+    /**
+     * What opens on demand must arrive visible too.
+     *
+     * sinAnimaciones sweeps the page at rest, so it never sees a dialog: the
+     * command palette and the mobile menu are not in the document until
+     * somebody opens them. Both used to fade their whole layer in from
+     * opacity 0, which means a tab that is not compositing opens a dialog that
+     * is invisible and still modal — focus trapped inside something nobody can
+     * see, with Escape as the only way out and no reason to guess it.
+     *
+     * The backdrop is allowed to fade. A backdrop that never appears costs a
+     * little contrast; the panel inside it costs the whole interaction.
+     */
+    async loQueSeAbre() {
+      const faint = [];
+
+      // Closing has to actually leave the page as it was found.
+      //
+      // The first version dismissed with Escape and moved on. Escape does set
+      // the state — aria-expanded goes false — but AnimatePresence keeps the
+      // element mounted until its exit animation finishes, and where no
+      // animation runs it never does. The sheet stayed on screen, frozen at
+      // the 0.98 scale of its own entrance, and the next case measured its
+      // buttons at 43px and reported a touch-target failure that belonged to
+      // this teardown. A case that leaves state behind fails its neighbours,
+      // and the neighbour gets the blame. The modal layers no longer animate
+      // on exit, so closing is closing; this waits and reports rather than
+      // ripping a React-managed node out of the document, which was the next
+      // thing I tried and which broke every later render of that menu.
+      const settled = async () => {
+        for (let i = 0; i < 12; i++) {
+          if (!document.querySelector('[role="dialog"]')) return true;
+          await new Promise((r) => setTimeout(r, 120));
+        }
+        return false;
+      };
+
+      const inspect = async (label, open, close) => {
+        open();
+        await new Promise((r) => setTimeout(r, 600));
+        const dialog = document.querySelector('[role="dialog"]');
+        if (!dialog) {
+          faint.push(label + ": no abrió");
+        } else {
+          const op = Number(getComputedStyle(dialog).opacity);
+          const box = dialog.getBoundingClientRect();
+          if (op < 0.1) faint.push(label + ": opacidad " + op);
+          else if (box.width < 4 || box.height < 4) faint.push(label + ": sin tamaño");
+          else {
+            // And its contents, which animate separately.
+            const hidden = [...dialog.querySelectorAll("a, button, li")].filter(
+              (e) =>
+                e.textContent &&
+                e.textContent.trim() &&
+                Number(getComputedStyle(e).opacity) < 0.1,
+            );
+            if (hidden.length) {
+              faint.push(label + ": " + hidden.length + " elementos invisibles");
+            }
+          }
+        }
+        close();
+        await new Promise((r) => setTimeout(r, 300));
+        if (!(await settled())) faint.push(label + ": no cerró");
+      };
+
+      const key = (k, code) =>
+        document.dispatchEvent(
+          new KeyboardEvent("keydown", { key: k, code, metaKey: k === "k", ctrlKey: k === "k", bubbles: true }),
+        );
+
+      await inspect(
+        "paleta",
+        () => key("k", "KeyK"),
+        () => key("Escape", "Escape"),
+      );
+
+      const menuBtn = document.querySelector("header button[aria-expanded]");
+      if (menuBtn && getComputedStyle(menuBtn).display !== "none") {
+        await inspect(
+          "menú",
+          () => menuBtn.click(),
+          () => key("Escape", "Escape"),
+        );
+      }
+
+      return { pass: faint.length === 0, detail: { problemas: faint } };
+    },
+
     // ------------------------------------------------------------------ nav
     async secciones() {
       if (!document.getElementById("problema"))
@@ -626,24 +715,45 @@
     },
 
     async idioma() {
-      if (!document.querySelector("[role=group]"))
+      // Visible, not merely present. Below xl the header keeps the language
+      // group in the document at zero width and the mobile sheet carries the
+      // real one, so "does it exist" found a control nobody can reach and the
+      // case clicked it anyway: the first click landed, the second did not,
+      // and it reported the language as unable to switch back. This project
+      // has made this exact mistake once before, with the menu button at 1440.
+      const visibleGroup = () =>
+        [...document.querySelectorAll("[role=group]")].find(
+          (g) => g.getBoundingClientRect().width > 0,
+        );
+
+      if (!visibleGroup())
         return { pass: true, detail: "selector no visible en este ancho" };
-      const group = document.querySelector("[role=group]");
-      if (!group) return { pass: false, detail: "no hay selector de idioma visible" };
+
       // Direction-agnostic: the page now starts in English, and asserting a
       // fixed starting language is how this case broke the day that changed.
       const start = document.documentElement.lang === "es" ? "es" : "en";
       const other = start === "es" ? "en" : "es";
-      const btn = (code) =>
-        [...group.querySelectorAll("button")].find(
-          (b) => b.textContent.trim().toLowerCase() === code,
-        );
+      // Re-queried every time. Switching language re-renders the group, so a
+      // reference taken before the switch points at a detached node and every
+      // click on it is silently discarded.
+      const btn = (code) => {
+        const group = visibleGroup();
+        return group
+          ? [...group.querySelectorAll("button")].find(
+              (b) => b.textContent.trim().toLowerCase() === code,
+            )
+          : null;
+      };
       const before = document.body.innerText.slice(0, 300);
-      btn(other).click();
+      const to = btn(other);
+      if (!to) return { pass: false, detail: "no hay botón para " + other };
+      to.click();
       await sleep(600);
       const changed = document.body.innerText.slice(0, 300) !== before;
       const lang = document.documentElement.lang;
-      btn(start).click();
+      const home = btn(start);
+      if (!home) return { pass: false, detail: "no hay botón para volver a " + start };
+      home.click();
       await sleep(500);
       const back = document.body.innerText.slice(0, 300) === before;
       return {

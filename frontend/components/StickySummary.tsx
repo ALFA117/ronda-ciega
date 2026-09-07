@@ -60,9 +60,9 @@ export function StickySummary({
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={reduce ? undefined : { opacity: 0, y: -12 }}
-          animate={reduce ? undefined : { opacity: 1, y: 0 }}
-          exit={reduce ? undefined : { opacity: 0, y: -12 }}
+          initial={reduce ? undefined : { y: -12 }}
+          animate={reduce ? undefined : { y: 0 }}
+          exit={reduce ? undefined : { y: -12 }}
           transition={springPanel}
           className="sticky top-[78px] z-30 mb-6"
         >

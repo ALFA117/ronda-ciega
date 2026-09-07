@@ -177,16 +177,17 @@ export function RankingBuilder({
 
   if (done) {
     return (
+      // Someone who just sealed a list has to see that it worked.
       <motion.div
-        initial={reduce ? undefined : { opacity: 0, y: 10 }}
-        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        initial={reduce ? undefined : { y: 10 }}
+        animate={reduce ? undefined : { y: 0 }}
         transition={springLayout}
       >
         <Panel sealed className="space-y-5 p-6">
           <div className="flex items-center gap-2.5">
             <motion.span
-              initial={reduce ? undefined : { scale: 0.5, opacity: 0 }}
-              animate={reduce ? undefined : { scale: 1, opacity: 1 }}
+              initial={reduce ? undefined : { scale: 0.5 }}
+              animate={reduce ? undefined : { scale: 1 }}
               transition={{ type: "spring", stiffness: 380, damping: 18 }}
               className="glass glass-sealed flex h-9 w-9 items-center justify-center rounded-xl text-sealed"
             >
@@ -257,9 +258,12 @@ export function RankingBuilder({
                 <motion.button
                   key={p.address.toBase58()}
                   layout
-                  initial={reduce ? undefined : { opacity: 0, scale: 0.9 }}
-                  animate={reduce ? undefined : { opacity: 1, scale: 1 }}
-                  exit={reduce ? undefined : { opacity: 0, scale: 0.9 }}
+                  // These are the control: you cannot build a ranking
+                  // without them. A stalled entrance leaves a panel that asks
+                  // you to tap people and shows none.
+                  initial={reduce ? undefined : { scale: 0.9 }}
+                  animate={reduce ? undefined : { scale: 1 }}
+                  exit={reduce ? undefined : { scale: 0.9 }}
                   whileTap={reduce ? undefined : { scale: 0.94 }}
                   transition={springSnappy}
                   onClick={() => setChosen((c) => [...c, p])}

@@ -324,7 +324,7 @@ behind a seeds constraint, one is declared and never raised (its invariant is
 enforced by a state transition instead), and one guards arithmetic on counters
 that cannot overflow.
 
-The sixteen UI cases run in the browser against any page of the deployed site.
+The seventeen UI cases run in the browser against any page of the deployed site.
 Two of them wait on the network, so the run takes about ten seconds:
 
 ```js

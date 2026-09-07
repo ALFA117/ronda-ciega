@@ -24,9 +24,9 @@ export function ThemeToggle() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={theme}
-          initial={reduce ? undefined : { opacity: 0, rotate: -90, scale: 0.6 }}
-          animate={reduce ? undefined : { opacity: 1, rotate: 0, scale: 1 }}
-          exit={reduce ? undefined : { opacity: 0, rotate: 90, scale: 0.6 }}
+          initial={reduce ? undefined : { rotate: -90, scale: 0.6 }}
+          animate={reduce ? undefined : { rotate: 0, scale: 1 }}
+          exit={reduce ? undefined : { rotate: 90, scale: 0.6 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="flex"
         >

@@ -62,9 +62,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             <motion.div
               key={t.id}
               layout
-              initial={reduce ? undefined : { opacity: 0, y: 16, scale: 0.96 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
-              exit={reduce ? undefined : { opacity: 0, scale: 0.96 }}
+              // Errors are delivered here. Fading in from nothing means a
+              // stalled tab reports failures silently, which is the one thing
+              // a notification must never do.
+              initial={reduce ? undefined : { y: 16, scale: 0.96 }}
+              animate={reduce ? undefined : { y: 0, scale: 1 }}
+              exit={reduce ? undefined : { scale: 0.96 }}
               transition={springPanel}
               // Flick it away. The same gesture people already use on every
               // notification they have ever dismissed.
