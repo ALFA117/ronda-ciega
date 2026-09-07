@@ -46,6 +46,42 @@ Ronda Ciega replaces it with an enclave:
 4. **The algorithm runs** inside the TEE, in a single rollup transaction.
 5. **Only the pairings are published.**
 
+## Check it rather than believe it
+
+Three things run in your browser, against public data, with no wallet:
+
+- **[/proof](https://ronda-ciega.vercel.app/proof)** generates four hundred markets with random
+  lists, runs the same matching implementation the chain runs, and searches every result for a
+  blocking pair — two people who would both rather leave their match for each other. One is enough
+  to make the whole promise false. *400 markets, 0 blocking pairs, ~30 ms.*
+- **Any settled transparent round** publishes its full trace, and the round page recomputes it
+  against what the chain says: no builder held twice, every index real, the pair count never
+  falling, the trace ending exactly where Solana says it ended.
+- **Any private round** publishes nothing to check — that is the product — so its page derives the
+  deterministic address of every preference list and asks Solana for them. *12 addresses checked,
+  0 found on L1.*
+
+The landing page's "0 preference lists published" is counted rather than asserted, by a
+`getProgramAccounts` call whose exact `curl` is printed beside it, with the public profiles as the
+control: a lone zero is indistinguishable from a broken query.
+
+Section 03 is a playground: the algorithm running on lists you can reshuffle, stepping round by
+round, ending with a live blocking-pair check. Same implementation, no wallet, no transaction.
+
+## Signing, and what a wallet cannot simulate
+
+A wallet simulates every transaction against L1. Once a round is delegated its account no longer
+lives there, so the simulation fails and the wallet warns or refuses — on its own dApp, for a
+transaction that would have succeeded. This is inherent to ephemeral rollups, not a bug in the page.
+
+None of the rollup instructions the operator sends check *who* signed: `close_round`,
+`seal_preferences` and `tick` take no signer at all, and the rest take a `payer` never compared
+against `round.authority`. So a round is driven by a local key kept in the browser, topped up once
+by a plain L1 transfer, and the whole lifecycle runs without a prompt. `scripts/operator-key.ts`
+proves the claim using a key the round has never heard of.
+
+Identity deliberately does not move: `submit_ranking` stays bound to the participant's wallet.
+
 ## How it runs
 
 Gale–Shapley proceeds in proposal rounds, so the program executes them as a loop inside **one
@@ -189,9 +225,9 @@ looks: `anchor build` panics on native Windows, so until CI existed nothing
 verified a Rust change compiled until it was deployed.
 
 ```bash
-cd frontend && npm test        # 44 unit tests, no network, ~1s
+cd frontend && npm test        # 68 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
-OFFLINE=1 node scripts/verify.mjs   # the 39 checks that read the repo
+OFFLINE=1 node scripts/verify.mjs   # the 43 checks that read the repo
 ```
 
 The rest costs SOL and needs a funded devnet wallet, so it stays manual and out
@@ -199,8 +235,10 @@ of CI. A pipeline that goes red because devnet is having a bad day is one people
 learn to ignore.
 
 ```bash
-npm run verify                 # 47 checks, including the deployed site
+npm run verify                 # 51 checks, including the deployed site
 npm run negative               # 11 refusals the program must make, on L1
+npm run operator-key           # a stranger key drives the rollup lifecycle
+npm run concurrency            # six wallets join at once, indices stay unique
 FULL=1 npm run negative        # + SideFull: fills a side with 16 (~0.1 SOL)
 npm run negative:rollup        # 26 refusals inside the TEE (~0.15 SOL, 3 min)
 npm run spike                  # the full lifecycle, including the privacy gate
@@ -212,7 +250,7 @@ behind a seeds constraint, one is declared and never raised (its invariant is
 enforced by a state transition instead), and one guards arithmetic on counters
 that cannot overflow.
 
-The eighteen UI cases run in the browser against the deployed site:
+The ten UI cases run in the browser against any page of the deployed site:
 
 ```js
 new Function(await (await fetch("/ui-cases.js")).text())();
