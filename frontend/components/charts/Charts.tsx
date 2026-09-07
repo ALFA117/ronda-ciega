@@ -111,30 +111,33 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
           const hM = total ? (d.matched / total) * plotH : 0;
           const hU = total ? (d.unmatched / total) * plotH : 0;
           return (
-            <g key={d.tick}>
+            // The bars are drawn at their real height and the group slides in.
+            //
+            // They used to grow from `height: 0`, which makes the animation
+            // load-bearing: a tab that is not compositing never runs it, and
+            // the chart renders its axes, its tick labels and its direct value
+            // labels around bars of no height at all. Not blank — worse than
+            // blank, because the numbers are still printed beside nothing. The
+            // same rule the entrance variants follow: motion is something this
+            // page is allowed to lose.
+            <motion.g
+              key={d.tick}
+              initial={reduce ? undefined : { y: 10 }}
+              animate={reduce ? undefined : { y: 0 }}
+              transition={{ duration: 0.45, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+            >
               {hU > 0 && (
-                <motion.rect
+                <rect
                   x={x}
                   width={barW}
                   y={y(total)}
+                  height={Math.max(hU - GAP, 0)}
                   rx={2}
                   fill={C2}
-                  initial={reduce ? undefined : { height: 0 }}
-                  animate={{ height: Math.max(hU - GAP, 0) }}
-                  transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
                 />
               )}
               {hM > 0 && (
-                <motion.rect
-                  x={x}
-                  width={barW}
-                  y={y(d.matched)}
-                  rx={2}
-                  fill={C1}
-                  initial={reduce ? undefined : { height: 0 }}
-                  animate={{ height: hM }}
-                  transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-                />
+                <rect x={x} width={barW} y={y(d.matched)} height={hM} rx={2} fill={C1} />
               )}
               {/* The round number, on the axis. */}
               <text
@@ -158,7 +161,7 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
               >
                 {d.matched}
               </text>
-            </g>
+            </motion.g>
           );
         })}
       </svg>
@@ -208,14 +211,16 @@ export function LatencyChart({
               <span className="text-muted">{b.label}</span>
               <span className="tnum text-chalk">{b.value} ms</span>
             </div>
+            {/* The width is the measurement, so it is set in CSS and is
+                right whether or not a frame is ever drawn. The bar arrives by
+                sliding; a stalled animation leaves it in place at the correct
+                length instead of at zero. */}
             <div className="h-2.5 w-full overflow-hidden rounded-sm bg-surface2">
               <motion.div
                 className="h-full rounded-sm"
-                style={{ background: b.color }}
-                initial={reduce ? undefined : { width: 0 }}
-                animate={
-                  reduce || shown ? { width: `${(b.value / max) * 100}%` } : undefined
-                }
+                style={{ background: b.color, width: `${(b.value / max) * 100}%` }}
+                initial={reduce ? undefined : { x: -12 }}
+                animate={reduce || shown ? { x: 0 } : undefined}
                 transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
               />
             </div>

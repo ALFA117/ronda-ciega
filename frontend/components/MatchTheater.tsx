@@ -83,9 +83,9 @@ export function MatchTheater({
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={atEnd ? "replay" : playing ? "pause" : "play"}
-                    initial={reduce ? undefined : { opacity: 0, scale: 0.7 }}
-                    animate={reduce ? undefined : { opacity: 1, scale: 1 }}
-                    exit={reduce ? undefined : { opacity: 0, scale: 0.7 }}
+                    initial={reduce ? undefined : { scale: 0.7 }}
+                    animate={reduce ? undefined : { scale: 1 }}
+                    exit={reduce ? undefined : { scale: 0.7 }}
                     transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     className="flex"
                   >

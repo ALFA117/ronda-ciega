@@ -58,11 +58,17 @@ export function Ticker({ round }: { round: RoundAccount }) {
       {/* Fixed height so the swap never nudges the layout. */}
       <div className="relative h-5 min-w-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
+          {/* Transform only. AnimatePresence skips the first entrance, so
+              the opening pairing always showed — but every rotation after it
+              started at opacity 0, and a tab that is not compositing never
+              finishes the fade: the strip went permanently blank after the
+              first swap. mode="wait" means the outgoing row is gone before the
+              next arrives, so nothing is lost by dropping the fade. */}
           <motion.div
             key={current.f.address.toBase58()}
-            initial={reduce ? undefined : { y: 14, opacity: 0 }}
-            animate={reduce ? undefined : { y: 0, opacity: 1 }}
-            exit={reduce ? undefined : { y: -14, opacity: 0 }}
+            initial={reduce ? undefined : { y: 14 }}
+            animate={reduce ? undefined : { y: 0 }}
+            exit={reduce ? undefined : { y: -14 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0 flex items-center gap-2 font-mono text-sm"
           >

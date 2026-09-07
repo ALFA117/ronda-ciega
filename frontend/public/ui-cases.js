@@ -156,6 +156,66 @@
       };
     },
 
+    /**
+     * A chart must draw its data, not just its axes.
+     *
+     * The sinAnimaciones case only sees elements with text, so it cannot see
+     * this: the bars grew from height 0 and the horizontal ones from width 0,
+     * which makes the animation load-bearing. A tab that is not compositing
+     * never runs it, and the chart renders its axes, its tick labels and its
+     * direct value labels around bars of no size at all — worse than blank,
+     * because the number is printed beside nothing.
+     *
+     * That last phrase is the actual rule, and the first version of this case
+     * did not use it: it flagged any zero-width bar, which caught the live
+     * pulse panel legitimately showing nothing while it still says
+     * "measuring". A bar with no measurement behind it is supposed to be
+     * empty. The defect is a bar that is empty next to a figure that is not.
+     */
+    async graficasConDatos() {
+      const number = (text) => {
+        const m = (text || "").match(/(\d[\d\s.,]*)\s*(ms|slots|%)/i);
+        if (!m) return null;
+        const n = Number(m[1].replace(/[\s,]/g, ""));
+        return Number.isFinite(n) ? n : null;
+      };
+
+      // SVG bars: an explicit height attribute that renders as nothing.
+      const flatBars = [];
+      for (const svg of document.querySelectorAll("svg")) {
+        for (const r of svg.querySelectorAll("rect")) {
+          const box = r.getBoundingClientRect();
+          if (box.width < 2) continue;
+          const h = Number(r.getAttribute("height"));
+          if (Number.isFinite(h) && h > 0 && box.height < 1) {
+            flatBars.push(r.getAttribute("fill") || "rect");
+          }
+        }
+      }
+
+      // Horizontal bars: a div whose inline width carries the measurement,
+      // sitting beside a figure that says the measurement is not zero.
+      const flatRows = [];
+      for (const bar of document.querySelectorAll("div[style*='width']")) {
+        const track = bar.parentElement;
+        if (!track || !String(track.className).includes("overflow-hidden")) continue;
+        if (bar.getBoundingClientRect().width >= 1) continue;
+
+        const row = track.parentElement || track;
+        const shown = number(row.innerText);
+        // No figure, or a figure of zero, means there is nothing to draw and
+        // an empty track is the honest picture.
+        if (shown !== null && shown > 0) {
+          flatRows.push(row.innerText.replace(/\n+/g, " ").slice(0, 40));
+        }
+      }
+
+      return {
+        pass: flatBars.length === 0 && flatRows.length === 0,
+        detail: { barrasEnCero: flatBars, filasEnCero: flatRows },
+      };
+    },
+
     /** iOS zooms the page when a focused field is under 16px. */
     async camposMoviles() {
       if (innerWidth >= 640) return { pass: true, detail: "no aplica sobre 640px" };

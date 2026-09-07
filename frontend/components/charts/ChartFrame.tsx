@@ -75,11 +75,14 @@ export function ChartFrame({
       ) : (
         <AnimatePresence mode="wait" initial={false}>
           {asTable ? (
+            // Switching between the chart and its table moves, it does
+            // not fade. Fading in from zero would leave the whole panel
+            // invisible if the animation never runs — and the table view
+            // exists precisely for readers who cannot rely on the chart.
             <motion.div
               key="table"
-              initial={reduce ? undefined : { opacity: 0 }}
-              animate={reduce ? undefined : { opacity: 1 }}
-              exit={reduce ? undefined : { opacity: 0 }}
+              initial={reduce ? undefined : { y: 6 }}
+              animate={reduce ? undefined : { y: 0 }}
               transition={{ duration: 0.18 }}
               className="overflow-x-auto"
             >
@@ -109,9 +112,8 @@ export function ChartFrame({
           ) : (
             <motion.div
               key="chart"
-              initial={reduce ? undefined : { opacity: 0 }}
-              animate={reduce ? undefined : { opacity: 1 }}
-              exit={reduce ? undefined : { opacity: 0 }}
+              initial={reduce ? undefined : { y: 6 }}
+              animate={reduce ? undefined : { y: 0 }}
               transition={{ duration: 0.18 }}
             >
               {children}
