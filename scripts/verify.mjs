@@ -158,6 +158,22 @@ head("Mobile form fields");
   }
 }
 
+// ------------------------------------------------------- focus ---
+// Keyboard focus has to be visible, and it has to be visible GLOBALLY: a rule
+// per component is a rule somebody forgets. :focus-visible rather than :focus
+// so a mouse click does not draw a ring nobody asked for.
+head("Keyboard focus is visible");
+{
+  const css = readFileSync(CSS, "utf8");
+  const rule = css.match(/:focus-visible\s*\{[^}]*\}/);
+  if (!rule) bad("no global :focus-visible rule in globals.css");
+  else if (/outline:[^;]*(solid|auto)/.test(rule[0])) {
+    ok("a global :focus-visible outline is defined");
+  } else {
+    bad(":focus-visible exists but sets no outline");
+  }
+}
+
 // --------------------------------------------------- reduced motion ---
 // The stylesheet's prefers-reduced-motion block cannot reach Framer, which
 // animates through inline styles from JavaScript. One MotionConfig covers
