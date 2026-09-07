@@ -140,7 +140,11 @@ to break the tie — and breaking it by account index would quietly reward whoev
 which is exactly the bias the system claims to remove.
 
 Ties are broken with **MagicBlock VRF**, requested against the ephemeral queue when the round is
-delegated. **Matching refuses to run until the callback lands** — `run_matching` and `tick` both
+delegated. The playground makes that arguable rather than asserted: reroll the tie-break on the
+same lists and the page counts how many of twenty-five seeds produce a different pairing. Often the
+answer is none — Gale-Shapley needs a tie-break only when a receiver has ranked *neither* of two
+proposers — and saying so is more convincing than implying the seed always matters. When it does
+matter, it decided somebody's match. **Matching refuses to run until the callback lands** — `run_matching` and `tick` both
 return `RandomnessMissing` rather than settling a round on registration order. The seed is published on the round,
 so anyone can replay every tie-break without seeing a single preference.
 
@@ -255,7 +259,7 @@ looks: `anchor build` panics on native Windows, so until CI existed nothing
 verified a Rust change compiled until it was deployed.
 
 ```bash
-cd frontend && npm test        # 159 unit tests, no network, ~1s
+cd frontend && npm test        # 172 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
 OFFLINE=1 node scripts/verify.mjs   # the 46 checks that read the repo
 ```

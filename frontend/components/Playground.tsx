@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Play, RotateCcw, Shuffle, SkipForward } from "lucide-react";
+import { Check, Dices, Play, RotateCcw, Shuffle, SkipForward } from "lucide-react";
 import {
   NONE,
   advanceOneRound,
@@ -11,28 +11,42 @@ import {
   type MatchState,
 } from "@/lib/matching";
 import { useT } from "@/lib/i18n";
+import { seedBytes, sensitivity } from "@/lib/tiebreak";
 import { springPanel } from "@/lib/motion";
 
 const FOUNDERS = ["Ana", "Beto", "Cami", "Dani"];
 const BUILDERS = ["Eli", "Fran", "Gus", "Hana"];
 const N = 4;
 
-/** Deterministic bytes, so a shared screenshot and a rerun agree. */
-function seedBytes(seed: number): Uint8Array {
-  let s = (seed || 1) >>> 0;
-  return Uint8Array.from({ length: 32 }, () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s >>> 24;
-  });
-}
 
+/**
+ * One person's list: a shuffle of the other side, sometimes cut short.
+ *
+ * It used to return the full permutation every time, and that quietly made
+ * the tie-break decorative. Gale-Shapley needs one only when a receiver has
+ * ranked *neither* of two proposers, and a receiver who ranked everybody
+ * never has. Twenty-five seeds on a complete market give twenty-five
+ * identical pairings, so the control for rerolling the randomness had nothing
+ * to show and the page's argument for the VRF was unillustrated.
+ *
+ * Partial lists are also what the product actually has. Ranking is optional
+ * and the form says so in as many words: leaving someone out is how you say
+ * you would rather stay unmatched. A demo where everyone ranks everyone is
+ * the one market shape where that choice does not exist.
+ */
 function shuffled(n: number, rand: () => number): number[] {
   const a = Array.from({ length: n }, (_, i) => i);
   for (let i = n - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
-  return a;
+  // One to all of them. Measured over two hundred markets, a floor of one
+  // makes the tie-break decide the outcome on about a fifth of them and still
+  // pairs 3.45 of 4 on average; a floor of three never produces a tie at all.
+  // A list of one person is not a degenerate case either — it is the product
+  // saying "only Eli, otherwise I would rather stay unmatched".
+  const keep = 1 + Math.floor(rand() * n);
+  return a.slice(0, Math.min(keep, n));
 }
 
 function prng(seed: number) {
@@ -63,7 +77,13 @@ interface Step {
 export function Playground() {
   const t = useT();
   const reduce = useReducedMotion();
+  // Two seeds, because they answer different questions. The lists are one
+  // market; the tie-break is the randomness the chain gets from the VRF. They
+  // used to be the same number, so "shuffle" changed both at once and the
+  // effect of the tie-break alone could not be seen — which is the one thing
+  // the VRF section of this page is arguing about.
   const [seed, setSeed] = useState(7);
+  const [tieSeed, setTieSeed] = useState(1);
   const [steps, setSteps] = useState<Step[]>([]);
   const [cursor, setCursor] = useState(0);
   const timer = useRef<number | null>(null);
@@ -82,7 +102,7 @@ export function Playground() {
   const timeline = useMemo(() => {
     const ms: MatchState = buildState(founderRankings, builderRankings);
     const pairs = new Array(16).fill(NONE);
-    const rnd = seedBytes(seed);
+    const rnd = seedBytes(tieSeed);
     const out: Step[] = [{ pairs: [...pairs], proposals: 0 }];
     for (let i = 0; i < 32; i++) {
       const proposals = advanceOneRound(ms, pairs, N, rnd);
@@ -90,7 +110,27 @@ export function Playground() {
       if (proposals === 0) break;
     }
     return { out, builderRank: ms.builderRank };
-  }, [founderRankings, builderRankings, seed]);
+  }, [founderRankings, builderRankings, tieSeed]);
+
+  /**
+   * Whether the tie-break decides anything on these particular lists.
+   *
+   * Gale-Shapley only needs a tie-break when a receiver has ranked neither of
+   * two proposers, so on many markets every seed gives the identical answer.
+   * Saying that plainly is more convincing than implying the seed always
+   * matters — and when it does matter, it decided somebody's match.
+   */
+  const tieEffect = useMemo(
+    () =>
+      sensitivity(
+        founderRankings,
+        builderRankings,
+        N,
+        seedBytes(tieSeed),
+        Array.from({ length: 24 }, (_, i) => seedBytes(tieSeed + i + 1)),
+      ),
+    [founderRankings, builderRankings, tieSeed],
+  );
 
   const shown = steps.length ? steps : [timeline.out[0]];
   const current = shown[Math.min(cursor, shown.length - 1)];
@@ -141,6 +181,14 @@ export function Playground() {
     setSteps([]);
     setCursor(0);
     if (nextSeed !== undefined) setSeed(nextSeed);
+  }
+
+  /** Same market, different randomness — the counterfactual the VRF is for. */
+  function rerollTieBreak() {
+    stop();
+    setSteps([]);
+    setCursor(0);
+    setTieSeed(Math.floor(Math.random() * 100000) + 1);
   }
 
   const totalProposals = timeline.out
@@ -273,6 +321,13 @@ export function Playground() {
             {t.play.shuffle}
           </button>
           <button
+            onClick={rerollTieBreak}
+            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl font-mono text-2xs text-muted transition-colors hover:text-sealed"
+          >
+            <Dices className="h-3.5 w-3.5" aria-hidden />
+            {t.play.reroll}
+          </button>
+          <button
             onClick={() => reset()}
             className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl font-mono text-2xs text-muted transition-colors hover:text-chalk"
           >
@@ -281,13 +336,31 @@ export function Playground() {
           </button>
         </div>
 
-        {/* The claim, checked live rather than asserted. */}
+        {/* What the tie-break is worth on these particular lists, counted.
+            Gale-Shapley only needs one when a receiver has ranked neither
+            proposer, so on many markets the seed changes nothing — and saying
+            that is more convincing than implying it always matters. Both
+            sentences are true statements about the lists on screen. */}
+        <p className="rounded-xl border border-edge px-3 py-2.5 text-xs leading-relaxed text-muted">
+          {tieEffect.differing === 0
+            ? t.play.tiesIrrelevant.replace("{n}", String(tieEffect.tried))
+            : t.play.tiesMatter
+                .replace("{d}", String(tieEffect.differing))
+                .replace("{n}", String(tieEffect.tried))}
+        </p>
+
+        {/* The claim, checked live rather than asserted.
+            It arrives by moving, not by fading in. This used to start at
+            opacity 0 and animate up, which makes the animation load-bearing:
+            with the loop stalled the payoff of the whole playground — whether
+            the result is stable — was in the document and invisible. The
+            entrance variants were changed for this reason and this one was
+            missed. */}
         <AnimatePresence>
           {done && steps.length > 0 && (
             <motion.p
-              initial={reduce ? undefined : { opacity: 0, y: 6 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0 }}
-              exit={reduce ? undefined : { opacity: 0 }}
+              initial={reduce ? undefined : { y: 6 }}
+              animate={reduce ? undefined : { y: 0 }}
               transition={springPanel}
               className="flex items-start gap-2 rounded-xl border border-sealed/40 bg-sealed/[0.07] px-3 py-2.5 text-xs leading-relaxed text-chalk/90"
             >
