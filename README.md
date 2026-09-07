@@ -166,6 +166,14 @@ So a round carries a `transparent` flag, decided at creation:
 
 The UI presents this as a disclosure, not a display toggle.
 
+The rule is one condition inside the matching loop, and it is the privacy claim
+that lives there: a misplaced `&&` would publish the proposal sequence for
+every round ever run, and the account would look entirely ordinary. Nothing
+checked it until the Rust tests existed. `a_private_round_records_no_frames_at_all`
+does now, on a market chosen to take several rounds so there is a sequence
+worth leaking — deleting the `transparent &&` makes exactly that test fail,
+which is how I know it is a real check and not a shape.
+
 ## The privacy model, stated honestly
 
 The Private ER is **TEE-enforced access control, not encryption**. Accounts are ordinary rollup
@@ -258,7 +266,7 @@ cd frontend && npm install && npm run dev
 
 CI runs everything that is deterministic and free — the unit suite, both type
 checks, the Next build, the design invariants, and the program itself: rustfmt,
-clippy, a host type check, seventeen Rust unit tests and the SBF build. That
+clippy, a host type check, thirty-three Rust unit tests and the SBF build. That
 last one matters more than it looks: `anchor build` panics on native Windows,
 so until CI existed nothing verified a Rust change compiled until it was
 deployed.
@@ -277,7 +285,7 @@ implementations disagreed with it in the same way, which is how it earned its
 place.
 
 ```bash
-cargo test --package ronda-ciega   # 17 tests, host target, no validator
+cargo test --package ronda-ciega   # 33 tests, host target, no validator
 ```
 
 ```bash

@@ -303,17 +303,7 @@ pub mod ronda_ciega {
             Side::Founder => ctx.accounts.round.builder_count,
             Side::Builder => ctx.accounts.round.founder_count,
         };
-        require!(
-            !ranking.is_empty() && ranking.len() <= opposite_count as usize,
-            ErrorCode::InvalidRanking
-        );
-        let mut seen = [false; MAX_PER_SIDE];
-        for entry in ranking.iter() {
-            let idx = *entry as usize;
-            require!(idx < opposite_count as usize, ErrorCode::InvalidRanking);
-            require!(!seen[idx], ErrorCode::DuplicateInRanking);
-            seen[idx] = true;
-        }
+        validate_ranking(&ranking, opposite_count)?;
 
         let first_submission = ctx.accounts.preferences.data_is_empty();
         if first_submission {
@@ -811,29 +801,31 @@ pub mod ronda_ciega {
         let mut total = ctx.accounts.round.total_proposals;
 
         for _ in 0..max_ticks {
-            let proposals = advance_one_round(&mut ms, &mut pairs, founder_count, &randomness);
-            tick_no = tick_no.checked_add(1).ok_or(ErrorCode::MathOverflow)?;
-            total = total
-                .checked_add(proposals as u32)
-                .ok_or(ErrorCode::MathOverflow)?;
+            let step = advance_matching(AdvanceInput {
+                ms: &mut ms,
+                pairs: &mut pairs,
+                founder_count,
+                randomness: &randomness,
+                transparent,
+                tick_no,
+                total,
+                history: &mut history,
+                history_len,
+            })?;
 
-            if proposals == 0 {
+            tick_no = step.tick_no;
+            total = step.total;
+            history_len = step.history_len;
+
+            if step.settled {
                 settled = true;
                 break;
-            }
-
-            // Only a transparent round records the frame. On a private round
-            // the intermediate states never leave the TEE, because the order of
-            // proposals is itself preference data.
-            if transparent && history_len < MAX_HISTORY {
-                history[history_len] = pairs;
-                history_len += 1;
             }
 
             emit!(TickAdvanced {
                 round: round_key,
                 tick: tick_no,
-                proposals,
+                proposals: step.proposals,
                 pairs,
             });
         }
@@ -924,6 +916,115 @@ fn advance_one_round(
     }
 
     proposals
+}
+
+/// Borrowed state for one step of the matching loop.
+struct AdvanceInput<'a> {
+    ms: &'a mut MatchState,
+    pairs: &'a mut [u8; MAX_PER_SIDE],
+    founder_count: usize,
+    randomness: &'a [u8; 32],
+    transparent: bool,
+    tick_no: u16,
+    total: u32,
+    history: &'a mut [[u8; MAX_PER_SIDE]; MAX_HISTORY],
+    history_len: usize,
+}
+
+/// What one step of the matching loop produced.
+struct AdvanceOutput {
+    tick_no: u16,
+    total: u32,
+    history_len: usize,
+    proposals: u8,
+    /// No proposals were made: the matching has reached its fixed point.
+    settled: bool,
+}
+
+/// One step of the matching loop: advance a round, count it, and record the
+/// frame if — and only if — the round is transparent.
+///
+/// Lifted out of `run_matching` so the recording rule can be asserted on the
+/// host. That rule is the privacy claim living inside the loop: on a private
+/// round the intermediate states never leave the enclave, because the order of
+/// proposals is itself preference data — if round one shows that founder 0
+/// proposed to builder 2, that publishes founder 0's first choice. Nothing
+/// checked it. A single misplaced condition here would publish the sequence
+/// for every round ever run, and the account would look ordinary.
+fn advance_matching(input: AdvanceInput<'_>) -> Result<AdvanceOutput> {
+    let AdvanceInput {
+        ms,
+        pairs,
+        founder_count,
+        randomness,
+        transparent,
+        tick_no,
+        total,
+        history,
+        mut history_len,
+    } = input;
+
+    let proposals = advance_one_round(ms, pairs, founder_count, randomness);
+    let tick_no = tick_no.checked_add(1).ok_or(ErrorCode::MathOverflow)?;
+    let total = total
+        .checked_add(proposals as u32)
+        .ok_or(ErrorCode::MathOverflow)?;
+
+    if proposals == 0 {
+        return Ok(AdvanceOutput {
+            tick_no,
+            total,
+            history_len,
+            proposals,
+            settled: true,
+        });
+    }
+
+    // Only a transparent round records the frame.
+    if transparent && history_len < MAX_HISTORY {
+        history[history_len] = *pairs;
+        history_len += 1;
+    }
+
+    Ok(AdvanceOutput {
+        tick_no,
+        total,
+        history_len,
+        proposals,
+        settled: false,
+    })
+}
+
+/// Everything a submitted ranking has to satisfy before it is written.
+///
+/// Lifted out of `submit_ranking` so it can be tested on the host. These four
+/// refusals were only ever exercised by `scripts/negative.ts`, which needs a
+/// funded devnet wallet, takes minutes and cannot run in CI — so the rules
+/// that decide whether somebody's list is accepted were checked by hand, when
+/// somebody remembered, against a cluster that has to be up.
+///
+/// The behaviour is unchanged: same requires, same error codes, same order.
+/// Order matters to the caller — a ranking that is both too long and full of
+/// duplicates must still report InvalidRanking, because the length is the
+/// thing to fix first.
+fn validate_ranking(ranking: &[u8], opposite_count: u8) -> Result<()> {
+    // Longer than the other side is impossible, and empty is not a preference
+    // — it is a submission that says nothing, which the account should not
+    // exist to hold.
+    require!(
+        !ranking.is_empty() && ranking.len() <= opposite_count as usize,
+        ErrorCode::InvalidRanking
+    );
+
+    let mut seen = [false; MAX_PER_SIDE];
+    for entry in ranking.iter() {
+        let idx = *entry as usize;
+        require!(idx < opposite_count as usize, ErrorCode::InvalidRanking);
+        require!(!seen[idx], ErrorCode::DuplicateInRanking);
+        seen[idx] = true;
+    }
+
+    Ok(())
 }
 
 /// Deterministic, reproducible tie-break from the round's VRF output. Anyone
@@ -1401,6 +1502,266 @@ mod tests {
 
     fn flat(v: u8) -> [u8; 32] {
         [v; 32]
+    }
+
+    // ------------------------------------------------------ frame recording
+    //
+    // The privacy claim that lives inside the matching loop. On a private
+    // round the intermediate states must never be written down, because the
+    // order of proposals is preference data: if round one shows founder 0
+    // proposing to builder 2, that publishes founder 0's first choice, and the
+    // full sequence reconstructs much of everyone's list. Nothing checked it.
+    // A single misplaced condition would publish that sequence for every round
+    // ever run, and the account would look entirely ordinary.
+
+    /// Run the whole matching the way run_matching does and report what got
+    /// written to the history.
+    fn run_and_record(
+        founder_lists: &[&[u8]],
+        builder_lists: &[&[u8]],
+        randomness: &[u8; 32],
+        transparent: bool,
+    ) -> (usize, u16, u32) {
+        let mut ms = state(founder_lists, builder_lists);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        let mut history = [[NONE; MAX_PER_SIDE]; MAX_HISTORY];
+        let mut history_len = 0usize;
+        let mut tick_no: u16 = 0;
+        let mut total: u32 = 0;
+
+        for _ in 0..64u8 {
+            let step = advance_matching(AdvanceInput {
+                ms: &mut ms,
+                pairs: &mut pairs,
+                founder_count: founder_lists.len(),
+                randomness,
+                transparent,
+                tick_no,
+                total,
+                history: &mut history,
+                history_len,
+            })
+            .unwrap();
+            tick_no = step.tick_no;
+            total = step.total;
+            history_len = step.history_len;
+            if step.settled {
+                break;
+            }
+        }
+
+        (history_len, tick_no, total)
+    }
+
+    /// A market that takes several rounds to settle, so there is a sequence
+    /// worth leaking.
+    fn multi_round_market() -> (&'static [&'static [u8]], &'static [&'static [u8]]) {
+        (
+            &[&[0, 1, 2], &[0, 1, 2], &[0, 1, 2]],
+            &[&[2, 1, 0], &[2, 1, 0], &[2, 1, 0]],
+        )
+    }
+
+    #[test]
+    fn a_private_round_records_no_frames_at_all() {
+        let (f, b) = multi_round_market();
+        let (history_len, ticks, _) = run_and_record(f, b, &flat(0), false);
+        assert!(ticks > 1, "market settled too fast to be a useful test");
+        assert_eq!(
+            history_len, 0,
+            "a private round wrote {} frames",
+            history_len
+        );
+    }
+
+    #[test]
+    fn a_transparent_round_records_one_frame_per_round_that_did_work() {
+        let (f, b) = multi_round_market();
+        let (history_len, ticks, _) = run_and_record(f, b, &flat(0), true);
+        // The final round makes no proposals and is the one that settles, so
+        // it is counted as a tick and produces no frame.
+        assert_eq!(history_len, ticks as usize - 1);
+    }
+
+    #[test]
+    fn the_two_modes_reach_the_same_pairing() {
+        // Transparency is a disclosure, not a different algorithm. If these
+        // ever diverge, the demo round pair that the README asks people to
+        // read side by side stops meaning anything.
+        let (f, b) = multi_round_market();
+        let a = settle(f, b, &flat(0));
+        let c = settle(f, b, &flat(0));
+        assert_eq!(a, c);
+
+        let (_, ticks_private, total_private) = run_and_record(f, b, &flat(0), false);
+        let (_, ticks_public, total_public) = run_and_record(f, b, &flat(0), true);
+        assert_eq!(ticks_private, ticks_public);
+        assert_eq!(total_private, total_public);
+    }
+
+    #[test]
+    fn the_history_stops_at_its_capacity_instead_of_overflowing() {
+        // MAX_HISTORY frames is all the account holds. A round deeper than
+        // that must keep matching and stop recording, not panic.
+        let mut ms = state(&[&[0]], &[&[0]]);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        let mut history = [[NONE; MAX_PER_SIDE]; MAX_HISTORY];
+
+        let step = advance_matching(AdvanceInput {
+            ms: &mut ms,
+            pairs: &mut pairs,
+            founder_count: 1,
+            randomness: &flat(0),
+            transparent: true,
+            tick_no: 0,
+            total: 0,
+            history: &mut history,
+            history_len: MAX_HISTORY,
+        })
+        .unwrap();
+
+        assert_eq!(step.history_len, MAX_HISTORY);
+    }
+
+    #[test]
+    fn a_settling_round_records_nothing_even_when_transparent() {
+        // The round that makes no proposals adds no information: the pairing
+        // it ends on is already published as the result.
+        let mut ms = state(&[&[]], &[&[]]);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        let mut history = [[NONE; MAX_PER_SIDE]; MAX_HISTORY];
+
+        let step = advance_matching(AdvanceInput {
+            ms: &mut ms,
+            pairs: &mut pairs,
+            founder_count: 1,
+            randomness: &flat(0),
+            transparent: true,
+            tick_no: 0,
+            total: 0,
+            history: &mut history,
+            history_len: 0,
+        })
+        .unwrap();
+
+        assert!(step.settled);
+        assert_eq!(step.history_len, 0);
+    }
+
+    #[test]
+    fn the_tick_counter_advances_once_per_step() {
+        let mut ms = state(&[&[0, 1]], &[&[0], &[0]]);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        let mut history = [[NONE; MAX_PER_SIDE]; MAX_HISTORY];
+
+        let step = advance_matching(AdvanceInput {
+            ms: &mut ms,
+            pairs: &mut pairs,
+            founder_count: 1,
+            randomness: &flat(0),
+            transparent: false,
+            tick_no: 41,
+            total: 100,
+            history: &mut history,
+            history_len: 0,
+        })
+        .unwrap();
+
+        assert_eq!(step.tick_no, 42);
+        assert_eq!(step.total, 101);
+        assert_eq!(step.proposals, 1);
+    }
+
+    // ------------------------------------------------------- validate_ranking
+    //
+    // These four refusals used to be checked only by scripts/negative.ts,
+    // which needs a funded devnet wallet, takes minutes, and cannot run in CI.
+    // The rules deciding whether somebody's list is accepted were verified by
+    // hand, when somebody remembered, against a cluster that has to be up.
+
+    /// The error code a refusal carries, or None when it was accepted.
+    fn refusal(ranking: &[u8], opposite_count: u8) -> Option<u32> {
+        match validate_ranking(ranking, opposite_count) {
+            Ok(()) => None,
+            Err(e) => match e {
+                Error::AnchorError(inner) => Some(inner.error_code_number),
+                _ => panic!("not an anchor error"),
+            },
+        }
+    }
+
+    const INVALID_RANKING: u32 = 6006;
+    const DUPLICATE_IN_RANKING: u32 = 6007;
+
+    #[test]
+    fn a_partial_ranking_is_accepted() {
+        // Shorter than the other side is the whole point: leaving people out
+        // is how a participant says they would rather stay unmatched.
+        assert_eq!(refusal(&[2], 4), None);
+        assert_eq!(refusal(&[3, 0], 4), None);
+    }
+
+    #[test]
+    fn a_complete_ranking_is_accepted() {
+        assert_eq!(refusal(&[3, 1, 0, 2], 4), None);
+    }
+
+    #[test]
+    fn an_empty_ranking_is_refused() {
+        // Not a preference — a submission that says nothing, which the account
+        // should not exist to hold.
+        assert_eq!(refusal(&[], 4), Some(INVALID_RANKING));
+    }
+
+    #[test]
+    fn a_ranking_longer_than_the_other_side_is_refused() {
+        assert_eq!(refusal(&[0, 1, 2, 3, 0], 4), Some(INVALID_RANKING));
+    }
+
+    #[test]
+    fn an_index_past_the_other_side_is_refused() {
+        // Four builders means indices 0..=3. Index 4 is nobody.
+        assert_eq!(refusal(&[4], 4), Some(INVALID_RANKING));
+        assert_eq!(refusal(&[0, 9], 4), Some(INVALID_RANKING));
+    }
+
+    #[test]
+    fn a_repeated_entry_is_refused_and_says_so() {
+        // A different code from the others on purpose: "you listed someone
+        // twice" is a different thing to fix from "that index is not real".
+        assert_eq!(refusal(&[1, 1], 4), Some(DUPLICATE_IN_RANKING));
+        assert_eq!(refusal(&[0, 2, 1, 2], 4), Some(DUPLICATE_IN_RANKING));
+    }
+
+    #[test]
+    fn length_is_judged_before_contents() {
+        // A ranking that is both too long and full of duplicates reports
+        // InvalidRanking, because the length is the thing to fix first. The
+        // caller shows one message, so which one it is matters.
+        assert_eq!(refusal(&[1, 1, 1, 1, 1], 4), Some(INVALID_RANKING));
+    }
+
+    #[test]
+    fn a_round_with_nobody_on_the_other_side_accepts_nothing() {
+        // opposite_count of zero makes every ranking too long, including the
+        // empty one, and there is genuinely nobody to rank.
+        assert_eq!(refusal(&[], 0), Some(INVALID_RANKING));
+        assert_eq!(refusal(&[0], 0), Some(INVALID_RANKING));
+    }
+
+    #[test]
+    fn a_full_side_of_sixteen_is_accepted_whole() {
+        // MAX_PER_SIDE exactly: the largest legal list, and the one that would
+        // overflow the seen array if the index bound were wrong.
+        let full: Vec<u8> = (0..MAX_PER_SIDE as u8).collect();
+        assert_eq!(refusal(&full, MAX_PER_SIDE as u8), None);
+    }
+
+    #[test]
+    fn an_index_of_255_does_not_overflow_the_seen_array() {
+        // NONE is 255 and would index far past a [bool; 16] if the bound check
+        // did not come first.
+        assert_eq!(refusal(&[NONE], MAX_PER_SIDE as u8), Some(INVALID_RANKING));
     }
 
     // ------------------------------------------------------------ break_tie
