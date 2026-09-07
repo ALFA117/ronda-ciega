@@ -119,6 +119,16 @@ jobs:
       - name: Type check on the host
         run: cargo check --all-targets
 
+      # Until these existed the program had no tests at all: everything that
+      # verified the matching ran against the TypeScript reimplementation in
+      # the frontend, and nothing checked that the two agree. Two of the cases
+      # are pinned vectors asserted in both languages, so a drift turns one of
+      # the two suites red instead of turning up as a devnet round that
+      # disagrees with the page explaining it. They run on the host, so they
+      # cost seconds and need no validator.
+      - name: Program unit tests
+        run: cargo test --package ronda-ciega
+
       - name: Build the SBF program
         working-directory: programs/ronda-ciega
         run: cargo build-sbf

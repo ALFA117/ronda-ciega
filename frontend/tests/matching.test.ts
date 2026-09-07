@@ -187,3 +187,42 @@ describe("Gale–Shapley: propiedades que deben cumplirse siempre", () => {
     assert.equal(res.pairs[1], 0);
   });
 });
+
+describe("vectores compartidos con la suite de Rust", () => {
+  // The same lists, the same seed and the same expected pairing are asserted
+  // in programs/ronda-ciega/src/lib.rs. Everything else here checks that this
+  // implementation is internally consistent; only these two check that it
+  // agrees with the one that actually decides who gets matched on chain.
+  //
+  // Until the Rust suite existed there was nothing of the kind: the program
+  // had no tests at all, and the two implementations were asserted to be
+  // equivalent by comment.
+
+  const flat = (v: number) => new Uint8Array(32).fill(v);
+
+  test("SHARED-A: tres y tres, listas completas", () => {
+    const founders = [
+      [0, 1, 2],
+      [1, 0, 2],
+      [1, 2, 0],
+    ];
+    const builders = [
+      [1, 0, 2],
+      [0, 2, 1],
+      [2, 1, 0],
+    ];
+    const res = runMatching(buildState(founders, builders), 3, flat(0));
+    assert.deepEqual(res.pairs.slice(0, 3), [1, 0, 2]);
+    assert.equal(res.settled, true);
+  });
+
+  test("SHARED-B: un mercado que sí llega al desempate", () => {
+    // Builder 0 ranked nobody, so founders 0 and 1 are separated only by the
+    // seed. A flat seed takes break_tie down its index-order fallback, and
+    // both languages have to fall the same way.
+    const founders = [[0], [0], [1]];
+    const builders: number[][] = [[], [2]];
+    const res = runMatching(buildState(founders, builders), 3, flat(200));
+    assert.deepEqual(res.pairs.slice(0, 3), [0, NONE, 1]);
+  });
+});

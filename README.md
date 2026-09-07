@@ -258,12 +258,30 @@ cd frontend && npm install && npm run dev
 
 CI runs everything that is deterministic and free — the unit suite, both type
 checks, the Next build, the design invariants, and the program itself: rustfmt,
-clippy, a host type check and the SBF build. That last one matters more than it
-looks: `anchor build` panics on native Windows, so until CI existed nothing
-verified a Rust change compiled until it was deployed.
+clippy, a host type check, seventeen Rust unit tests and the SBF build. That
+last one matters more than it looks: `anchor build` panics on native Windows,
+so until CI existed nothing verified a Rust change compiled until it was
+deployed.
+
+The Rust tests are newer than they should be. Everything that verified the
+matching ran against the **TypeScript reimplementation** in the frontend — four
+hundred generated markets per click, well covered — and nothing anywhere
+checked that the two implementations agree. The one that decides who actually
+gets matched is the Rust, and it was the one with no tests. Two of the cases
+are **pinned vectors asserted in both languages**: the same lists, the same
+seed, the same expected pairing, in `programs/ronda-ciega/src/lib.rs` and in
+`frontend/tests/matching.test.ts`. A drift now turns one of the two suites red
+instead of turning up as a devnet round that disagrees with the page explaining
+it. The first version of that vector was expected by hand and was wrong — both
+implementations disagreed with it in the same way, which is how it earned its
+place.
 
 ```bash
-cd frontend && npm test        # 175 unit tests, no network, ~1s
+cargo test --package ronda-ciega   # 17 tests, host target, no validator
+```
+
+```bash
+cd frontend && npm test        # 177 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
 OFFLINE=1 node scripts/verify.mjs   # the 46 checks that read the repo
 ```

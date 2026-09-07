@@ -1339,3 +1339,285 @@ pub struct Tick<'info> {
     )]
     pub match_state: UncheckedAccount<'info>,
 }
+
+// ---------------------------------------------------------------- tests ---
+//
+// The program had none. Everything that verified this logic ran against a
+// TypeScript reimplementation in the frontend — four hundred generated markets
+// per click, well covered — and nothing anywhere checked that the two agree.
+// The implementation that decides who actually gets matched is this one, and
+// it was the untested one.
+//
+// So these run the Rust directly. The vector marked SHARED uses the same lists
+// the TypeScript suite asserts on, so if the two ever drift one of the two
+// suites goes red instead of a devnet round quietly producing a different
+// pairing from the page that explains it.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A MatchState with no accounts attached: only the fields the algorithm
+    /// reads.
+    fn state(founder_lists: &[&[u8]], builder_lists: &[&[u8]]) -> MatchState {
+        let mut ms = MatchState {
+            round: Pubkey::default(),
+            founder_ranking: [[NONE; MAX_PER_SIDE]; MAX_PER_SIDE],
+            founder_len: [0; MAX_PER_SIDE],
+            builder_rank: [[UNRANKED; MAX_PER_SIDE]; MAX_PER_SIDE],
+            cursor: [0; MAX_PER_SIDE],
+            hold: [NONE; MAX_PER_SIDE],
+            bump: 0,
+        };
+
+        for (f, list) in founder_lists.iter().enumerate() {
+            for (i, b) in list.iter().enumerate() {
+                ms.founder_ranking[f][i] = *b;
+            }
+            ms.founder_len[f] = list.len() as u8;
+        }
+
+        // The inverse, exactly as seal_preferences builds it.
+        for (b, list) in builder_lists.iter().enumerate() {
+            for (position, f) in list.iter().enumerate() {
+                ms.builder_rank[b][*f as usize] = position as u8;
+            }
+        }
+
+        ms
+    }
+
+    /// Run to the fixed point and return the pairing, founder-indexed.
+    fn settle(founder_lists: &[&[u8]], builder_lists: &[&[u8]], randomness: &[u8; 32]) -> Vec<u8> {
+        let mut ms = state(founder_lists, builder_lists);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        let n = founder_lists.len();
+        for _ in 0..64 {
+            if advance_one_round(&mut ms, &mut pairs, n, randomness) == 0 {
+                break;
+            }
+        }
+        pairs[..n].to_vec()
+    }
+
+    fn flat(v: u8) -> [u8; 32] {
+        [v; 32]
+    }
+
+    // ------------------------------------------------------------ break_tie
+
+    #[test]
+    fn tie_goes_to_the_higher_byte() {
+        // break_tie(r, builder 0, challenger 1, incumbent 0) reads r[1] vs r[0].
+        let mut r = flat(0);
+        r[0] = 100;
+        r[1] = 200;
+        assert!(break_tie(&r, 0, 1, 0));
+        r[1] = 50;
+        assert!(!break_tie(&r, 0, 1, 0));
+    }
+
+    #[test]
+    fn equal_bytes_fall_back_to_index_order() {
+        // Not arbitrary: with a degenerate seed the result still has to be
+        // deterministic, or two validators replaying the round disagree.
+        let r = flat(7);
+        assert!(break_tie(&r, 0, 1, 2));
+        assert!(!break_tie(&r, 0, 2, 1));
+    }
+
+    #[test]
+    fn break_tie_is_deterministic() {
+        let r = flat(3);
+        let first = break_tie(&r, 1, 2, 3);
+        for _ in 0..100 {
+            assert_eq!(break_tie(&r, 1, 2, 3), first);
+        }
+    }
+
+    #[test]
+    fn break_tie_never_reads_out_of_bounds() {
+        // builder * 3 + challenger is taken modulo 32, and MAX_PER_SIDE is 16,
+        // so the largest index touched would be 15 * 3 + 15 = 60. Without the
+        // modulo this panics.
+        let r = flat(1);
+        for b in 0..MAX_PER_SIDE {
+            for c in 0..MAX_PER_SIDE {
+                for i in 0..MAX_PER_SIDE {
+                    let _ = break_tie(&r, b, c, i);
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------- advance_one_round
+
+    #[test]
+    fn a_free_builder_accepts() {
+        let mut ms = state(&[&[0]], &[&[0]]);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        assert_eq!(advance_one_round(&mut ms, &mut pairs, 1, &flat(0)), 1);
+        assert_eq!(pairs[0], 0);
+    }
+
+    #[test]
+    fn a_matched_founder_does_not_propose_again() {
+        let mut ms = state(&[&[0, 1]], &[&[0]]);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        advance_one_round(&mut ms, &mut pairs, 1, &flat(0));
+        assert_eq!(advance_one_round(&mut ms, &mut pairs, 1, &flat(0)), 0);
+    }
+
+    #[test]
+    fn a_founder_who_runs_out_of_list_stays_unmatched() {
+        // Founder 1 ranked only builder 0, who prefers founder 0.
+        let pairs = settle(&[&[0], &[0]], &[&[0, 1], &[]], &flat(0));
+        assert_eq!(pairs[0], 0);
+        assert_eq!(pairs[1], NONE);
+    }
+
+    #[test]
+    fn a_better_ranked_challenger_displaces_the_incumbent() {
+        let pairs = settle(&[&[0], &[0]], &[&[1, 0], &[]], &flat(0));
+        assert_eq!(pairs[1], 0);
+        assert_eq!(pairs[0], NONE);
+    }
+
+    #[test]
+    fn unranked_loses_to_every_real_rank() {
+        // Builder 0 ranked founder 1 and not founder 0. Founder 0 proposes
+        // first and is held, and must still lose the slot.
+        let pairs = settle(&[&[0], &[0]], &[&[1], &[]], &flat(0));
+        assert_eq!(pairs[1], 0);
+        assert_eq!(pairs[0], NONE);
+    }
+
+    #[test]
+    fn the_tie_break_decides_when_the_builder_ranked_neither() {
+        // The branch the VRF exists for. Both founders want builder 0, who
+        // ranked nobody. Index order would always hand it to founder 0.
+        let mut incumbent_wins = flat(0);
+        incumbent_wins[0] = 200;
+        incumbent_wins[1] = 10;
+        assert_eq!(settle(&[&[0], &[0]], &[&[], &[]], &incumbent_wins)[0], 0);
+
+        let mut challenger_wins = flat(0);
+        challenger_wins[0] = 10;
+        challenger_wins[1] = 200;
+        let pairs = settle(&[&[0], &[0]], &[&[], &[]], &challenger_wins);
+        assert_eq!(pairs[1], 0, "the seed must be able to change who wins");
+        assert_eq!(pairs[0], NONE);
+    }
+
+    #[test]
+    fn no_builder_is_held_twice() {
+        let pairs = settle(
+            &[&[0, 1, 2], &[1, 0, 2], &[2, 1, 0]],
+            &[&[2, 0, 1], &[0, 1, 2], &[1, 2, 0]],
+            &flat(9),
+        );
+        let mut seen = [false; MAX_PER_SIDE];
+        for b in pairs.iter().filter(|b| **b != NONE) {
+            assert!(!seen[*b as usize], "builder {} held twice", b);
+            seen[*b as usize] = true;
+        }
+    }
+
+    /// SHARED-A with frontend/tests/matching.test.ts.
+    ///
+    /// Same lists, same seed, same expected pairing, asserted in both
+    /// languages. Nothing else in the project checks that the algorithm the
+    /// chain runs and the algorithm the page explains produce the same answer;
+    /// four hundred generated markets prove the TypeScript is stable, not that
+    /// it agrees with the Rust.
+    ///
+    /// The expected value here was wrong when it was first written by hand,
+    /// and both implementations disagreed with it in the same way — which is
+    /// how a pinned vector earns its place.
+    #[test]
+    fn shared_vector_a() {
+        let founders: &[&[u8]] = &[&[0, 1, 2], &[1, 0, 2], &[1, 2, 0]];
+        let builders: &[&[u8]] = &[&[1, 0, 2], &[0, 2, 1], &[2, 1, 0]];
+        assert_eq!(settle(founders, builders, &flat(0)), vec![1, 0, 2]);
+    }
+
+    /// SHARED-B: the same, on a market that reaches the tie-break.
+    ///
+    /// Builder 0 ranked nobody, so the two founders proposing to it are
+    /// separated only by the seed. A flat seed sends break_tie down its
+    /// index-order fallback, and both languages have to fall the same way.
+    #[test]
+    fn shared_vector_b_reaches_the_tie_break() {
+        let founders: &[&[u8]] = &[&[0], &[0], &[1]];
+        let builders: &[&[u8]] = &[&[], &[2]];
+        assert_eq!(settle(founders, builders, &flat(200)), vec![0, NONE, 1]);
+    }
+
+    #[test]
+    fn an_empty_market_settles_immediately() {
+        let mut ms = state(&[], &[]);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        assert_eq!(advance_one_round(&mut ms, &mut pairs, 0, &flat(0)), 0);
+    }
+
+    #[test]
+    fn a_market_where_nobody_ranked_anybody_makes_no_proposals() {
+        let mut ms = state(&[&[], &[]], &[&[], &[]]);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        assert_eq!(advance_one_round(&mut ms, &mut pairs, 2, &flat(0)), 0);
+        assert_eq!(pairs[0], NONE);
+        assert_eq!(pairs[1], NONE);
+    }
+
+    #[test]
+    fn a_full_side_proposes_exactly_once_each() {
+        // proposals is a u8 behind saturating_add. Sixteen founders proposing
+        // in one round is the largest real case and the count must be exact.
+        let list: Vec<u8> = (0..MAX_PER_SIDE as u8).collect();
+        let founders: Vec<&[u8]> = (0..MAX_PER_SIDE).map(|_| list.as_slice()).collect();
+        let builders: Vec<&[u8]> = (0..MAX_PER_SIDE).map(|_| list.as_slice()).collect();
+        let mut ms = state(&founders, &builders);
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        assert_eq!(
+            advance_one_round(&mut ms, &mut pairs, MAX_PER_SIDE, &flat(0)),
+            MAX_PER_SIDE as u8
+        );
+    }
+
+    #[test]
+    fn the_result_is_stable_on_a_market_with_ties() {
+        // No blocking pair: no founder and builder would both rather have each
+        // other. Checked here rather than only in TypeScript, because this is
+        // the implementation the answer comes from.
+        let founders: &[&[u8]] = &[&[0, 1], &[0, 1], &[1]];
+        let builders: &[&[u8]] = &[&[2, 0], &[]];
+        let pairs = settle(founders, builders, &flat(5));
+        let rank = state(founders, builders).builder_rank;
+
+        for (f, list) in founders.iter().enumerate() {
+            let current_pos = list.iter().position(|b| *b == pairs[f]);
+            for (pos, b) in list.iter().enumerate() {
+                if let Some(cp) = current_pos {
+                    if pos >= cp {
+                        break;
+                    }
+                }
+                let bi = *b as usize;
+                match pairs.iter().position(|v| *v == *b) {
+                    // A free builder who never ranked f is not blocked by f:
+                    // leaving someone off your list is preferring nobody.
+                    None => assert_eq!(
+                        rank[bi][f], UNRANKED,
+                        "founder {} and free builder {} block",
+                        f, b
+                    ),
+                    Some(h) => assert!(
+                        rank[bi][f] >= rank[bi][h],
+                        "founder {} and builder {} block",
+                        f,
+                        b
+                    ),
+                }
+            }
+        }
+    }
+}

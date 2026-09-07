@@ -85,10 +85,17 @@ export async function fetchSlot(url: string): Promise<number> {
       signal: ctl.signal,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    if (json.error) throw new Error(json.error.message ?? "RPC error");
-    if (typeof json.result !== "number") throw new Error("no slot in response");
-    return json.result;
+    // res.json() is unknown under the test tsconfig, and narrowing it here is
+    // not ceremony: this value arrives from a public endpoint over the wire,
+    // so "it has a numeric .result" is a claim to check rather than assume.
+    const json: unknown = await res.json();
+    if (typeof json !== "object" || json === null) {
+      throw new Error("malformed RPC response");
+    }
+    const body = json as { result?: unknown; error?: { message?: string } };
+    if (body.error) throw new Error(body.error.message ?? "RPC error");
+    if (typeof body.result !== "number") throw new Error("no slot in response");
+    return body.result;
   } finally {
     clearTimeout(timer);
   }
