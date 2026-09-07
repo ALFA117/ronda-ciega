@@ -8,11 +8,25 @@ Cada número de este documento salió de una corrida, no de una estimación.
 
 | Programa | | Interfaz | | Pruebas que pasan |  |
 |---|---|---|---|---|---|
-| Instrucciones | 14 | Rutas | 3 | Unitarias | 63 |
-| Códigos de error | 19 | Componentes | 30 | Negativos en L1 | 12 |
-| Estados de ronda | 4 | Hooks | 5 | Negativos en el rollup | 26 |
-| Máximo por lado | 16 | Idiomas | EN · ES | Casos de interfaz | 54 |
-| Cuadros de historial | 24 | Temas | claro · oscuro | Comprobaciones fijas | 49 |
+| Instrucciones | 14 | Rutas | 3 | Unitarias, TypeScript | 177 |
+| Códigos de error | 19 | Componentes | 35 | Unitarias, Rust | 40 |
+| Estados de ronda | 4 | Hooks | 5 | Casos de interfaz | 15 |
+| Máximo por lado | 16 | Idiomas | EN · ES | Comprobaciones fijas | 46 |
+| Cuadros de historial | 24 | Temas | claro · oscuro | Comprobaciones en vivo | 54 |
+| | | | | Negativos en L1 · rollup | 12 · 26 |
+
+Los cuarenta tests de Rust son nuevos y llegaron tarde: **el programa no tenía
+ninguno**. Todo lo que verificaba el emparejamiento corría contra la
+reimplementación en TypeScript del frontend, y nada comprobaba que las dos
+coincidieran — siendo la de Rust la que decide quién se empareja de verdad. Dos
+de los casos son vectores clavados en los dos idiomas: mismas listas, misma
+semilla, mismo resultado esperado, afirmado en `lib.rs` y en
+`matching.test.ts`.
+
+Los quince casos de interfaz corren en el navegador contra el sitio desplegado;
+antes eran cincuenta y cuatro comprobaciones sueltas dentro de once casos, y el
+número de esta tabla contaba las comprobaciones. Se cuentan casos ahora porque
+es lo que se puede leer en la salida.
 
 Medido contra devnet desde México:
 

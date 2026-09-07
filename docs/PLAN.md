@@ -1,7 +1,15 @@
 # Ronda Ciega — plan de cierre
 
 100 tareas para llevar el proyecto de "funciona" a "entregable que compite".
-Deadline: **viernes 11 de septiembre de 2026**. Hoy es el 5 → quedan 6 días.
+Deadline: **viernes 11 de septiembre de 2026**.
+
+> **Este documento se escribió el 5 de septiembre y no se ha ido tachando.**
+> Varias de las tareas de abajo ya están hechas — el callback del VRF, el cierre
+> de las cuentas privadas, el undelegate, los tests del desempate — y otras
+> quedaron descartadas por el camino. Para saber qué existe hoy la fuente es el
+> README y `docs/ROADMAP.md`, no esta lista. Se conserva porque el orden de
+> ejecución que propone resultó ser el correcto, y explica por qué las cosas se
+> hicieron en el orden en que se hicieron.
 
 Estado al escribir esto: programa desplegado en devnet, privacidad verificada
 en vivo, matching en una sola transacción, frontend desplegado en

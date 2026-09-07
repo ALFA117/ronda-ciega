@@ -3,8 +3,13 @@
 Regla que gobierna todo: **el jurado son los ingenieros que escribieron el runtime.** No hay que
 explicarles qué es un ephemeral rollup. Hay que demostrarles que hacía falta uno.
 
-Grabar en **modo oscuro, español o inglés según el público** (el submission es en inglés → grabar
-en EN). Ronda de demo sembrada de antemano, ya liquidada, para no depender del oráculo en vivo.
+Grabar en **modo oscuro, idioma EN** (el submission es en inglés).
+
+**Lo que cambió desde la primera versión de este guion:** la página ahora ejecuta sus propias
+pruebas en el navegador de quien la ve. Antes había que irse al explorador a demostrar que una
+cuenta no se puede leer; ahora es un botón que corre cuatro sondas con sus dos controles. Eso
+cambia la demo entera: **casi nada de lo que hay que enseñar necesita una firma**, lo cual también
+lo hace mucho más difícil de romper en vivo.
 
 ---
 
@@ -26,7 +31,7 @@ en EN). Ronda de demo sembrada de antemano, ya liquidada, para no depender del o
 > El problema es que necesita un tercero que reciba todas las listas y no las filtre nunca. Por eso
 > solo existe donde hay una institución detrás: residencias médicas, admisiones escolares."
 
-**En pantalla:** la sección "El problema", tres tarjetas.
+**En pantalla:** la sección "El problema".
 
 ---
 
@@ -51,40 +56,58 @@ Esta es la parte que gana o pierde el video. **No apurarla.**
 
 ---
 
-## 1:25 – 2:10 · La demo
+## 1:25 – 2:15 · La demo
 
-Sin narrar cada clic. Mostrar y decir qué está pasando.
+Sin narrar cada clic. **Tres tomas, y ninguna de las dos primeras necesita monedero.**
 
-1. **Sellar una lista.** Ordenar tres nombres, pulsar "Sellar mi lista", **mostrar la firma de la
-   wallet**.
-   > "Esa firma no es un trámite. Es lo que le prueba al enclave quién soy, y es la razón por la que
-   > nadie más puede leer lo que acabo de escribir."
+### 1. El rollup es real, y se ve corriendo — 10 s
 
-2. **La cuenta, en el explorador.** Intentar leer la cuenta `Preferences` desde fuera.
-   > "Esta cuenta existe. No la puedo leer, y ustedes tampoco. Solo su dueño."
-   >
-   > Y el control: la cuenta `Round`, pública, en la misma conexión, se lee sin problema. El rechazo
-   > es el permiso funcionando, no una conexión rota.
+Scrollear al panel de las dos cadenas. Dejar que cuente dos o tres segundos antes de hablar.
 
-3. **Correr el matching.** Una sola transacción.
-   > "El matching completo — todas las rondas de propuestas — en una transacción del rollup.
-   > 671 milisegundos de reloj de pared desde México. Un cliente remoto no puede hacer N
-   > transacciones seguidas rápido. Sí puede hacer una que haga N rondas."
+> "Estas dos alturas se las está pidiendo mi navegador a las dos cadenas ahora mismo, una vez por
+> segundo. El rollup TEE contra Solana devnet. Unas tres veces más rápido, y ese número sale de lo
+> que contestan, no está escrito en la página."
 
-4. **La animación.** El tick donde un builder suelta a un founder por una propuesta mejor.
-   > "Ahí. El founder cero estaba emparejado y lo desplazan. En la siguiente ronda cae a su segunda
-   > opción."
+*Si el endpoint del TEE está caído, el panel lo dice solo. No lo tapes: es la mitad del argumento.*
+
+### 2. La privacidad, con sus controles — 20 s
+
+Abrir una ronda liquidada, ir a **"What this round does not publish"**, pulsar el botón.
+
+> "Cada lista tiene una dirección derivada de la ronda y del monedero de su dueño, así que cualquiera
+> puede calcularlas. Estas son las doce de esta ronda.
+>
+> Fila uno: L1 me devuelve la cuenta pública de la ronda. Fila dos: **el rollup se la devuelve a una
+> conexión sin token**. Las dos conexiones funcionan.
+>
+> Y ahora las listas: cero de doce en L1, cero de doce en el rollup.
+>
+> Las dos primeras filas son las que hacen que las otras dos signifiquen algo. Sin ellas, un cero es
+> indistinguible de una consulta rota."
+
+*Este es el mejor plano del video. Es la afirmación central del proyecto ejecutándose en vivo, con
+su propio control, en veinte segundos.*
+
+### 3. Sellar una lista — 20 s
+
+Ordenar tres nombres, "Sellar mi lista", **mostrar el prompt del monedero**.
+
+> "Dos firmas la primera vez: una prueba al enclave quién soy, la otra es la transacción. El token
+> del enclave dura horas y sobrevive recargas, así que a partir de ahí es una sola. La página lo
+> dice antes de pedirlas."
+
+**Si algo falla aquí, corta y sigue.** Los pasos 1 y 2 ya demostraron el sistema.
 
 ---
 
-## 2:10 – 2:35 · La honestidad que nadie más va a decir
+## 2:15 – 2:40 · La honestidad que nadie más va a decir
 
 > "Dos cosas que quiero decir yo antes de que las pregunten.
 >
 > Primera: esta ronda es **transparente**. Publica los estados intermedios para que se pueda ver el
 > algoritmo. Eso revela quién propuso a quién y en qué orden — filtra. Por eso es un flag que se
-> decide al crear la ronda, y por eso una ronda con gente real no lo lleva. Si quieren ver el
-> algoritmo correr en una ronda de verdad, no pueden. Ese es el punto.
+> decide al crear la ronda. Si quieren ver el algoritmo correr en una ronda de verdad, no pueden.
+> Ese es el punto.
 >
 > Segunda: la privacidad aquí es **control de acceso aplicado por hardware, no cifrado**. El estado
 > no es texto cifrado; el TEE se niega a servirlo a quien no está en la lista de miembros. La
@@ -92,28 +115,65 @@ Sin narrar cada clic. Mostrar y decir qué está pasando.
 
 ---
 
-## 2:35 – 3:00 · Cierre
+## 2:40 – 3:00 · Cierre: el VRF, tocándolo
 
-> "Los empates se rompen con VRF, porque romperlos por índice de cuenta premiaría a quien se
-> registró primero — justo el sesgo que esto quita. El matching no corre hasta que llega la
+**En pantalla:** la sección 01, el playground. Pulsar **"Otro desempate"** sobre un mercado donde
+los empates deciden (si sale "no decide nada", pulsar "Listas nuevas" hasta que cambie — pasa en
+una de cada cinco).
+
+> "Los empates se rompen con VRF. Mismas listas, otra semilla, y el emparejamiento se mueve. Sin
+> aleatoriedad verificable esto lo decidiría el orden de registro: premiaría a quien llegó primero,
+> justo el sesgo que el sistema quita. El matching se niega a correr hasta que llega la
 > aleatoriedad.
 >
-> Al final, la ronda vuelve a L1 con los pares. Las listas se quedan en el enclave y no hay
+> Al final la ronda vuelve a L1 con los pares. Las listas se quedan en el enclave, y no hay
 > instrucción en el programa que las revele.
 >
 > Ronda Ciega. Dices a quién quieres, sin que nadie sepa que lo dijiste."
 
-**En pantalla:** el pareo final, y el link.
+---
+
+## Si sobra tiempo (o para la descripción del submission)
+
+Cosas ciertas que no caben en tres minutos, por orden de peso:
+
+- **`/proof`**: cuatrocientos mercados generados en tu navegador, cero pares bloqueantes, 172 de
+  ellos capaces de llegar al desempate. La mitad llevan listas cortadas a propósito: con listas
+  completas el desempate no se ejecuta nunca, así que un barrido todo-completo dejaba fuera la rama
+  que el VRF existe para proteger.
+- **Cuarenta tests en Rust** sobre el programa mismo, dos de ellos vectores clavados también en la
+  suite de TypeScript, para que las dos implementaciones no puedan separarse en silencio.
+- **Piloto automático**: la ronda se conduce sola desde la pestaña. Ninguna de las instrucciones del
+  operador comprueba quién firma, así que las manda una llave local del navegador sin un solo
+  prompt.
 
 ---
 
 ## Checklist antes de grabar
 
+**El día antes**
+
 - [ ] Sembrar 2–3 rondas con handles creíbles, no `founder-0`
-- [ ] Una ronda liquidada, transparente, con VRF cumplido
-- [ ] Una ronda **no** transparente, para mostrar que ahí no hay nada que animar
+- [ ] Una ronda liquidada y **transparente**, con VRF cumplido → para el replay del algoritmo
+- [ ] Una ronda **no** transparente → para enseñar que ahí no hay nada que animar
+- [ ] Abrir `/proof` y correrlo una vez: confirmar 400 / 0 / 172
+- [ ] Abrir el panel de privacidad de la ronda que vas a usar y correrlo: **las cuatro filas en
+      verde**. Si un control falla, es devnet, no el proyecto — reintentar
+- [ ] Confirmar que el panel de las dos cadenas está midiendo (no "measuring…")
+
+**Justo antes**
+
 - [ ] Modo oscuro, idioma EN
-- [ ] Wallet con SOL de devnet suficiente
+- [ ] Monedero con SOL de devnet suficiente para el paso 3
 - [ ] Cerrar pestañas y notificaciones
 - [ ] Probar el audio antes de la toma buena
 - [ ] Máximo 3 tomas: si a la tercera no sale, el guion es el problema, no la ejecución
+
+**Plan B si devnet está mal**
+
+Los pasos 1 y 2 dependen de devnet; el paso 3 también. El playground y `/proof` **no dependen de
+nada**: corren enteros en el navegador. Si devnet está caído, el video se puede grabar con el
+playground, `/proof` y una ronda ya liquidada cargada de caché, y decirlo:
+
+> "Devnet está teniendo un mal día, así que esto corre en mi navegador contra la misma
+> implementación que corre en la cadena."
