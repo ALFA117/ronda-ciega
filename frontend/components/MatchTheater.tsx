@@ -176,8 +176,8 @@ export function MatchTheater({
         <AnimatePresence>
           {round.status === "settled" && atEnd && (
             <motion.div
-              initial={reduce ? undefined : { opacity: 0, y: 6 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0 }}
+              initial={reduce ? undefined : { y: 6 }}
+              animate={reduce ? undefined : { y: 0 }}
               exit={reduce ? undefined : { opacity: 0 }}
               transition={{ duration: 0.3 }}
             >

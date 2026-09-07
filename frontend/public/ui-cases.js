@@ -128,6 +128,34 @@
       };
     },
 
+    /**
+     * Nothing readable may depend on an animation having run.
+     *
+     * Measured without the freeze stylesheet, so it sees the page as it is.
+     * An entrance that starts at opacity 0 is not merely un-animated when the
+     * loop is throttled — a background tab, a screen recorder — it is absent.
+     * This once hid eighteen elements, including the four measured numbers
+     * under the hero, which are the whole argument of the page.
+     */
+    async sinAnimaciones() {
+      const readable = [...document.querySelectorAll("main *, header *, footer *")].filter(
+        (e) => {
+          const cs = getComputedStyle(e);
+          if (cs.display === "none" || cs.visibility === "hidden") return false;
+          if (!painted(e)) return false;
+          const r = e.getBoundingClientRect();
+          return r.width > 4 && r.height > 4 && e.textContent && e.textContent.trim();
+        },
+      );
+      const invisible = readable
+        .filter((e) => Number(getComputedStyle(e).opacity) < 0.1)
+        .map((e) => e.textContent.trim().slice(0, 26));
+      return {
+        pass: invisible.length === 0,
+        detail: { conTexto: readable.length, invisibles: invisible },
+      };
+    },
+
     /** iOS zooms the page when a focused field is under 16px. */
     async camposMoviles() {
       if (innerWidth >= 640) return { pass: true, detail: "no aplica sobre 640px" };

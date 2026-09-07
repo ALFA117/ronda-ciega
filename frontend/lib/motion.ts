@@ -46,18 +46,25 @@ export const stagger = (delayChildren = 0): Variants => ({
   },
 });
 
+/**
+ * Entrances move, they do not appear.
+ *
+ * These used to start at `opacity: 0`, which makes the animation load-bearing:
+ * the content is not merely un-animated when the loop is throttled, it is
+ * absent. Measured on the deployed site with animations stalled, eighteen
+ * elements were invisible — including the four measured numbers under the
+ * hero, which are the whole argument of the page.
+ *
+ * Starting from a visible, displaced state costs almost nothing visually and
+ * makes the worst case "it did not slide" instead of "it is not there".
+ */
 export const riseIn: Variants = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: springPanel },
+  hidden: { y: 14 },
+  show: { y: 0, transition: springPanel },
 };
 
+/** For genuinely optional decoration, where absence is not a loss. */
 export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: easeEnter },
-};
-
-/** Words revealing one at a time in the headline. */
-export const wordIn: Variants = {
-  hidden: { opacity: 0, y: "0.4em" },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };

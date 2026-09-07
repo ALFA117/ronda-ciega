@@ -85,8 +85,8 @@ function Preview({ round }: { round: RoundAccount }) {
         return (
           <motion.li
             key={f.address.toBase58()}
-            initial={reduce ? undefined : { opacity: 0, x: -6 }}
-            animate={reduce ? undefined : { opacity: 1, x: 0 }}
+            initial={reduce ? undefined : { x: -6 }}
+            animate={reduce ? undefined : { x: 0 }}
             transition={{ delay: reduce ? 0 : i * 0.04, duration: 0.25 }}
             className="flex items-center gap-2 font-mono text-2xs"
           >

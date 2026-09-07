@@ -130,8 +130,8 @@ export function CompareColumns() {
       {cols.map((c, i) => (
         <motion.div
           key={c.title}
-          initial={reduce ? undefined : { opacity: 0, y: 16 }}
-          animate={reduce || shown ? { opacity: 1, y: 0 } : undefined}
+          initial={reduce ? undefined : { y: 16 }}
+          animate={reduce || shown ? { y: 0 } : undefined}
           transition={{ duration: 0.45, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
           className={`flex flex-col p-6 sm:p-8 ${
             c.ok

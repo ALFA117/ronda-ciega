@@ -61,8 +61,8 @@ export function StatBand() {
       {stats.map((s, i) => (
         <motion.div
           key={s.label}
-          initial={reduce ? undefined : { opacity: 0, y: 12 }}
-          animate={reduce || shown ? { opacity: 1, y: 0 } : undefined}
+          initial={reduce ? undefined : { y: 12 }}
+          animate={reduce || shown ? { y: 0 } : undefined}
           transition={{ delay: i * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className={`px-5 py-7 sm:px-7 ${
             i % 2 === 1 ? "border-l border-edge" : ""

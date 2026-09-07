@@ -87,8 +87,8 @@ export function StartPanel() {
   return (
     <motion.section
       aria-label={t.start.title}
-      initial={reduce ? undefined : { opacity: 0, y: 10 }}
-      animate={reduce ? undefined : { opacity: 1, y: 0 }}
+      initial={reduce ? undefined : { y: 10 }}
+      animate={reduce ? undefined : { y: 0 }}
       transition={springPanel}
       className="glass overflow-hidden rounded-2xl"
     >

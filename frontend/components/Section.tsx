@@ -39,8 +39,8 @@ export function Section({
       <motion.div
         ref={ref}
         className="grid gap-x-8 gap-y-5 lg:grid-cols-[12rem_1fr]"
-        initial={reduce ? undefined : { opacity: 0, y: 18 }}
-        animate={reduce || shown ? { opacity: 1, y: 0 } : undefined}
+        initial={reduce ? undefined : { y: 18 }}
+        animate={reduce || shown ? { y: 0 } : undefined}
         transition={easeEnter}
       >
         <div className="flex items-baseline gap-3 lg:block">

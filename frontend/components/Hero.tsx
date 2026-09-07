@@ -72,8 +72,8 @@ export function Hero() {
 
         <motion.div
           className="mt-9 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
-          initial={reduce ? undefined : { opacity: 0, y: 14 }}
-          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          initial={reduce ? undefined : { y: 14 }}
+          animate={reduce ? undefined : { y: 0 }}
           transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
           <p className="lede max-w-prose text-chalk/85">{t.hero.lede}</p>
@@ -90,8 +90,8 @@ export function Hero() {
 
       <motion.div
         className="mt-12"
-        initial={reduce ? undefined : { opacity: 0, y: 22 }}
-        animate={reduce ? undefined : { opacity: 1, y: 0 }}
+        initial={reduce ? undefined : { y: 22 }}
+        animate={reduce ? undefined : { y: 0 }}
         transition={{ delay: 0.35, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <HeroVisual />
