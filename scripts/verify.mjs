@@ -158,6 +158,31 @@ head("Mobile form fields");
   }
 }
 
+// --------------------------------------------------- reduced motion ---
+// The stylesheet's prefers-reduced-motion block cannot reach Framer, which
+// animates through inline styles from JavaScript. One MotionConfig covers
+// every component at once; without it each one has to remember to ask, and
+// three had already forgotten.
+head("Reduced motion is handled once, globally");
+{
+  const providers = readFileSync(
+    join(HERE, "..", "frontend", "app", "providers.tsx"),
+    "utf8",
+  );
+  if (/<MotionConfig[^>]*reducedMotion=["']user["']/.test(providers)) {
+    ok("MotionConfig reducedMotion=\"user\" wraps the tree");
+  } else {
+    bad("providers.tsx has no MotionConfig reducedMotion=\"user\"");
+  }
+
+  const css = readFileSync(CSS, "utf8");
+  if (css.includes("@media (prefers-reduced-motion: reduce)")) {
+    ok("the stylesheet still covers CSS animations and transitions");
+  } else {
+    bad("no prefers-reduced-motion block in globals.css");
+  }
+}
+
 // ------------------------------------------------- account sizes ---
 // The page answers "how many preference lists are on L1" by filtering a public
 // RPC call on account size. That only stays an honest question while the size

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { stagger, wordIn } from "@/lib/motion";
 import { HeroVisual } from "./HeroVisual";
 
 /**
@@ -37,36 +36,39 @@ export function Hero() {
   return (
     <section ref={ref} className="aurora relative overflow-hidden pb-4 pt-6 sm:pt-12">
       <motion.div style={reduce ? undefined : { y, opacity: fade }}>
-        <motion.h1
-          key={t.hero.headline}
-          className="display max-w-[16ch]"
-          variants={reduce ? undefined : stagger()}
-          initial={reduce ? undefined : "hidden"}
-          animate={reduce ? undefined : "show"}
-        >
+        {/* The reveal is CSS and moves only the transform. The Framer version
+            faded each word up from opacity 0, which meant the headline — the
+            first thing on the page — was blank until an animation ran, and
+            stayed blank when one did not. Now the words are in the document at
+            full opacity and the motion is something the page can lose. */}
+        <h1 key={t.hero.headline} className="display max-w-[16ch]">
           <span className="block">
             {headline.map((w, i) => (
-              <motion.span
+              <span
                 key={i}
-                variants={reduce ? undefined : wordIn}
-                className="mr-[0.22em] inline-block"
+                className="rc-word mr-[0.22em]"
+                style={reduce ? undefined : { animationDelay: `${i * 55}ms` }}
               >
                 {w}
-              </motion.span>
+              </span>
             ))}
           </span>
           <span className="block text-muted">
             {subline.map((w, i) => (
-              <motion.span
+              <span
                 key={i}
-                variants={reduce ? undefined : wordIn}
-                className="mr-[0.22em] inline-block"
+                className="rc-word mr-[0.22em]"
+                style={
+                  reduce
+                    ? undefined
+                    : { animationDelay: `${(headline.length + i) * 55}ms` }
+                }
               >
                 {w}
-              </motion.span>
+              </span>
             ))}
           </span>
-        </motion.h1>
+        </h1>
 
         <motion.div
           className="mt-9 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"

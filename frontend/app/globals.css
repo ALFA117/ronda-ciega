@@ -502,6 +502,25 @@
   border: 1px solid var(--edge) !important;
 }
 
+/* The headline reveal.
+ *
+ * It animates TRANSFORM and never opacity, on purpose. A word that fades in
+ * from nothing is a word that is missing if the animation does not run — a
+ * throttled tab, a screen recorder, a browser that decided the page is not
+ * visible. This element is the first thing anyone reads, so its resting state
+ * has to be "legible", and the motion has to be something it can lose without
+ * losing the text.
+ */
+@keyframes rc-word-in {
+  from { transform: translateY(0.42em); }
+  to { transform: none; }
+}
+
+.rc-word {
+  display: inline-block;
+  animation: rc-word-in 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
