@@ -50,10 +50,14 @@ Ronda Ciega replaces it with an enclave:
 
 Three things run in your browser, against public data, with no wallet:
 
-- **[/proof](https://ronda-ciega.vercel.app/proof)** generates four hundred markets with random
-  lists, runs the same matching implementation the chain runs, and searches every result for a
-  blocking pair — two people who would both rather leave their match for each other. One is enough
-  to make the whole promise false. *400 markets, 0 blocking pairs, ~30 ms.*
+- **[/proof](https://ronda-ciega.vercel.app/proof)** generates four hundred markets, runs the same
+  matching implementation the chain runs, and searches every result for a blocking pair — two people
+  who would both rather leave their match for each other. One is enough to make the whole promise
+  false. Half the markets carry complete lists and half are cut short, and that split is the point:
+  Gale–Shapley consults the tie-break only when a receiver has ranked *neither* of two proposers, so
+  an all-complete sweep executes `break_tie` exactly zero times. It used to be all-complete, which
+  left the branch the VRF exists to protect outside the guarantee this page presents.
+  *400 markets, 0 blocking pairs, 172 of them able to reach the tie-break, ~30 ms.*
 - **Any settled transparent round** publishes its full trace, and the round page recomputes it
   against what the chain says: no builder held twice, every index real, the pair count never
   falling, the trace ending exactly where Solana says it ended.
@@ -259,7 +263,7 @@ looks: `anchor build` panics on native Windows, so until CI existed nothing
 verified a Rust change compiled until it was deployed.
 
 ```bash
-cd frontend && npm test        # 172 unit tests, no network, ~1s
+cd frontend && npm test        # 175 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
 OFFLINE=1 node scripts/verify.mjs   # the 46 checks that read the repo
 ```

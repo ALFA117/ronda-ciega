@@ -452,11 +452,12 @@ export const es = {
     stability: {
       title: "La garantía de estabilidad, comprobada aquí",
       lede:
-        "Genera cuatrocientos mercados con listas al azar, corre el mismo algoritmo que corre en cadena, y busca en cada resultado un par bloqueante: dos personas que preferirían dejarse por estar juntas. Si existe uno solo, la promesa es falsa.",
+        "Genera cuatrocientos mercados —la mitad con listas completas, la mitad con listas cortadas— corre el mismo algoritmo que corre en cadena, y busca en cada resultado un par bloqueante: dos personas que preferirían dejarse por estar juntas. Si existe uno solo, la promesa es falsa. Las listas cortadas están ahí a propósito: el desempate solo se consulta cuando alguien no clasificó a ninguno de los dos que le proponen, así que con listas completas nunca se ejecuta.",
       run: "Correr 400 mercados",
       running: "Corriendo…",
       cases: "Mercados",
       blocking: "Pares bloqueantes",
+      withTies: "Con empates posibles",
       deepest: "Rondas, la más larga",
       time: "Tiempo",
       passed:

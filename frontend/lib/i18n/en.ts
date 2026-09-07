@@ -417,11 +417,12 @@ export const en: Dictionary = {
     stability: {
       title: "The stability guarantee, checked here",
       lede:
-        "Generate four hundred markets with random lists, run the same algorithm the chain runs, and look in each result for a blocking pair: two people who would both rather leave their match for each other. One is enough to make the promise false.",
+        "Generate four hundred markets — half with complete lists, half cut short — run the same algorithm the chain runs, and look in each result for a blocking pair: two people who would both rather leave their match for each other. One is enough to make the promise false. The short lists are there on purpose: the tie-break is only consulted when a receiver has ranked neither of two proposers, so complete lists never execute it.",
       run: "Run 400 markets",
       running: "Running…",
       cases: "Markets",
       blocking: "Blocking pairs",
+      withTies: "Where ties are possible",
       deepest: "Rounds, deepest",
       time: "Time",
       passed:

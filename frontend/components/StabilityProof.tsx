@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { Check, X } from "lucide-react";
-import { NONE, buildState, findBlockingPair, runMatching } from "@/lib/matching";
+import {
+  NONE,
+  UNRANKED,
+  buildState,
+  findBlockingPair,
+  runMatching,
+} from "@/lib/matching";
+import { seedBytes } from "@/lib/tiebreak";
 import { useT } from "@/lib/i18n";
 
 const CASES = 400;
@@ -16,13 +23,39 @@ function prng(seed: number) {
   };
 }
 
-function shuffled(n: number, rand: () => number): number[] {
+/**
+ * A ranking of `n` people, keeping the first `keep` of them.
+ *
+ * The version this replaces always returned the whole permutation, and that
+ * quietly narrowed what four hundred markets were checking. Gale-Shapley
+ * consults the tie-break only when a receiver has ranked *neither* of two
+ * proposers, and a receiver who ranked everybody never has — so `break_tie`,
+ * the branch the VRF exists to protect, was never once executed by the proof
+ * that this page presents as the guarantee.
+ *
+ * Partial lists are also the product's real shape: ranking is optional, and
+ * leaving someone out is how a participant says they would rather stay
+ * unmatched.
+ */
+function shuffled(n: number, rand: () => number, keep = n): number[] {
   const a = Array.from({ length: n }, (_, i) => i);
   for (let i = n - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
-  return a;
+  return a.slice(0, Math.max(1, Math.min(keep, n)));
+}
+
+/** Did this market ever put two unranked proposers in front of one receiver? */
+function needsTieBreak(builderRank: number[][], founderCount: number): boolean {
+  for (const row of builderRank) {
+    let unranked = 0;
+    for (let f = 0; f < founderCount; f++) {
+      if (row[f] === UNRANKED) unranked++;
+    }
+    if (unranked >= 2) return true;
+  }
+  return false;
 }
 
 interface Report {
@@ -31,6 +64,8 @@ interface Report {
   unconverged: number;
   maxRounds: number;
   totalPairs: number;
+  /** How many of the markets could reach the tie-break at all. */
+  withTies: number;
   ms: number;
 }
 
@@ -63,17 +98,33 @@ export function StabilityProof() {
       let unconverged = 0;
       let maxRounds = 0;
       let totalPairs = 0;
+      let withTies = 0;
 
       for (let seed = 1; seed <= CASES; seed++) {
         const rand = prng(seed);
         const nF = 2 + Math.floor(rand() * 7);
         const nB = 2 + Math.floor(rand() * 7);
-        const founderRankings = Array.from({ length: nF }, () => shuffled(nB, rand));
-        const builderRankings = Array.from({ length: nB }, () => shuffled(nF, rand));
-        const ms = buildState(founderRankings, builderRankings);
-        const randomness = Uint8Array.from({ length: 32 }, () =>
-          Math.floor(rand() * 256),
+
+        // Half the markets keep complete lists, half are cut short. Both
+        // shapes occur in practice and only the second one reaches the
+        // tie-break, so checking only the first left the branch the VRF
+        // protects unexercised by the page's headline claim.
+        const partial = seed % 2 === 0;
+        const cut = (n: number) => (partial ? 1 + Math.floor(rand() * n) : n);
+
+        const founderRankings = Array.from({ length: nF }, () =>
+          shuffled(nB, rand, cut(nB)),
         );
+        const builderRankings = Array.from({ length: nB }, () =>
+          shuffled(nF, rand, cut(nF)),
+        );
+        const ms = buildState(founderRankings, builderRankings);
+        // The randomness comes from the mixed generator rather than this
+        // LCG's low bits, which produced a frozen first byte and a tie-break
+        // that favoured the challenger three times in five.
+        const randomness = seedBytes(seed * 2654435761);
+
+        if (needsTieBreak(ms.builderRank, nF)) withTies++;
 
         const res = runMatching(ms, nF, randomness);
         if (!res.settled) unconverged++;
@@ -90,6 +141,7 @@ export function StabilityProof() {
         unconverged,
         maxRounds,
         totalPairs,
+        withTies,
         ms: Math.round(performance.now() - started),
       });
       setBusy(false);
@@ -123,7 +175,7 @@ export function StabilityProof() {
               {[
                 [t.proof.stability.cases, String(report.cases)],
                 [t.proof.stability.blocking, String(report.blocking)],
-                [t.proof.stability.deepest, String(report.maxRounds)],
+                [t.proof.stability.withTies, String(report.withTies)],
                 [t.proof.stability.time, `${report.ms} ms`],
               ].map(([k, v], i) => (
                 <div key={k} className="bg-surface px-4 py-3">

@@ -1,6 +1,12 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { pairingFor, seedBytes, sensitivity } from "../lib/tiebreak.ts";
+import {
+  UNRANKED,
+  buildState,
+  findBlockingPair,
+  runMatching,
+} from "../lib/matching.ts";
 
 /** 32 bytes, all the same value: a seed with no internal variation. */
 const flat = (v: number) => new Uint8Array(32).fill(v);
@@ -128,5 +134,100 @@ describe("seedBytes", () => {
   test("seed zero does not degenerate to all zeroes", () => {
     const z = seedBytes(0);
     assert.equal(new Set(z).size > 1, true);
+  });
+});
+
+describe("estabilidad sobre listas parciales", () => {
+  // The property test the /proof page runs, with the shape it was missing.
+  //
+  // It used to generate complete permutations only, and a receiver who ranked
+  // everybody never needs a tie-break — so four hundred markets executed
+  // break_tie exactly zero times. The branch the VRF exists to protect was
+  // outside the guarantee the page presents.
+
+  function prng(seed: number) {
+    let s = seed >>> 0;
+    return () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 0x100000000;
+    };
+  }
+
+  function shuffled(n: number, rand: () => number, keep = n): number[] {
+    const a = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a.slice(0, Math.max(1, Math.min(keep, n)));
+  }
+
+  function sweep(cases: number) {
+    let blocking = 0;
+    let unconverged = 0;
+    let withTies = 0;
+
+    for (let seed = 1; seed <= cases; seed++) {
+      const rand = prng(seed);
+      const nF = 2 + Math.floor(rand() * 7);
+      const nB = 2 + Math.floor(rand() * 7);
+      const partial = seed % 2 === 0;
+      const cut = (n: number) => (partial ? 1 + Math.floor(rand() * n) : n);
+
+      const founders = Array.from({ length: nF }, () => shuffled(nB, rand, cut(nB)));
+      const builders = Array.from({ length: nB }, () => shuffled(nF, rand, cut(nF)));
+      const ms = buildState(founders, builders);
+
+      for (const row of ms.builderRank) {
+        let unranked = 0;
+        for (let f = 0; f < nF; f++) if (row[f] === UNRANKED) unranked++;
+        if (unranked >= 2) {
+          withTies++;
+          break;
+        }
+      }
+
+      const res = runMatching(ms, nF, seedBytes(seed * 2654435761));
+      if (!res.settled) unconverged++;
+      if (findBlockingPair(res.pairs, founders, ms.builderRank, nF)) blocking++;
+    }
+
+    return { blocking, unconverged, withTies };
+  }
+
+  test("four hundred markets, no blocking pair, none unconverged", () => {
+    const r = sweep(400);
+    assert.equal(r.blocking, 0);
+    assert.equal(r.unconverged, 0);
+  });
+
+  test("and a large share of them can actually reach the tie-break", () => {
+    // This is the assertion that keeps the sweep honest. With complete lists
+    // it would read zero, and the sweep would be checking a narrower claim
+    // than the page makes for it.
+    const r = sweep(400);
+    assert.equal(r.withTies > 100, true, `only ${r.withTies} markets had ties`);
+  });
+
+  test("an all-complete sweep reaches no tie-break at all", () => {
+    // The state this replaced, asserted so the reason is on the record.
+    let withTies = 0;
+    for (let seed = 1; seed <= 200; seed++) {
+      const rand = prng(seed);
+      const nF = 2 + Math.floor(rand() * 7);
+      const nB = 2 + Math.floor(rand() * 7);
+      const founders = Array.from({ length: nF }, () => shuffled(nB, rand));
+      const builders = Array.from({ length: nB }, () => shuffled(nF, rand));
+      const ms = buildState(founders, builders);
+      for (const row of ms.builderRank) {
+        let unranked = 0;
+        for (let f = 0; f < nF; f++) if (row[f] === UNRANKED) unranked++;
+        if (unranked >= 2) {
+          withTies++;
+          break;
+        }
+      }
+    }
+    assert.equal(withTies, 0);
   });
 });

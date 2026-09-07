@@ -166,7 +166,20 @@ export function findBlockingPair(
 
       // Who holds b right now?
       const holder = pairs.findIndex((v, i) => i < founderCount && v === b);
-      if (holder === -1) return { founder: f, builder: b }; // b is free
+      if (holder === -1) {
+        // b is free — but a free builder who never ranked f is not blocked
+        // by f. Leaving someone off your list is saying you would rather stay
+        // unmatched than have them, so the pair cannot block.
+        //
+        // After a converged run this is unreachable: a builder who was ever
+        // proposed to never becomes free again, so a free b means nobody
+        // proposed, and f ranking b above their match means f did. It matters
+        // when the run did not converge inside its tick budget, where the
+        // pairing is partial and this check is the difference between "not
+        // stable" and "not finished".
+        if (builderRank[b][f] === UNRANKED) continue;
+        return { founder: f, builder: b };
+      }
       if (builderRank[b][f] < builderRank[b][holder]) {
         return { founder: f, builder: b };
       }
