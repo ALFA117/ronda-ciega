@@ -37,6 +37,8 @@ use ephemeral_rollups_sdk::{
     },
 };
 
+use session_keys::SessionToken;
+
 mod error;
 mod state;
 
@@ -295,6 +297,36 @@ pub mod ronda_ciega {
             ctx.accounts.round.key(),
             ErrorCode::WrongRound
         );
+
+        // Who is entitled to write this list.
+        //
+        // `wallet` stopped being a signer so that a session key can stand in
+        // for it, which means this check is now the only thing standing
+        // between a ranking and anyone who wants to write it. Without a token
+        // the signer must BE the owner; with one, the token must name this
+        // program, this owner, and this signer, and must not have expired.
+        //
+        // Note what a session key still cannot do: every account here is
+        // seeded from `wallet`, and the permission on a Preferences account
+        // lists the owner and the round. A session key can write a list. It
+        // can never read one back.
+        let owner = ctx.accounts.wallet.key();
+        match &ctx.accounts.session_token {
+            None => require_keys_eq!(ctx.accounts.signer.key(), owner, ErrorCode::InvalidSession),
+            Some(token) => {
+                require_keys_eq!(token.authority, owner, ErrorCode::InvalidSession);
+                require_keys_eq!(token.target_program, crate::ID, ErrorCode::InvalidSession);
+                require_keys_eq!(
+                    token.session_signer,
+                    ctx.accounts.signer.key(),
+                    ErrorCode::InvalidSession
+                );
+                require!(
+                    Clock::get()?.unix_timestamp < token.valid_until,
+                    ErrorCode::InvalidSession
+                );
+            }
+        }
 
         // A ranking may be shorter than the other side (you are allowed to
         // simply not want most people) but never longer, never empty, and never
@@ -1146,8 +1178,18 @@ pub struct InitMatchState<'info> {
 #[derive(Accounts)]
 #[instruction(round_id: u64)]
 pub struct SubmitRanking<'info> {
+    /// Whoever is paying and signing this transaction: either `wallet`
+    /// itself, or a session signer holding a token `wallet` issued.
     #[account(mut)]
-    pub wallet: Signer<'info>,
+    pub signer: Signer<'info>,
+    /// CHECK: The participant this ranking belongs to. Not a signer, because
+    /// a session key may be standing in for it — every account below is
+    /// seeded from this key, and the body proves the signer is entitled to
+    /// act for it.
+    pub wallet: UncheckedAccount<'info>,
+    /// A token from the session-keys program authorising `signer` to act for
+    /// `wallet`. Absent when the owner signs for themselves.
+    pub session_token: Option<Account<'info, SessionToken>>,
     #[account(
         mut,
         sponsor,

@@ -212,6 +212,7 @@ export const es = {
     reorder: "Reordenar arrastrando",
     remove: "Quitar de mi lista",
     position: "Posición",
+    sessionCreated: "Clave de sesión autorizada por 2 horas",
     tapToAdd: "Toca para añadir a tu lista",
     nobody: "Todavía no hay nadie del otro lado a quien rankear.",
   },

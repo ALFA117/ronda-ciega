@@ -213,6 +213,7 @@ export const en: Dictionary = {
     reorder: "Reorder by dragging",
     remove: "Remove from my list",
     position: "Position",
+    sessionCreated: "Session key authorised for 2 hours",
     tapToAdd: "Tap to add to your list",
     nobody: "Nobody on the other side to rank yet.",
   },

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   AnimatePresence,
   motion,
@@ -15,6 +16,13 @@ import { permissionPdaFromAccount } from "@magicblock-labs/ephemeral-rollups-sdk
 import { getProgram, ParticipantAccount, RoundAccount } from "@/lib/program";
 import { participantPda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
+import {
+  createSessionIx,
+  sessionExpiry,
+  sessionKey,
+  sessionTokenPda,
+  SESSION_FUNDING_SOL,
+} from "@/lib/session";
 import { springLayout, springSnappy } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import { classifyError } from "@/lib/errors";
@@ -121,6 +129,7 @@ export function RankingBuilder({
   participants: ParticipantAccount[];
   onSubmitted: () => void;
 }) {
+  const { connection } = useConnection();
   const wallet = useWallet();
   const t = useT();
   const toast = useToast();
@@ -143,11 +152,47 @@ export function RankingBuilder({
     setBusy(true);
     setError(null);
     try {
-      // This signature is the moment the enclave learns who you are, and the
-      // reason nobody else can read what you are about to write.
-      const conn = await teeConnection(wallet.publicKey, (m) => wallet.signMessage!(m));
-      const program = getProgram(conn, wallet as any);
-      const preferences = preferencesPda(round.address, wallet.publicKey);
+      const owner = wallet.publicKey;
+      const session = sessionKey(owner);
+      const token = sessionTokenPda(session.publicKey, owner);
+
+      // Authorise the session key, once, if it is not already authorised.
+      //
+      // This is an ordinary L1 transaction to a program that exists on L1,
+      // which is exactly what a wallet can simulate — so it is the one
+      // signature this flow still costs, and the one that will not be
+      // refused. The transfer rides along because the session key pays the
+      // rollup fee afterwards and starts with nothing.
+      const existing = await connection.getAccountInfo(token);
+      if (!existing) {
+        const tx = new Transaction()
+          .add(createSessionIx(owner, session.publicKey, sessionExpiry()))
+          .add(
+            SystemProgram.transfer({
+              fromPubkey: owner,
+              toPubkey: session.publicKey,
+              lamports: Math.round(SESSION_FUNDING_SOL * LAMPORTS_PER_SOL),
+            }),
+          );
+        tx.feePayer = owner;
+        tx.recentBlockhash = (await connection.getLatestBlockhash("confirmed")).blockhash;
+        // The session key has to sign for its own token to be created.
+        await session.signTransaction(tx);
+        const sig = await wallet.sendTransaction(tx, connection, {
+          signers: [session.keypair],
+        });
+        await connection.confirmTransaction(sig, "confirmed");
+        toast(t.ranking.sessionCreated);
+      }
+
+      // The enclave still learns who you are from YOUR signature — this one is
+      // over a message, not a transaction, so there is nothing for a wallet to
+      // simulate and nothing for it to refuse. What the session key signs is
+      // the transaction, which is the part a wallet cannot make sense of once
+      // the round lives on the rollup.
+      const conn = await teeConnection(owner, (m) => wallet.signMessage!(m));
+      const program = getProgram(conn, session as any);
+      const preferences = preferencesPda(round.address, owner);
 
       await program.methods
         .submitRanking(
@@ -155,9 +200,11 @@ export function RankingBuilder({
           Buffer.from(chosen.map((c) => c.index)),
         )
         .accountsPartial({
-          wallet: wallet.publicKey,
+          signer: session.publicKey,
+          wallet: owner,
+          sessionToken: token,
           round: round.address,
-          participant: participantPda(round.address, wallet.publicKey),
+          participant: participantPda(round.address, owner),
           preferences,
           preferencesPermission: permissionPdaFromAccount(preferences),
         })
