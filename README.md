@@ -289,7 +289,7 @@ cargo test --package ronda-ciega   # 40 tests, host target, no validator
 ```
 
 ```bash
-cd frontend && npm test        # 177 unit tests, no network, ~1s
+cd frontend && npm test        # 183 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
 OFFLINE=1 node scripts/verify.mjs   # the 46 checks that read the repo
 ```

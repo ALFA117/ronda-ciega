@@ -49,6 +49,20 @@ export function MatchTheater({
   }, [round.historyLen, round.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const atEnd = frame >= frames.length - 1;
+
+  /**
+   * What round a frame belongs to.
+   *
+   * Frame i is the state after proposal round i+1, except the last one. The
+   * algorithm keeps going until a round makes no proposals, and that final
+   * round changes nothing, so it is never recorded — which means the last
+   * frame is the state the round ended on, whatever number the chain says that
+   * round was. The counter and the jump buttons both ask this, because two
+   * places numbering the same thing differently is how a control comes to say
+   * "go to round 2" and land you on round 3.
+   */
+  const roundOf = (i: number) =>
+    i >= frames.length - 1 ? round.tick : Math.min(i + 1, round.tick);
   const pairs = frames[Math.min(frame, frames.length - 1)] || [];
 
   const node = (p: ParticipantAccount) => ({
@@ -66,7 +80,7 @@ export function MatchTheater({
         {scrubbable && (
           <div className="flex items-center gap-3">
             <span className="tnum font-mono text-2xs text-muted">
-              {t.stats.tick} {Math.min(frame + 1, round.tick)} / {round.tick}
+              {t.stats.tick} {roundOf(frame)} / {round.tick}
             </span>
             <div className="flex items-center gap-1">
               <IconButton
@@ -113,7 +127,7 @@ export function MatchTheater({
                 setFrame(i);
                 setPlaying(false);
               }}
-              aria-label={`${t.round.goToTick} ${i + 1}`}
+              aria-label={`${t.round.goToTick} ${roundOf(i)}`}
               aria-current={i === frame}
               className="group h-11 flex-1 cursor-pointer sm:h-8"
             >

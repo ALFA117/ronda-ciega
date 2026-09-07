@@ -106,7 +106,26 @@ export function decodeParticipant(address: PublicKey, raw: any): ParticipantAcco
  */
 export function framesFor(round: RoundAccount): number[][] {
   const frames = round.history.slice(0, round.historyLen);
-  frames.push(round.pairs);
+
+  // The outcome goes on the end — unless it is already there.
+  //
+  // The program records a frame after every round that made a proposal and
+  // breaks before recording the one that makes none, so on a round that ran to
+  // its fixed point the last recorded frame IS the final pairing. Appending it
+  // anyway gave every settled transparent round a duplicate last frame: a
+  // replay that ends on a step where nothing happens, which reads as the
+  // animation being broken rather than finished. All three demo rounds had it.
+  //
+  // The append still matters twice: a private round records nothing, so the
+  // outcome is the only frame there is; and a round deeper than MAX_HISTORY
+  // stops recording while it is still working, so its last frame is not the
+  // end.
+  const last = frames[frames.length - 1];
+  const same =
+    last !== undefined && last.length === round.pairs.length &&
+    last.every((v, i) => v === round.pairs[i]);
+  if (!same) frames.push(round.pairs);
+
   return frames;
 }
 
