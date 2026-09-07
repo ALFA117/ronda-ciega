@@ -12,9 +12,15 @@ import { getProgram } from "@/lib/program";
 import { roundPda } from "@/lib/pdas";
 import { classifyError } from "@/lib/errors";
 import { useT } from "@/lib/i18n";
+import {
+  checkMinutes,
+  MAX_MINUTES,
+  MIN_MINUTES,
+  minutesToSeconds,
+} from "@/lib/duration";
 import { usePreflight } from "@/hooks/usePreflight";
 import { springPanel } from "@/lib/motion";
-import { Button } from "./ui";
+import { Button, ErrorText } from "./ui";
 
 const FAUCET = "https://faucet.solana.com/";
 
@@ -46,7 +52,11 @@ export function StartPanel() {
   const reduce = useReducedMotion();
   const { lowBalance, balanceSol } = usePreflight();
 
-  const [minutes, setMinutes] = useState(10);
+  // The raw string. See lib/duration.ts — Number("") is 0 and Number("abc")
+  // is NaN, and new BN(NaN).toString() is "0", so an empty box used to create
+  // a round whose deadline was 1970 with nothing on screen to say so. This is
+  // the panel a connected wallet lands on, so it was the common path.
+  const [minutes, setMinutes] = useState("10");
   const [transparent, setTransparent] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,15 +67,19 @@ export function StartPanel() {
     ? `${address.slice(0, 4)}…${address.slice(-4)}`
     : t.start.notConnected;
 
+  const minutesError = checkMinutes(minutes);
+
   async function create() {
-    if (!wallet.publicKey) return;
+    if (!wallet.publicKey || minutesError) return;
     setBusy(true);
     setError(null);
     try {
       const program = getProgram(connection, wallet as any);
       const roundId = new BN(Date.now());
       const round = roundPda(wallet.publicKey, roundId);
-      const deadline = new BN(Math.floor(Date.now() / 1000) + minutes * 60);
+      const deadline = new BN(
+        Math.floor(Date.now() / 1000) + minutesToSeconds(minutes),
+      );
 
       await program.methods
         .initRound(roundId, deadline, 2, transparent)
@@ -141,13 +155,24 @@ export function StartPanel() {
               <input
                 id="closes-in"
                 type="number"
-                min={1}
+                inputMode="numeric"
+                min={MIN_MINUTES}
+                max={MAX_MINUTES}
                 value={minutes}
-                onChange={(e) => setMinutes(Number(e.target.value))}
-                className="glass h-11 w-24 rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim"
+                onChange={(e) => setMinutes(e.target.value)}
+                aria-invalid={minutesError ? true : undefined}
+                aria-describedby={minutesError ? "closes-in-error" : undefined}
+                className={`glass h-11 w-24 rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim ${
+                  minutesError ? "ring-1 ring-open" : ""
+                }`}
               />
               <span className="font-mono text-xs text-muted">{t.create.minutes}</span>
             </div>
+            {minutesError && (
+              <div id="closes-in-error">
+                <ErrorText>{t.create.errors[minutesError]}</ErrorText>
+              </div>
+            )}
           </div>
 
           <label className="flex cursor-pointer items-start gap-3">
@@ -189,7 +214,7 @@ export function StartPanel() {
 
           <div className="flex flex-wrap items-center gap-3">
             {connected ? (
-              <Button onClick={create} busy={busy}>
+              <Button onClick={create} busy={busy} disabled={!!minutesError}>
                 {t.create.submit}
               </Button>
             ) : (

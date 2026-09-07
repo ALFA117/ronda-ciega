@@ -255,7 +255,7 @@ looks: `anchor build` panics on native Windows, so until CI existed nothing
 verified a Rust change compiled until it was deployed.
 
 ```bash
-cd frontend && npm test        # 123 unit tests, no network, ~1s
+cd frontend && npm test        # 137 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
 OFFLINE=1 node scripts/verify.mjs   # the 44 checks that read the repo
 ```
@@ -274,13 +274,23 @@ npm run negative:rollup        # 26 refusals inside the TEE (~0.15 SOL, 3 min)
 npm run spike                  # the full lifecycle, including the privacy gate
 ```
 
+Two of those cases exist because of the same failure: something that is wrong
+and silent. The stat band counted up on `requestAnimationFrame` and froze
+mid-count in any tab that stopped compositing, leaving invented measurements on
+screen in the same type as the real ones. And the round-length box ran its value
+through `Number()` straight into the deadline — `Number("")` is `0` and
+`new BN(NaN).toString()` is `"0"`, not a throw, so an empty box created a round
+dated 1970: the transaction succeeded, and the round could never be joined by
+anyone, with nothing on screen saying why. Neither logged an error. Both are now
+checked from the browser.
+
 Sixteen of the program's nineteen error codes are exercised. The three that are
 not are documented in [docs/ROADMAP.md](docs/ROADMAP.md): one is unreachable
 behind a seeds constraint, one is declared and never raised (its invariant is
 enforced by a state transition instead), and one guards arithmetic on counters
 that cannot overflow.
 
-The thirteen UI cases run in the browser against any page of the deployed site.
+The fourteen UI cases run in the browser against any page of the deployed site.
 Two of them wait on the network, so the run takes about ten seconds:
 
 ```js

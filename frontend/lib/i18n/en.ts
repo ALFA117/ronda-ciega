@@ -313,6 +313,12 @@ export const en: Dictionary = {
   },
 
   create: {
+    errors: {
+      empty: "Say how many minutes the round runs. Left blank it would be created already closed.",
+      notNumber: "That is not a number of minutes.",
+      tooShort: "One minute minimum. Less than that is born closed and nobody can join.",
+      tooLong: "Fourteen days maximum (20160 minutes). More than that is usually one digit too many.",
+    },
     closesIn: "Closes in",
     minutes: "minutes",
     transparent: "Transparent round",
@@ -445,6 +451,10 @@ export const en: Dictionary = {
     listsNote: "Not one was ever written outside the enclave.",
     profiles: "Public profiles on L1",
     profilesNote: "The control: same query, different account size.",
+    verdictOk:
+      "The control answered, so the zero above is a measured zero: this query does find accounts of this program when they exist, and it finds no preference lists at all.",
+    verdictBroken:
+      "The control came back zero too, and it cannot be: the public profiles are on L1. The query is broken or the RPC did not answer, so the zero beside it proves nothing. Run it again.",
     showCommand: "Show the command and run it yourself",
   },
   privacy: {

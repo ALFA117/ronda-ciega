@@ -9,7 +9,13 @@ import { getProgram } from "@/lib/program";
 import { classifyError } from "@/lib/errors";
 import { roundPda } from "@/lib/pdas";
 import { useT } from "@/lib/i18n";
-import { Button, Note, Panel } from "./ui";
+import {
+  checkMinutes,
+  MAX_MINUTES,
+  MIN_MINUTES,
+  minutesToSeconds,
+} from "@/lib/duration";
+import { Button, ErrorText, Note, Panel } from "./ui";
 
 export function CreateRound() {
   const { connection } = useConnection();
@@ -17,20 +23,26 @@ export function CreateRound() {
   const router = useRouter();
   const t = useT();
   const [open, setOpen] = useState(false);
-  const [minutes, setMinutes] = useState(10);
+  // The raw string, not a number. Number("") is 0 and Number("abc") is NaN,
+  // and both of those used to reach the deadline: the first as "closes now",
+  // the second as 1970, because new BN(NaN).toString() is "0" rather than a
+  // throw. Keeping the text lets the check see an empty box as empty.
+  const [minutes, setMinutes] = useState("10");
   const [transparent, setTransparent] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function create() {
-    if (!wallet.publicKey) return;
+    if (!wallet.publicKey || minutesError) return;
     setBusy(true);
     setError(null);
     try {
       const program = getProgram(connection, wallet as any);
       const roundId = new BN(Date.now());
       const round = roundPda(wallet.publicKey, roundId);
-      const deadline = new BN(Math.floor(Date.now() / 1000) + minutes * 60);
+      const deadline = new BN(
+        Math.floor(Date.now() / 1000) + minutesToSeconds(minutes),
+      );
 
       await program.methods
         .initRound(roundId, deadline, 2, transparent)
@@ -49,6 +61,8 @@ export function CreateRound() {
     }
   }
 
+  const minutesError = checkMinutes(minutes);
+
   if (!open) {
     return (
       <Button variant="ghost" onClick={() => setOpen(true)}>
@@ -66,13 +80,27 @@ export function CreateRound() {
         <div className="flex items-center gap-2">
           <input
             type="number"
-            min={1}
+            inputMode="numeric"
+            min={MIN_MINUTES}
+            max={MAX_MINUTES}
             value={minutes}
-            onChange={(e) => setMinutes(Number(e.target.value))}
-            className="glass h-11 w-24 rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
+            onChange={(e) => setMinutes(e.target.value)}
+            aria-invalid={minutesError ? true : undefined}
+            aria-describedby={minutesError ? "closes-in-error" : undefined}
+            className={`glass h-11 w-24 rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm ${
+              minutesError ? "ring-1 ring-open" : ""
+            }`}
           />
           <span className="font-mono text-xs text-muted">{t.create.minutes}</span>
         </div>
+        {/* Said here rather than after the transaction, because the program
+            accepts a deadline in the past perfectly happily — it just makes a
+            round nobody can ever join, with nothing on screen to explain it. */}
+        {minutesError && (
+          <div id="closes-in-error">
+            <ErrorText>{t.create.errors[minutesError]}</ErrorText>
+          </div>
+        )}
       </div>
 
       <label className="flex cursor-pointer items-start gap-3">
@@ -100,7 +128,11 @@ export function CreateRound() {
       )}
 
       <div className="flex gap-2">
-        <Button onClick={create} busy={busy} disabled={!wallet.publicKey}>
+        <Button
+          onClick={create}
+          busy={busy}
+          disabled={!wallet.publicKey || !!minutesError}
+        >
           {wallet.publicKey ? t.create.submit : t.join.connect}
         </Button>
         <Button variant="ghost" onClick={() => setOpen(false)}>

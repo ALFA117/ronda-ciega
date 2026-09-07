@@ -312,6 +312,12 @@ export const es = {
   },
 
   create: {
+    errors: {
+      empty: "Pon cuántos minutos dura la ronda. En blanco se crearía ya vencida.",
+      notNumber: "Eso no es un número de minutos.",
+      tooShort: "Mínimo 1 minuto. Menos que eso nace cerrada y nadie alcanza a entrar.",
+      tooLong: "Máximo 14 días (20160 minutos). Más que eso suele ser un dígito de más.",
+    },
     closesIn: "Cierra en",
     minutes: "minutos",
     transparent: "Ronda transparente",
@@ -480,6 +486,10 @@ export const es = {
     listsNote: "Nunca se escribió ninguna fuera del enclave.",
     profiles: "Perfiles públicos en L1",
     profilesNote: "El control: la misma consulta, otro tamaño de cuenta.",
+    verdictOk:
+      "El control contestó, así que el cero de arriba es un cero medido: esta consulta sí encuentra cuentas de este programa cuando existen, y de listas de preferencias no encuentra ninguna.",
+    verdictBroken:
+      "El control también salió en cero, y eso no puede ser: los perfiles públicos sí están en L1. La consulta está rota o el RPC no contestó, así que el cero de las listas no prueba nada. Vuelve a intentarlo.",
     showCommand: "Ver el comando y correrlo tú",
   },
 

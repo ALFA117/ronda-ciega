@@ -52,6 +52,11 @@ export function LedgerProof() {
     }
   }
 
+  // The profiles query is the control: it asks the same program for a
+  // different account size and must come back non-zero.
+  const controlOk =
+    (rows?.find((r) => r.key === "participants")?.value ?? 0) > 0;
+
   return (
     <section className="rounded-2xl border border-edge bg-surface/60 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -98,6 +103,21 @@ export function LedgerProof() {
           </motion.dl>
         )}
       </AnimatePresence>
+
+      {/* The control, read out loud.
+          Both figures were already on screen, but the big cyan zero is the one
+          that carries the argument and it reads as proof on its own. If the
+          control is also zero the query did not work, and saying so is the
+          difference between evidence and a number. */}
+      {rows && (
+        <p
+          className={`mt-4 max-w-prose text-xs leading-relaxed ${
+            controlOk ? "text-muted" : "text-open"
+          }`}
+        >
+          {controlOk ? t.ledger.verdictOk : t.ledger.verdictBroken}
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="mt-4 font-mono text-2xs text-open">

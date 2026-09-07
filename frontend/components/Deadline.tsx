@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
+import { formatCountdown } from "@/lib/duration";
 
 /**
  * How long the round has left, as a bar that actually drains.
@@ -31,13 +32,10 @@ export function Deadline({ deadlineTs }: { deadlineTs: number }) {
     );
   }
 
-  const m = Math.floor(left / 60);
-  const sec = Math.floor(left % 60);
-
   return (
     <div className="flex items-center gap-2.5">
       <span className="tnum font-mono text-2xs text-muted">
-        {t.round.deadline} {m}:{String(sec).padStart(2, "0")}
+        {t.round.deadline} {formatCountdown(left)}
       </span>
       <div
         className="h-1 w-20 overflow-hidden rounded-full bg-edge"

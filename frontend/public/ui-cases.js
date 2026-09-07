@@ -266,6 +266,58 @@
       };
     },
 
+    /**
+     * The round window must refuse the values that make an unusable round.
+     *
+     * This is checkable with no wallet, and it is worth checking, because the
+     * failure it guards is completely silent on chain: Number("") is 0 and
+     * Number("abc") is NaN, and new BN(NaN).toString() is "0" rather than a
+     * throw — so an empty box produced a round whose deadline was 1970. The
+     * program accepted it, the transaction succeeded, and the round could
+     * never be joined by anyone, with nothing anywhere saying why.
+     */
+    async ventanaDeRonda() {
+      const input = document.getElementById("closes-in");
+      if (!input) return { pass: true, detail: "no aplica: sin panel de creación" };
+
+      const native = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value",
+      ).set;
+      const type = (v) => {
+        native.call(input, v);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      const errorNow = () => {
+        const el = document.getElementById("closes-in-error");
+        return el ? (el.innerText || "").trim() : null;
+      };
+
+      const original = input.value;
+      const bad = [];
+      const settle = () => new Promise((r) => setTimeout(r, 250));
+
+      for (const v of ["", "0", "-5", "999999"]) {
+        type(v);
+        await settle();
+        if (!errorNow()) bad.push(v === "" ? "(vacío)" : v);
+      }
+
+      // And it has to let go again, or the panel is merely broken in the other
+      // direction.
+      type("10");
+      await settle();
+      const stuck = errorNow();
+
+      type(original);
+      await settle();
+
+      return {
+        pass: bad.length === 0 && !stuck,
+        detail: { sinAviso: bad, seQuedaEnError: stuck },
+      };
+    },
+
     // ------------------------------------------------------------------ nav
     async secciones() {
       if (!document.getElementById("problema"))
