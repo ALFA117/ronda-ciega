@@ -232,6 +232,9 @@ export const en: Dictionary = {
     needsQuorum: "Not enough people to close",
     delegateLateHint:
       "Leave delegating until last. Before it, joining is an ordinary Solana transaction; after it, joining is a rollup transaction, and wallets simulate those against L1, fail to make sense of them, and refuse to sign. Share the link, let people in, then delegate.",
+    operatorFunded: "Local operator key funded",
+    operatorNote:
+      "Rollup actions are signed by a local key in this browser, not by your wallet: your wallet simulates against L1, and a delegated round no longer lives there. None of those instructions check who signed, only who paid. Your preference list stays bound to your wallet, and this key cannot read it.",
     quorumHint:
       "This round needs {min} per side. It is short {f} founders and {b} builders. The minimum is per side, not the two added together.",
     matchStateExists: "The working memory already existed",

@@ -3,11 +3,18 @@
 import { useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import BN from "bn.js";
+import { LAMPORTS_PER_SOL, SystemProgram, Transaction } from "@solana/web3.js";
 import { permissionPdaFromAccount } from "@magicblock-labs/ephemeral-rollups-sdk";
 import { getProgram } from "@/lib/program";
 import type { ParticipantAccount, RoundAccount } from "@/lib/program";
 import { matchStatePda, preferencesPda } from "@/lib/pdas";
 import { teeConnection } from "@/lib/tee";
+import {
+  OPERATOR_MIN_SOL,
+  OPERATOR_TOPUP_SOL,
+  operatorKey,
+  type OperatorKey,
+} from "@/lib/operator-key";
 import { EPHEMERAL_QUEUE, TEE_VALIDATOR } from "@/lib/constants";
 import { useLocale, useT } from "@/lib/i18n";
 import { classifyError } from "@/lib/errors";
@@ -63,11 +70,44 @@ export function RoundControls({
     toast(m);
   };
 
-  async function er() {
-    const conn = await teeConnection(wallet.publicKey!, (m) =>
-      wallet.signMessage!(m),
+  /**
+   * A rollup client that never asks the wallet for anything.
+   *
+   * The TEE auth challenge is signed by the local key too, so even proving
+   * who is connecting costs no prompt. Nothing this client sends checks the
+   * signer against the round authority, so the identity it uses is only ever
+   * "whoever paid".
+   */
+  /**
+   * Put a little SOL on the local key, if it needs it.
+   *
+   * This is the one wallet prompt the operator flow still costs, and it is a
+   * plain transfer on L1 — a wallet can simulate that perfectly well and
+   * signs it without complaint. Everything the round then does on the rollup
+   * is paid for from here, silently.
+   */
+  async function ensureFunded(op: OperatorKey) {
+    const balance = await connection.getBalance(op.publicKey);
+    if (balance >= OPERATOR_MIN_SOL * LAMPORTS_PER_SOL) return;
+    if (!wallet.publicKey || !wallet.sendTransaction) return;
+
+    const tx = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: wallet.publicKey,
+        toPubkey: op.publicKey,
+        lamports: Math.round(OPERATOR_TOPUP_SOL * LAMPORTS_PER_SOL),
+      }),
     );
-    return getProgram(conn, wallet as any);
+    const sig = await wallet.sendTransaction(tx, connection);
+    await connection.confirmTransaction(sig, "confirmed");
+    say(t.controls.operatorFunded);
+  }
+
+  async function er() {
+    const op = operatorKey();
+    await ensureFunded(op);
+    const conn = await teeConnection(op.publicKey, op.signMessage);
+    return { program: getProgram(conn, op as any), op };
   }
 
   async function run(name: string, fn: () => Promise<void>) {
@@ -111,7 +151,7 @@ export function RoundControls({
         say(t.controls.delegated);
       }
 
-      const erProgram = await er();
+      const { program: erProgram, op } = await er();
 
       // The working memory is private with no members, so its existence
       // cannot be read back from here — not by anyone, including its author.
@@ -121,7 +161,7 @@ export function RoundControls({
         await erProgram.methods
           .initMatchState(roundId)
           .accountsPartial({
-            payer: wallet.publicKey!,
+            payer: op.publicKey,
             round: round.address,
             matchState,
             matchStatePermission: permissionPdaFromAccount(matchState),
@@ -138,7 +178,7 @@ export function RoundControls({
         await erProgram.methods
           .requestRoundRandomness(roundId)
           .accountsPartial({
-            payer: wallet.publicKey!,
+            payer: op.publicKey,
             round: round.address,
             oracleQueue: EPHEMERAL_QUEUE,
           })
@@ -159,7 +199,7 @@ export function RoundControls({
    */
   const settle = () =>
     run("settle", async () => {
-      const erProgram = await er();
+      const { program: erProgram, op } = await er();
 
       if (round.status === "open") {
         await erProgram.methods
@@ -241,7 +281,7 @@ export function RoundControls({
    */
   const finish = () =>
     run("finish", async () => {
-      const erProgram = await er();
+      const { program: erProgram, op } = await er();
 
       let closed = 0;
       for (const p of participants) {
@@ -250,7 +290,7 @@ export function RoundControls({
           await erProgram.methods
             .closePreferences(roundId)
             .accountsPartial({
-              payer: wallet.publicKey!,
+              payer: op.publicKey,
               owner: p.wallet,
               round: round.address,
               preferences: prefs,
@@ -268,7 +308,7 @@ export function RoundControls({
         await erProgram.methods
           .closeMatchState(roundId)
           .accountsPartial({
-            payer: wallet.publicKey!,
+            payer: op.publicKey,
             round: round.address,
             matchState,
             matchStatePermission: permissionPdaFromAccount(matchState),
@@ -281,7 +321,7 @@ export function RoundControls({
 
       await erProgram.methods
         .undelegateRound(roundId)
-        .accountsPartial({ payer: wallet.publicKey!, round: round.address })
+        .accountsPartial({ payer: op.publicKey, round: round.address })
         .rpc();
       say(t.controls.undelegated);
     });
@@ -369,6 +409,10 @@ export function RoundControls({
       {!delegated && participants.length === 0 && (
         <Note>{t.controls.delegateLateHint}</Note>
       )}
+
+      {/* Who is signing what, said plainly. A key that runs the round from
+          inside the browser should never be a surprise. */}
+      {delegated && <Note>{t.controls.operatorNote}</Note>}
 
       {/* The one instruction a stuck operator needs, and only when stuck. */}
       {delegated && !round.randomnessFulfilled && round.status === "open" && (

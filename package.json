@@ -8,7 +8,8 @@
     "seed": "ts-node scripts/seed.ts",
     "verify": "node scripts/verify.mjs",
     "negative:rollup": "ts-node scripts/negative-rollup.ts",
-    "concurrency": "ts-node scripts/concurrency.ts"
+    "concurrency": "ts-node scripts/concurrency.ts",
+    "operator-key": "ts-node scripts/operator-key.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

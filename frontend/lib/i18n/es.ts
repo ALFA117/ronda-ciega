@@ -231,6 +231,9 @@ export const es = {
     needsQuorum: "Falta gente para poder cerrar",
     delegateLateHint:
       "Deja la delegación para el final. Antes de delegar, entrar a la ronda es una transacción normal de Solana; después es del rollup, y las billeteras la simulan contra L1, no la entienden y se niegan a firmar. Comparte el enlace, deja que entre la gente, y delega cuando ya estén.",
+    operatorFunded: "Clave local del operador fondeada",
+    operatorNote:
+      "Las acciones del rollup las firma una clave local de este navegador, no tu billetera: tu billetera simula contra L1 y una ronda delegada ya no vive ahí. Ninguna de esas instrucciones comprueba quién firma, solo quién paga. Tu lista de preferencias sigue atada a tu billetera y esta clave no puede leerla.",
     quorumHint:
       "Esta ronda necesita {min} por lado. Faltan {f} founders y {b} builders. El mínimo es por lado, no la suma de los dos.",
     matchStateExists: "La memoria de trabajo ya existía",
