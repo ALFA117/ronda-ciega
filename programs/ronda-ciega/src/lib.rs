@@ -374,18 +374,14 @@ pub mod ronda_ciega {
     pub fn close_round(ctx: Context<CloseRound>, round_id: u64) -> Result<()> {
         let round = &mut ctx.accounts.round;
         require_eq!(round.round_id, round_id);
-        require!(
-            round.status == RoundStatus::Open,
-            ErrorCode::WrongRoundStatus
-        );
-        require!(
-            Clock::get()?.unix_timestamp >= round.deadline_ts,
-            ErrorCode::RoundStillOpen
-        );
-        require!(
-            round.founder_count >= round.min_per_side && round.builder_count >= round.min_per_side,
-            ErrorCode::NotEnoughParticipants
-        );
+        check_closable(
+            round.status,
+            Clock::get()?.unix_timestamp,
+            round.deadline_ts,
+            round.founder_count,
+            round.builder_count,
+            round.min_per_side,
+        )?;
 
         round.status = RoundStatus::Sealing;
         emit!(RoundClosed {
@@ -916,6 +912,36 @@ fn advance_one_round(
     }
 
     proposals
+}
+
+/// Everything that has to be true before a round can close.
+///
+/// Lifted out of `close_round` so it can be tested on the host, and because
+/// the interface has to make the same decision to know whether to offer the
+/// button. It got that wrong once already: the quorum was read as a total
+/// rather than per side, so "close and match" sat there live on a round with
+/// six founders and no builders — a control offering the one thing the program
+/// is guaranteed to refuse.
+///
+/// The order of the three is deliberate and worth keeping. A round already
+/// past Open reports the status, not the deadline, because the deadline is no
+/// longer the interesting fact about it.
+fn check_closable(
+    status: RoundStatus,
+    now: i64,
+    deadline_ts: i64,
+    founder_count: u8,
+    builder_count: u8,
+    min_per_side: u8,
+) -> Result<()> {
+    require!(status == RoundStatus::Open, ErrorCode::WrongRoundStatus);
+    require!(now >= deadline_ts, ErrorCode::RoundStillOpen);
+    // Both sides, never the sum. Twelve people all on one side is not a market.
+    require!(
+        founder_count >= min_per_side && builder_count >= min_per_side,
+        ErrorCode::NotEnoughParticipants
+    );
+    Ok(())
 }
 
 /// Borrowed state for one step of the matching loop.
@@ -1502,6 +1528,116 @@ mod tests {
 
     fn flat(v: u8) -> [u8; 32] {
         [v; 32]
+    }
+
+    // --------------------------------------------------------- check_closable
+    //
+    // The rule the interface has to mirror to know whether to offer the
+    // button, and it got it wrong once: the quorum was read as a total rather
+    // than per side, so "close and match" sat live on a round with six
+    // founders and no builders.
+
+    const WRONG_ROUND_STATUS: u32 = 6003;
+    const ROUND_STILL_OPEN: u32 = 6002;
+    const NOT_ENOUGH_PARTICIPANTS: u32 = 6005;
+
+    fn closable(
+        status: RoundStatus,
+        now: i64,
+        deadline_ts: i64,
+        founders: u8,
+        builders: u8,
+        min_per_side: u8,
+    ) -> Option<u32> {
+        match check_closable(status, now, deadline_ts, founders, builders, min_per_side) {
+            Ok(()) => None,
+            Err(Error::AnchorError(inner)) => Some(inner.error_code_number),
+            Err(_) => panic!("not an anchor error"),
+        }
+    }
+
+    #[test]
+    fn an_open_round_past_its_deadline_with_quorum_closes() {
+        assert_eq!(closable(RoundStatus::Open, 1_000, 1_000, 2, 2, 2), None);
+    }
+
+    #[test]
+    fn the_deadline_is_inclusive() {
+        // The program compares with >=, and the autopilot decides when to send
+        // this using the same boundary. An off-by-one here strands a round for
+        // a whole poll interval after it became closeable.
+        assert_eq!(
+            closable(RoundStatus::Open, 999, 1_000, 2, 2, 2),
+            Some(ROUND_STILL_OPEN)
+        );
+        assert_eq!(closable(RoundStatus::Open, 1_000, 1_000, 2, 2, 2), None);
+    }
+
+    #[test]
+    fn a_round_that_is_not_open_reports_the_status() {
+        for status in [
+            RoundStatus::Sealing,
+            RoundStatus::Matching,
+            RoundStatus::Settled,
+        ] {
+            assert_eq!(
+                closable(status, 5_000, 1_000, 8, 8, 2),
+                Some(WRONG_ROUND_STATUS)
+            );
+        }
+    }
+
+    #[test]
+    fn quorum_is_per_side_and_never_the_total() {
+        // The bug this test exists for. Six and nothing is twelve people by
+        // one reading and not a market by the only one that counts.
+        assert_eq!(
+            closable(RoundStatus::Open, 5_000, 1_000, 6, 0, 2),
+            Some(NOT_ENOUGH_PARTICIPANTS)
+        );
+        assert_eq!(
+            closable(RoundStatus::Open, 5_000, 1_000, 0, 6, 2),
+            Some(NOT_ENOUGH_PARTICIPANTS)
+        );
+        assert_eq!(closable(RoundStatus::Open, 5_000, 1_000, 2, 2, 2), None);
+    }
+
+    #[test]
+    fn one_short_on_either_side_is_still_short() {
+        assert_eq!(
+            closable(RoundStatus::Open, 5_000, 1_000, 2, 1, 2),
+            Some(NOT_ENOUGH_PARTICIPANTS)
+        );
+        assert_eq!(
+            closable(RoundStatus::Open, 5_000, 1_000, 1, 2, 2),
+            Some(NOT_ENOUGH_PARTICIPANTS)
+        );
+    }
+
+    #[test]
+    fn status_is_reported_before_the_deadline_and_the_deadline_before_quorum() {
+        // A round already past Open reports the status, not the deadline: the
+        // deadline is no longer the interesting fact about it. And a round
+        // still inside its window reports that rather than a headcount that
+        // people may yet fix by joining.
+        assert_eq!(
+            closable(RoundStatus::Sealing, 0, 1_000, 0, 0, 2),
+            Some(WRONG_ROUND_STATUS)
+        );
+        assert_eq!(
+            closable(RoundStatus::Open, 0, 1_000, 0, 0, 2),
+            Some(ROUND_STILL_OPEN)
+        );
+    }
+
+    #[test]
+    fn a_negative_timestamp_does_not_wrap_into_a_closeable_round() {
+        // unix_timestamp is i64 and signed. A clock before the epoch must read
+        // as "not yet", not as an enormous positive.
+        assert_eq!(
+            closable(RoundStatus::Open, -1, 1_000, 2, 2, 2),
+            Some(ROUND_STILL_OPEN)
+        );
     }
 
     // ------------------------------------------------------ frame recording

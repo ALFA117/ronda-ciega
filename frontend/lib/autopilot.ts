@@ -74,7 +74,14 @@ const wait = (waiting: AutoWaiting, stalled = false): AutoPlan => ({
   stalled,
 });
 
-export function hasQuorum(s: AutoState): boolean {
+/**
+ * The same three fields `check_closable` reads in the program, and nothing
+ * more: the round controls ask this question too, and a function demanding a
+ * whole AutoState to answer it is a function they cannot call.
+ */
+export function hasQuorum(
+  s: Pick<AutoState, "founderCount" | "builderCount" | "minPerSide">,
+): boolean {
   // Both sides, not the total. A round with six founders and no builders has
   // twelve participants and cannot be matched.
   return s.founderCount >= s.minPerSide && s.builderCount >= s.minPerSide;

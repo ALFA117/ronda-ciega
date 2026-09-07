@@ -266,7 +266,7 @@ cd frontend && npm install && npm run dev
 
 CI runs everything that is deterministic and free — the unit suite, both type
 checks, the Next build, the design invariants, and the program itself: rustfmt,
-clippy, a host type check, thirty-three Rust unit tests and the SBF build. That
+clippy, a host type check, forty Rust unit tests and the SBF build. That
 last one matters more than it looks: `anchor build` panics on native Windows,
 so until CI existed nothing verified a Rust change compiled until it was
 deployed.
@@ -285,7 +285,7 @@ implementations disagreed with it in the same way, which is how it earned its
 place.
 
 ```bash
-cargo test --package ronda-ciega   # 33 tests, host target, no validator
+cargo test --package ronda-ciega   # 40 tests, host target, no validator
 ```
 
 ```bash

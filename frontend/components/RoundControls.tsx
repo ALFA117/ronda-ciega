@@ -18,7 +18,7 @@ import {
 import { EPHEMERAL_QUEUE, TEE_VALIDATOR } from "@/lib/constants";
 import { useLocale, useT } from "@/lib/i18n";
 import { classifyError } from "@/lib/errors";
-import { plan, shouldRetrySetup, type AutoAction } from "@/lib/autopilot";
+import { hasQuorum, plan, shouldRetrySetup, type AutoAction } from "@/lib/autopilot";
 import { Button, Label, Note, Panel } from "./ui";
 import { useToast } from "./Toast";
 
@@ -76,8 +76,15 @@ export function RoundControls({
   // `close_round` needs the minimum on BOTH sides, not across them. Without
   // this the button was live on a round with one builder and no founders,
   // and pressing it produced a program refusal the operator had to decode.
-  const quorum =
-    round.founderCount >= round.minPerSide && round.builderCount >= round.minPerSide;
+  //
+  // Imported rather than rewritten: this panel and the autopilot were deciding
+  // the same thing from two copies of the rule, which is how the copy without
+  // the fix survives a fix.
+  const quorum = hasQuorum({
+    founderCount: round.founderCount,
+    builderCount: round.builderCount,
+    minPerSide: round.minPerSide,
+  });
   const missing = [
     Math.max(round.minPerSide - round.founderCount, 0),
     Math.max(round.minPerSide - round.builderCount, 0),
