@@ -65,3 +65,47 @@ describe("Clasificación de errores de billetera", () => {
     );
   });
 });
+
+describe("Errores del programa, sin logs del TEE", () => {
+  test("reconoce el código numérico cuando el mensaje viene vacío", () => {
+    // What a rollup failure actually looks like: no logs, empty message, the
+    // program error number buried somewhere in the object.
+    assert.equal(classifyError({ message: "", code: 6001 }), "roundClosed");
+    assert.equal(classifyError({ message: "", code: 6009 }), "alreadyDone");
+    assert.equal(classifyError({ message: "", code: 6016 }), "noRandomness");
+  });
+
+  test("reconoce el código en hexadecimal, como lo imprime Solana", () => {
+    assert.equal(
+      classifyError(new Error("custom program error: 0x1771")), // 6001
+      "roundClosed",
+    );
+    assert.equal(
+      classifyError(new Error("custom program error: 0x1776")), // 6006
+      "badRanking",
+    );
+  });
+
+  test("reconoce el nombre cuando los logs sí llegaron", () => {
+    assert.equal(
+      classifyError({ error: { errorCode: { code: "SideFull" } } }),
+      "sideFull",
+    );
+    assert.equal(
+      classifyError({ message: "Error: WrongRoundStatus" }),
+      "roundClosed",
+    );
+  });
+
+  test("un rechazo del usuario gana sobre cualquier código de programa", () => {
+    assert.equal(
+      classifyError({ message: "User rejected the request.", code: 6001 }),
+      "rejected",
+    );
+  });
+
+  test("no confunde un número cualquiera con un código de programa", () => {
+    assert.equal(classifyError(new Error("took 6001 milliseconds")), "unknown");
+    assert.equal(classifyError(new Error("value 42 out of range")), "unknown");
+  });
+});

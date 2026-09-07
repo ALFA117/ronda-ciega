@@ -229,6 +229,9 @@ export const en: Dictionary = {
     matchStateCreated: "Working memory created, private with no members",
     closed: "Round closed",
     completeSetup: "Complete the setup",
+    needsQuorum: "Not enough people to close",
+    quorumHint:
+      "This round needs {min} per side. It is short {f} founders and {b} builders. The minimum is per side, not the two added together.",
     matchStateExists: "The working memory already existed",
     stepDelegate: "Delegated to the rollup, private working memory created",
     stepRandomness: "Verifiable randomness confirmed",
@@ -286,7 +289,18 @@ export const en: Dictionary = {
     lowBalance:
       "Not enough devnet SOL to pay the accounts rent. Get some at faucet.solana.com.",
     blockhash: "The network took too long. Try again.",
-    unknown: "The round could not be created.",
+    roundClosed:
+      "This round has closed. If someone else closed it while you were writing, your list did not make it in.",
+    alreadyDone: "That was already done. No need to repeat it.",
+    notEnough:
+      "Not enough people. The round needs a minimum per side, and the two sides together do not count.",
+    tooEarly: "The deadline has not passed yet.",
+    sideFull: "That side is already full.",
+    badRanking:
+      "Your list is not valid: it is empty, repeats someone, or includes someone who is not in this round.",
+    noRandomness:
+      "Verifiable randomness is missing. Without it the matching refuses to run, because ties would fall to registration order.",
+    unknown: "The operation could not be completed.",
   },
 
   play: {

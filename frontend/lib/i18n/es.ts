@@ -228,6 +228,9 @@ export const es = {
     matchStateCreated: "Memoria de trabajo creada, privada y sin miembros",
     closed: "Ronda cerrada",
     completeSetup: "Completar la preparación",
+    needsQuorum: "Falta gente para poder cerrar",
+    quorumHint:
+      "Esta ronda necesita {min} por lado. Faltan {f} founders y {b} builders. El mínimo es por lado, no la suma de los dos.",
     matchStateExists: "La memoria de trabajo ya existía",
     stepDelegate: "Delegada al rollup, con memoria de trabajo privada",
     stepRandomness: "Aleatoriedad verificable confirmada",
@@ -285,7 +288,18 @@ export const es = {
     lowBalance:
       "Te falta SOL de devnet para pagar la renta de las cuentas. Consíguelo en faucet.solana.com.",
     blockhash: "La red tardó de más. Vuelve a intentar.",
-    unknown: "No se pudo crear la ronda.",
+    roundClosed:
+      "Esta ronda ya cerró. Si alguien más la cerró mientras escribías, tu lista no alcanzó a entrar.",
+    alreadyDone: "Eso ya estaba hecho. No hacía falta repetirlo.",
+    notEnough:
+      "Falta gente. La ronda exige un mínimo por lado, y contar los dos lados juntos no cuenta.",
+    tooEarly: "Todavía no llega la fecha límite.",
+    sideFull: "Ese lado ya está lleno.",
+    badRanking:
+      "Tu lista no es válida: está vacía, repite a alguien, o incluye a alguien que no está en esta ronda.",
+    noRandomness:
+      "Falta la aleatoriedad verificable. Sin ella el emparejamiento se niega a correr, porque los empates caerían al orden de registro.",
+    unknown: "No se pudo completar la operación.",
   },
 
   play: {

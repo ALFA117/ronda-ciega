@@ -48,6 +48,16 @@ export function RoundControls({
   const matchState = matchStatePda(round.address);
   const deadlinePassed = Date.now() / 1000 >= round.deadlineTs;
 
+  // `close_round` needs the minimum on BOTH sides, not across them. Without
+  // this the button was live on a round with one builder and no founders,
+  // and pressing it produced a program refusal the operator had to decode.
+  const quorum =
+    round.founderCount >= round.minPerSide && round.builderCount >= round.minPerSide;
+  const missing = [
+    Math.max(round.minPerSide - round.founderCount, 0),
+    Math.max(round.minPerSide - round.builderCount, 0),
+  ];
+
   const say = (m: string) => {
     setLog((l) => [...l, m]);
     toast(m);
@@ -323,9 +333,13 @@ export function RoundControls({
           <Button
             onClick={settle}
             busy={busy === "settle"}
-            disabled={!deadlinePassed || !round.randomnessFulfilled}
+            disabled={!deadlinePassed || !round.randomnessFulfilled || !quorum}
           >
-            {deadlinePassed ? t.controls.settle : t.controls.waitingDeadline}
+            {!quorum
+              ? t.controls.needsQuorum
+              : deadlinePassed
+                ? t.controls.settle
+                : t.controls.waitingDeadline}
           </Button>
         )}
         {/* Sealing had no button at all, so a sequence that stopped halfway
@@ -350,6 +364,17 @@ export function RoundControls({
       {/* The one instruction a stuck operator needs, and only when stuck. */}
       {delegated && !round.randomnessFulfilled && round.status === "open" && (
         <Note>{t.controls.setupHint}</Note>
+      )}
+
+      {/* Said as a count of people still needed, because "not enough
+          participants" does not tell the operator how many to go and find. */}
+      {round.status === "open" && !quorum && (
+        <Note>
+          {t.controls.quorumHint
+            .replace("{f}", String(missing[0]))
+            .replace("{b}", String(missing[1]))
+            .replace("{min}", String(round.minPerSide))}
+        </Note>
       )}
 
       {!delegated && (
