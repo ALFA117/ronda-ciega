@@ -215,8 +215,10 @@ export function Reveal({
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 18 }}
-      animate={shown ? { opacity: 1, y: 0 } : undefined}
+      // Displacement only: content this wraps must be readable whether or not
+      // the animation ever runs. See lib/motion.ts.
+      initial={{ y: 18 }}
+      animate={shown ? { y: 0 } : undefined}
       transition={{ ...easeEnter, delay }}
     >
       {children}

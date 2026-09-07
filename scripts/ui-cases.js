@@ -401,6 +401,53 @@
       };
     },
 
+    /**
+     * The replay has to show a different picture each round.
+     *
+     * It draws the pairing wires of one frame. Retiring a wire used to be an
+     * exit animation, so the picture was only correct once that animation
+     * finished — and where the loop is throttled it never does, leaving every
+     * retired wire on screen. A six-pair round drew eight, and two founders
+     * appeared to hold two partners each.
+     */
+    async replayDelAlgoritmo() {
+      const main = document.querySelector("main");
+      if (!main) return { pass: true, detail: "no aplica fuera de una ronda" };
+      const steps = [...main.querySelectorAll("button")].filter((b) =>
+        /Go to round|Ir a la ronda/.test(b.getAttribute("aria-label") || ""),
+      );
+      if (steps.length < 2) {
+        return { pass: true, detail: "esta ronda no publica traza" };
+      }
+
+      const founders = [...main.querySelectorAll("*")].length && null;
+      const wires = () => {
+        const svg = [...main.querySelectorAll("svg")].find(
+          (x) => x.querySelectorAll("line").length > 1,
+        );
+        return svg ? svg.querySelectorAll("line").length : 0;
+      };
+
+      const seen = [];
+      for (const b of steps) {
+        b.click();
+        await sleep(700);
+        seen.push(wires());
+      }
+
+      // Never more wires than founders: one partner each, at most.
+      const founderCount = (main.textContent.match(/(d+)s+founders/) || [])[1];
+      const cap = founderCount ? Number(founderCount) : Infinity;
+      const tooMany = seen.filter((n) => n > cap);
+      // And the frames must not all be identical, or nothing is being replayed.
+      const moves = new Set(seen).size > 1;
+
+      return {
+        pass: tooMany.length === 0 && moves,
+        detail: { paresPorRonda: seen, tope: cap, cambia: moves },
+      };
+    },
+
     async ticker() {
       const t = document.querySelector('a[aria-label*="ltim"], a[aria-label*="Latest"]');
       if (!t) return { pass: true, detail: "sin rondas cerradas: no debe mostrarse" };

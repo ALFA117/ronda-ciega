@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { springLayout } from "@/lib/motion";
 import { NONE } from "@/lib/constants";
 import { useT } from "@/lib/i18n";
@@ -57,16 +57,21 @@ export function MatchGraph({
         className="wire-glow pointer-events-none absolute inset-0 h-full w-full"
         aria-hidden
       >
-        <AnimatePresence>
+        {/* No AnimatePresence, and no exit.
+
+            A wire that leaves used to fade out, which meant the picture was
+            correct only once the exit animation finished. Where the animation
+            loop is throttled it never does: stepping through the replay left
+            every retired wire on screen, so a six-pair round drew eight and two
+            founders appeared to hold two partners each. The frame being shown
+            must not depend on an animation completing — links are simply the
+            links of the current frame. */}
+        <>
           {links.map((l) => (
             <motion.g
-              // Keyed by both ends: re-pairing retracts the old wire and draws a
-              // new one instead of sliding an endpoint across.
+              // Keyed by both ends: re-pairing draws a new wire rather than
+              // sliding an endpoint across.
               key={`${l.from}-${l.to}`}
-              initial={reduce ? { opacity: 1 } : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
             >
               <motion.line
                 x1={`${X1}%`}
@@ -78,7 +83,6 @@ export function MatchGraph({
                 strokeLinecap="round"
                 initial={reduce ? undefined : { pathLength: 0 }}
                 animate={reduce ? undefined : { pathLength: 1 }}
-                exit={reduce ? undefined : { pathLength: 0 }}
                 transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 style={{ opacity: 0.9 }}
               />
@@ -89,7 +93,6 @@ export function MatchGraph({
                 fill="var(--sealed)"
                 initial={reduce ? undefined : { scale: 0 }}
                 animate={reduce ? undefined : { scale: 1 }}
-                exit={reduce ? undefined : { scale: 0 }}
                 transition={{ type: "spring", stiffness: 420, damping: 22 }}
               />
               <motion.circle
@@ -99,7 +102,6 @@ export function MatchGraph({
                 fill="var(--sealed)"
                 initial={reduce ? undefined : { scale: 0 }}
                 animate={reduce ? undefined : { scale: 1 }}
-                exit={reduce ? undefined : { scale: 0 }}
                 transition={{
                   type: "spring",
                   stiffness: 420,
@@ -109,7 +111,7 @@ export function MatchGraph({
               />
             </motion.g>
           ))}
-        </AnimatePresence>
+        </>
       </svg>
 
       <div

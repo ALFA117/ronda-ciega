@@ -127,8 +127,8 @@ export default function RoundPage({ params }: { params: { address: string } }) {
           <motion.div
             key="theater"
             layout
-            initial={reduce ? undefined : { opacity: 0, y: 12 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            initial={reduce ? undefined : { y: 12 }}
+            animate={reduce ? undefined : { y: 0 }}
             exit={reduce ? undefined : { opacity: 0 }}
             transition={springLayout}
           >
@@ -165,8 +165,8 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         {round.status === "open" && !me && (
           <motion.div
             key="join"
-            initial={reduce ? undefined : { opacity: 0, y: 12 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0 }}
+            initial={reduce ? undefined : { y: 12 }}
+            animate={reduce ? undefined : { y: 0 }}
             exit={reduce ? undefined : { opacity: 0, y: -8 }}
             transition={springLayout}
           >
@@ -188,8 +188,8 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         {round.status === "open" && me && !delegated && (
           <motion.div
             key="wait"
-            initial={reduce ? undefined : { opacity: 0 }}
-            animate={reduce ? undefined : { opacity: 1 }}
+            initial={false}
+            animate={undefined}
             exit={reduce ? undefined : { opacity: 0 }}
           >
             <Panel className="p-6">
