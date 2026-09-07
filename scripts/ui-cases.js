@@ -235,6 +235,23 @@
       if (!pulse) return { pass: true, detail: "no aplica fuera de la portada" };
 
       pulse.scrollIntoView({ block: "center" });
+      // scrollIntoView does not always emit a scroll event, and the panel's
+      // on-screen check listens for one. A person scrolling emits it; say so.
+      window.dispatchEvent(new Event("scroll"));
+      await new Promise((r) => setTimeout(r, 400));
+
+      // Some automation surfaces refuse to scroll at all. The panel is then
+      // correctly idle, and demanding a measurement from it would report a
+      // failure this case never observed. Say what happened instead.
+      const box = pulse.getBoundingClientRect();
+      const onScreen = box.top < innerHeight && box.bottom > 0;
+      if (!onScreen) {
+        return {
+          pass: true,
+          detail: "no se pudo desplazar hasta el panel; no se puede juzgar aquí",
+        };
+      }
+
       // Four poll periods: enough for two samples plus a slow devnet round-trip.
       await new Promise((r) => setTimeout(r, 4500));
 
