@@ -65,8 +65,9 @@ The landing page's "0 preference lists published" is counted rather than asserte
 `getProgramAccounts` call whose exact `curl` is printed beside it, with the public profiles as the
 control: a lone zero is indistinguishable from a broken query.
 
-Section 03 is a playground: the algorithm running on lists you can reshuffle, stepping round by
-round, ending with a live blocking-pair check. Same implementation, no wallet, no transaction.
+Section 01 is a playground: the algorithm running on lists you can reshuffle, stepping round by
+round, ending with a live blocking-pair check. Same implementation, no wallet, no transaction. It
+sits first because it used to sit fifth, behind three hundred words nobody scrolled past.
 
 ## Signing, and what a wallet cannot simulate
 
@@ -81,6 +82,12 @@ by a plain L1 transfer, and the whole lifecycle runs without a prompt. `scripts/
 proves the claim using a key the round has never heard of.
 
 Identity deliberately does not move: `submit_ranking` stays bound to the participant's wallet.
+
+A participant still signs, and the page now says how often before it asks. The enclave's auth
+challenge is one prompt and the transaction is the other, so a cold browser costs two; the token is
+valid for hours and survives reloads, so everything after that costs one. It used to be two every
+time, because the token lived in a module-level Map that every page load threw away. Disconnecting
+clears it.
 
 ## How it runs
 
@@ -225,9 +232,9 @@ looks: `anchor build` panics on native Windows, so until CI existed nothing
 verified a Rust change compiled until it was deployed.
 
 ```bash
-cd frontend && npm test        # 68 unit tests, no network, ~1s
+cd frontend && npm test        # 81 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
-OFFLINE=1 node scripts/verify.mjs   # the 43 checks that read the repo
+OFFLINE=1 node scripts/verify.mjs   # the 44 checks that read the repo
 ```
 
 The rest costs SOL and needs a funded devnet wallet, so it stays manual and out
@@ -235,7 +242,7 @@ of CI. A pipeline that goes red because devnet is having a bad day is one people
 learn to ignore.
 
 ```bash
-npm run verify                 # 51 checks, including the deployed site
+npm run verify                 # 52 checks, including the deployed site
 npm run negative               # 11 refusals the program must make, on L1
 npm run operator-key           # a stranger key drives the rollup lifecycle
 npm run concurrency            # six wallets join at once, indices stay unique
@@ -250,7 +257,7 @@ behind a seeds constraint, one is declared and never raised (its invariant is
 enforced by a state transition instead), and one guards arithmetic on counters
 that cannot overflow.
 
-The ten UI cases run in the browser against any page of the deployed site:
+The twelve UI cases run in the browser against any page of the deployed site:
 
 ```js
 new Function(await (await fetch("/ui-cases.js")).text())();
