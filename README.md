@@ -57,9 +57,13 @@ Three things run in your browser, against public data, with no wallet:
 - **Any settled transparent round** publishes its full trace, and the round page recomputes it
   against what the chain says: no builder held twice, every index real, the pair count never
   falling, the trace ending exactly where Solana says it ended.
-- **Any private round** publishes nothing to check — that is the product — so its page derives the
-  deterministic address of every preference list and asks Solana for them. *12 addresses checked,
-  0 found on L1.*
+- **Every round** derives the deterministic address of each preference list and goes looking for
+  them on both chains, from your browser — **with the two controls that make an absence mean
+  anything**. The panel asks L1 for the round's public account and gets it; asks the rollup for the
+  same account over a connection carrying *no auth token* and gets it; then asks both for the
+  lists and gets nothing. Without those first two rows a zero is indistinguishable from a query
+  pointed at the wrong cluster, and the verdict refuses to read "shielded" unless they passed.
+  *4 probes, 0 of 12 lists readable.*
 
 The landing page's "0 preference lists published" is counted rather than asserted, by a
 `getProgramAccounts` call whose exact `curl` is printed beside it, with the public profiles as the
@@ -83,6 +87,19 @@ proves the claim using a key the round has never heard of.
 
 Identity deliberately does not move: `submit_ranking` stays bound to the participant's wallet.
 
+The operator does not have to be there either. Running a round is three actions separated by two
+waits — set it up, settle it once the deadline has passed and the oracle has answered, then destroy
+the private accounts and hand the round back to L1 — and nobody is at the keyboard when a deadline
+passes at three in the morning. Every one of those steps is already sent by the local key, so the
+only thing that ever required a person was the click. **Autopilot** does the clicking: it reads the
+round, runs whatever is possible, waits out what is not, re-sends a randomness request that never
+landed (rate-limited, so a stuck oracle cannot drain the key), and disarms itself after three
+refusals rather than retrying a permanent one forever. It runs in a browser tab and the UI says so,
+because a round left half-settled by a closed laptop is recoverable only if nobody was told
+otherwise. `lib/autopilot.ts` decides the sequence and is tested on its own — settling a moment
+early wastes a transaction, and finishing a moment early destroys the working memory of a round
+that has not produced its pairings yet.
+
 A participant still signs, and the page now says how often before it asks. The enclave's auth
 challenge is one prompt and the transaction is the other, so a cold browser costs two; the token is
 valid for hours and survives reloads, so everything after that costs one. It used to be two every
@@ -105,6 +122,12 @@ Measured against devnet from Mexico:
 
 That gap is network latency, not rollup execution. The rollup produces blocks every ~10 ms; the
 internet does not.
+
+Those two rows were measured once, by me. The landing page also carries a **live** version: both
+endpoints are asked for their slot height about once a second from the reader's own browser, and
+the rate is derived from what they answer rather than typed into the page. Around 3.3× as fast,
+and if the TEE endpoint is down that lane says so in front of everyone instead of the page
+carrying on claiming 671 ms.
 
 Storing the **inverse** of each receiver's ranking (`builder_rank[b][f]` = founder *f*'s position in
 builder *b*'s list) is what keeps each round O(n): deciding whether a builder prefers a new proposer
@@ -232,7 +255,7 @@ looks: `anchor build` panics on native Windows, so until CI existed nothing
 verified a Rust change compiled until it was deployed.
 
 ```bash
-cd frontend && npm test        # 81 unit tests, no network, ~1s
+cd frontend && npm test        # 123 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
 OFFLINE=1 node scripts/verify.mjs   # the 44 checks that read the repo
 ```
@@ -257,7 +280,7 @@ behind a seeds constraint, one is declared and never raised (its invariant is
 enforced by a state transition instead), and one guards arithmetic on counters
 that cannot overflow.
 
-The twelve UI cases run in the browser against any page of the deployed site:
+The thirteen UI cases run in the browser against any page of the deployed site:
 
 ```js
 new Function(await (await fetch("/ui-cases.js")).text())();

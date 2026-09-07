@@ -215,6 +215,40 @@
       };
     },
 
+    /**
+     * The live two-chain panel must actually measure something.
+     *
+     * It polls only while its element is on screen and the tab is visible,
+     * which is right — a rate computed across a throttled interval is not a
+     * rate — but it also means the panel has a silent failure mode: it sits on
+     * "measuring…" forever and looks like a design choice rather than a
+     * component that never started. Scroll to it, wait past a few periods, and
+     * insist on digits.
+     */
+    async pulsoEnVivo() {
+      const pulse = [...document.querySelectorAll("div")].find(
+        (e) =>
+          e.className &&
+          String(e.className).includes("glass") &&
+          /slots\/s|measuring|midiendo/.test(e.innerText || ""),
+      );
+      if (!pulse) return { pass: true, detail: "no aplica fuera de la portada" };
+
+      pulse.scrollIntoView({ block: "center" });
+      // Four poll periods: enough for two samples plus a slow devnet round-trip.
+      await new Promise((r) => setTimeout(r, 4500));
+
+      const text = pulse.innerText || "";
+      const rates = text.match(/(\d+\.\d+)\s*slots/g) || [];
+      const down = /no answer|sin respuesta/.test(text);
+      return {
+        // An endpoint being down is a true report, not a broken panel — the
+        // failure this case exists to catch is neither: no rate and no reason.
+        pass: rates.length === 2 || down,
+        detail: { tasas: rates, caido: down, texto: text.slice(0, 70) },
+      };
+    },
+
     // ------------------------------------------------------------------ nav
     async secciones() {
       if (!document.getElementById("problema"))

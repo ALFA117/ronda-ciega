@@ -16,6 +16,7 @@ import { CreateRound } from "@/components/CreateRound";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
 import { StatBand } from "@/components/StatBand";
+import { RollupPulse } from "@/components/RollupPulse";
 import { Ticker } from "@/components/Ticker";
 import { StartPanel } from "@/components/StartPanel";
 import { Playground } from "@/components/Playground";
@@ -81,6 +82,16 @@ export default function Home() {
 
       <div className="mt-8">
         <StatBand />
+      </div>
+
+      {/* Four of the numbers above were measured once, by me, and written down.
+          This one is measured now, by the reader, against both endpoints. The
+          page argues that the rollup is fast; this is the version of that claim
+          nobody has to take my word for. */}
+      <div className="mt-8">
+        <ErrorBoundary>
+          <RollupPulse />
+        </ErrorBoundary>
       </div>
 
       {/* First, before a word of argument: the algorithm, running, on lists

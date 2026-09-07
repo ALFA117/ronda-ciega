@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import BN from "bn.js";
 import { LAMPORTS_PER_SOL, SystemProgram, Transaction } from "@solana/web3.js";
@@ -18,8 +18,18 @@ import {
 import { EPHEMERAL_QUEUE, TEE_VALIDATOR } from "@/lib/constants";
 import { useLocale, useT } from "@/lib/i18n";
 import { classifyError } from "@/lib/errors";
+import { plan, shouldRetrySetup, type AutoAction } from "@/lib/autopilot";
 import { Button, Label, Note, Panel } from "./ui";
 import { useToast } from "./Toast";
+
+/**
+ * How often the autopilot looks at the round.
+ *
+ * Slow on purpose: every idle tick is one RPC read, and the two things it
+ * waits for — a deadline and a VRF callback — are not worth polling harder
+ * than this. A settle that lands six seconds late is a settle that landed.
+ */
+const AUTOPILOT_TICK_MS = 6000;
 
 /**
  * The round authority drives the phase changes. Each button maps to exactly one
@@ -45,6 +55,14 @@ export function RoundControls({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
+  const [auto, setAuto] = useState(false);
+
+  // Guards for the autopilot loop. Refs rather than state because the loop
+  // reads them on a timer and must see the current value, not the one that
+  // was captured when the interval was scheduled.
+  const running = useRef(false);
+  const failures = useRef(0);
+  const lastSetupAt = useRef<number | null>(null);
 
   // The log holds text that was already translated when it was written, so
   // switching language leaves a half-Spanish, half-English transcript on
@@ -115,9 +133,13 @@ export function RoundControls({
     setError(null);
     try {
       await fn();
+      failures.current = 0;
       onDone();
     } catch (e: any) {
       const msg = t.errors[classifyError(e)];
+      // Counted so the autopilot can give up rather than retry a permanent
+      // refusal every few seconds until the operator key runs dry.
+      failures.current += 1;
       setError(msg);
       toast(msg, "error");
     } finally {
@@ -326,9 +348,126 @@ export function RoundControls({
       say(t.controls.undelegated);
     });
 
+  /**
+   * The autopilot.
+   *
+   * Everything it does, the operator was already doing by hand with the same
+   * local key and the same instructions — this only removes the requirement
+   * that a person be awake when the deadline passes. It runs whatever
+   * `plan` says is possible, and otherwise re-reads the round so the wait
+   * ends by itself.
+   *
+   * It is deliberately not a background service. A browser tab is the only
+   * thing running it, and the UI says so: a round left half-settled by a
+   * closed laptop is recoverable, but only if nobody was told otherwise.
+   */
+  const step = async () => {
+    if (running.current) return;
+
+    const p = plan({
+      status: round.status,
+      delegated,
+      randomnessFulfilled: round.randomnessFulfilled,
+      founderCount: round.founderCount,
+      builderCount: round.builderCount,
+      minPerSide: round.minPerSide,
+      deadlineTs: round.deadlineTs,
+      now: Date.now() / 1000,
+    });
+
+    if (p.done) {
+      setAuto(false);
+      say(t.autopilot.doneAll);
+      return;
+    }
+
+    // Three refusals in a row is a round that needs a person, not another
+    // attempt. Disarming is louder than a toast nobody is there to read.
+    if (failures.current >= 3) {
+      setAuto(false);
+      say(t.autopilot.stopped);
+      return;
+    }
+
+    let action: AutoAction | null = p.action;
+
+    // A randomness request can be lost. Re-sending setup is the only way to
+    // ask again, and it is rate-limited so a stuck oracle does not drain the
+    // operator key one duplicate request at a time.
+    if (!action && shouldRetrySetup(p.waiting, lastSetupAt.current, Date.now())) {
+      action = "setup";
+      say(t.autopilot.retrying);
+    }
+
+    if (!action) {
+      // Nothing to send. Re-read the round so a deadline or a callback that
+      // has landed since the last tick is noticed.
+      onDone();
+      return;
+    }
+
+    running.current = true;
+    try {
+      if (action === "setup") lastSetupAt.current = Date.now();
+      say(`${t.autopilot.running}: ${action}`);
+      if (action === "setup") await setup();
+      else if (action === "settle") await settle();
+      else await finish();
+    } finally {
+      running.current = false;
+    }
+  };
+
+  // The latest-ref pattern, and it is load-bearing rather than tidy.
+  //
+  // The first version made step a useCallback over round and listed it in
+  // the effect deps. round is a fresh object on every refresh, so every tick
+  // produced a new step, which tore down and rebuilt the interval, which ran
+  // step immediately, which called onDone to refresh — a loop spinning as
+  // fast as devnet answers, on the operator key, sending real transactions.
+  // Holding the closure in a ref keeps the interval tied to auto alone.
+  const stepRef = useRef(step);
+  stepRef.current = step;
+
+  useEffect(() => {
+    if (!auto) return;
+    const tick = () => void stepRef.current();
+    tick();
+    const id = window.setInterval(tick, AUTOPILOT_TICK_MS);
+    return () => window.clearInterval(id);
+  }, [auto]);
+
+  // Turning it on resets the failure count, so "read the error and turn it
+  // back on" actually works rather than disarming again on the next tick.
+  const arm = (on: boolean) => {
+    if (on) failures.current = 0;
+    setAuto(on);
+  };
+
   if (!wallet.publicKey || !wallet.publicKey.equals(round.authority)) {
     return null;
   }
+
+  const current = plan({
+    status: round.status,
+    delegated,
+    randomnessFulfilled: round.randomnessFulfilled,
+    founderCount: round.founderCount,
+    builderCount: round.builderCount,
+    minPerSide: round.minPerSide,
+    deadlineTs: round.deadlineTs,
+    now: Date.now() / 1000,
+  });
+
+  const waitingText = current.done
+    ? t.autopilot.doneAll
+    : current.waiting === "deadline"
+      ? t.autopilot.waitingDeadline
+      : current.waiting === "randomness"
+        ? t.autopilot.waitingRandomness
+        : current.waiting === "quorum"
+          ? t.autopilot.waitingQuorum
+          : null;
 
   return (
     <Panel className="space-y-4 p-6">
@@ -362,6 +501,62 @@ export function RoundControls({
           </li>
         ))}
       </ol>
+
+      {/* One switch instead of three appointments.
+          Every step below is already sent by the local key, which asks the
+          wallet for nothing — so the only thing that ever required a person
+          here was the click. This does the clicking. */}
+      {!current.done && (
+        <div
+          className={`rounded-xl border p-4 transition-colors ${
+            auto ? "border-sealed/40 bg-sealed/[0.06]" : "border-edge"
+          }`}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                    auto
+                      ? current.stalled
+                        ? "bg-open"
+                        : "bg-sealed animate-pulse"
+                      : "bg-edgeStrong"
+                  }`}
+                />
+                <span className="font-mono text-2xs uppercase tracking-[0.14em] text-chalk">
+                  {t.autopilot.label}
+                </span>
+                {auto && (
+                  <span className="font-mono text-2xs text-sealed">
+                    {t.autopilot.on}
+                  </span>
+                )}
+              </div>
+              <p className="max-w-prose text-xs leading-relaxed text-muted">
+                {auto && waitingText ? waitingText : t.autopilot.help}
+              </p>
+            </div>
+
+            <Button
+              variant={auto ? "ghost" : "sealed"}
+              onClick={() => arm(!auto)}
+            >
+              {auto ? t.autopilot.disable : t.autopilot.enable}
+            </Button>
+          </div>
+
+          {/* Said while it is on, not buried in a tooltip. Someone who thinks
+              this keeps running after they close the laptop will come back to
+              a round they believe settled and find it did not. */}
+          {auto && (
+            <p className="mt-3 border-t border-edge pt-3 font-mono text-2xs leading-relaxed text-dim">
+              {t.autopilot.tabWarning}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {(!delegated || !round.randomnessFulfilled) && round.status === "open" && (

@@ -196,6 +196,35 @@ export const es = {
     youAreIn: "Estás dentro como",
   },
 
+  autopilot: {
+    label: "Piloto automático",
+    help: "Deja que la ronda se conduzca sola. Cada paso lo firma la llave local del navegador, así que no vuelve a salir el monedero.",
+    enable: "Activar piloto automático",
+    disable: "Desactivar",
+    on: "Activo",
+    tabWarning: "Corre solo mientras esta pestaña esté abierta. Si la cierras, la ronda se queda donde iba y la retomas al volver.",
+    waitingDeadline: "Esperando la fecha límite",
+    waitingRandomness: "Esperando la aleatoriedad del oráculo",
+    waitingQuorum: "Faltan participantes. Nadie puede arreglar esto salvo más gente entrando.",
+    running: "Ejecutando",
+    doneAll: "Ronda cerrada y devuelta a L1. No queda nada por hacer.",
+    stopped: "Detenido tras varios fallos seguidos. Revisa el error y vuelve a activarlo.",
+    retrying: "La solicitud de aleatoriedad no llegó. Reintentando.",
+  },
+
+  pulse: {
+    title: "Los dos encadenados, ahora mismo",
+    rollup: "Rollup TEE",
+    rollupHost: "devnet-tee.magicblock.app",
+    l1: "Solana L1",
+    l1Host: "api.devnet.solana.com",
+    faster: "más rápido",
+    measuring: "midiendo…",
+    perSecond: "slots/s",
+    unreachable: "sin respuesta",
+    note: "Medido en tu navegador: se le pregunta la altura a cada cadena cada segundo y la tasa sale de lo que contestan. Nada de esto está escrito en la página.",
+  },
+
   steps: {
     title: "Tu recorrido",
     of: "de",
@@ -353,15 +382,20 @@ export const es = {
   privacy: {
     title: "Lo que esta ronda no publica",
     lede:
-      "Una ronda privada no tiene traza que revisar: ese es el producto. Pero sí deja algo comprobable, del tipo negativo. La dirección de cada lista se deriva de la ronda y de la billetera de su dueño, así que cualquiera puede calcularlas. Pregúntale a Solana por ellas.",
-    run: "Buscar las listas en L1",
+      "La dirección de cada lista se deriva de la ronda y de la billetera de su dueño, así que cualquiera puede calcularlas — tú incluido, aquí abajo. Se le preguntan a las dos cadenas desde tu navegador, junto con dos controles: si una conexión ni siquiera alcanza a leer la cuenta pública de la ronda, su silencio sobre las listas no significa nada.",
+    run: "Buscar las listas",
     running: "Buscando…",
     checked: "Direcciones consultadas",
     found: "Encontradas en L1",
     passed:
-      "Ninguna existe. Se escribieron dentro del enclave y ahí se destruyeron, sin tocar L1 en ningún momento.",
+      "Las dos cadenas contestaron, y ninguna entregó una sola lista. Nunca se publicaron en L1, y el rollup no se las sirve a una conexión sin token. En una ronda ya cerrada además fueron destruidas dentro del enclave: silencio por protegidas o silencio por destruidas, las dos son la promesa. Lo que queda descartado es que estén publicadas en algún lado.",
     failed:
-      "Apareció al menos una en L1. Eso sería una fuga y no debería ocurrir nunca.",
+      "Al menos una se dejó leer. Eso es una fuga: la promesa central del proyecto es falsa en esta ronda.",
+    probeL1Control: "L1 contesta: la cuenta pública de la ronda se lee ahí",
+    probeTeeControl: "El rollup le contesta a esta conexión sin token: la misma cuenta pública se lee",
+    probeL1Prefs: "Listas de preferencias encontradas en L1",
+    probeTeePrefs: "Listas que un extraño alcanza a leer del rollup",
+    inconclusive: "Uno de los controles falló, así que las dos ausencias de abajo no prueban nada: una consulta rota devuelve exactamente lo mismo que una lista protegida. Vuelve a intentarlo.",
     showAddresses: "Ver las direcciones y comprobarlas por tu cuenta",
   },
 

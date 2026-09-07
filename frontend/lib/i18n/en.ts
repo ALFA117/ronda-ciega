@@ -197,6 +197,35 @@ export const en: Dictionary = {
     youAreIn: "You're in as",
   },
 
+  autopilot: {
+    label: "Autopilot",
+    help: "Let the round drive itself. Every step is signed by the local browser key, so the wallet never asks again.",
+    enable: "Turn on autopilot",
+    disable: "Turn off",
+    on: "On",
+    tabWarning: "Runs only while this tab is open. Close it and the round stays where it got to; it picks up when you come back.",
+    waitingDeadline: "Waiting for the deadline",
+    waitingRandomness: "Waiting for the oracle's randomness",
+    waitingQuorum: "Short of participants. Nothing but more people joining fixes this.",
+    running: "Running",
+    doneAll: "Round settled and handed back to L1. Nothing left to do.",
+    stopped: "Stopped after repeated failures. Read the error and turn it back on.",
+    retrying: "The randomness request never landed. Asking again.",
+  },
+
+  pulse: {
+    title: "Both chains, right now",
+    rollup: "TEE rollup",
+    rollupHost: "devnet-tee.magicblock.app",
+    l1: "Solana L1",
+    l1Host: "api.devnet.solana.com",
+    faster: "faster",
+    measuring: "measuring…",
+    perSecond: "slots/s",
+    unreachable: "no answer",
+    note: "Measured in your browser: each chain is asked for its height about once a second and the rate comes out of what they answer. None of this is typed into the page.",
+  },
+
   steps: {
     title: "Where you are",
     of: "of",
@@ -421,15 +450,20 @@ export const en: Dictionary = {
   privacy: {
     title: "What this round does not publish",
     lede:
-      "A private round has no trace to inspect: that is the product. It does leave something checkable, of the negative kind. Each list has an address derived from the round and its owner wallet, so anyone can compute them. Ask Solana for them.",
-    run: "Look for the lists on L1",
+      "Each list has an address derived from the round and its owner's wallet, so anyone can compute them — you, below. Both chains are asked for them from your browser, along with two controls: a connection that cannot even read the round's public account proves nothing by staying silent about a list.",
+    run: "Go looking for the lists",
     running: "Looking…",
     checked: "Addresses checked",
     found: "Found on L1",
     passed:
-      "Not one exists. They were written inside the enclave and destroyed there, without ever touching L1.",
+      "Both chains answered, and neither handed over a list. They were never published to L1, and the rollup will not serve them to a connection with no token. On a round that has already closed they were also destroyed inside the enclave: silence because shielded or silence because destroyed, and both are the promise. What is ruled out is that they are readable anywhere.",
     failed:
-      "At least one turned up on L1. That would be a leak and must never happen.",
+      "At least one could be read. That is a leak: the project's central claim is false for this round.",
+    probeL1Control: "L1 answers: the round's public account reads back from it",
+    probeTeeControl: "The rollup answers this token-less connection: the same public account reads back",
+    probeL1Prefs: "Preference lists found on L1",
+    probeTeePrefs: "Lists an outsider can read off the rollup",
+    inconclusive: "One of the controls failed, so the two absences below prove nothing either way — a broken query returns exactly what a shielded list does. Run it again.",
     showAddresses: "Show the addresses and check them yourself",
   },
 
