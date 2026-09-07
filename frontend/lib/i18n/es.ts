@@ -185,6 +185,11 @@ export const es = {
     builderBlurb: "Perfil técnico. Este lado recibe propuestas y elige.",
     sideNote:
       "Los founders proponen y los builders eligen. Eso hace el resultado óptimo para los founders — es una propiedad del algoritmo, y se dice aquí en vez de esconderla.",
+    profileErrors: {
+      handleEmpty: "Pon un handle.",
+      handleTooLong: "El handle no cabe. El límite son 32 bytes: los acentos cuentan dos y los emoji cuatro.",
+      linkTooLong: "El enlace no cabe. El límite son 96 bytes.",
+    },
     handle: "Handle",
     link: "Link",
     profileNote:
@@ -365,6 +370,21 @@ export const es = {
       "Tu lista no es válida: está vacía, repite a alguien, o incluye a alguien que no está en esta ronda.",
     noRandomness:
       "Falta la aleatoriedad verificable. Sin ella el emparejamiento se niega a correr, porque los empates caerían al orden de registro.",
+    deadlinePast:
+      "La fecha límite ya pasó en el momento en que se envió. El programa rechaza una ronda que nace cerrada.",
+    profileTooLong:
+      "El handle o el enlace no caben. El límite del programa se mide en bytes, no en letras: los acentos y los emoji ocupan dos o más cada uno.",
+    wrongRound: "Esa cuenta pertenece a otra ronda.",
+    sealIncomplete:
+      "No entraron todas las listas selladas, así que la ronda no puede pasar a emparejar. Vuelve a intentar el sellado.",
+    badSession:
+      "La clave de sesión no sirve para esto: expiró, o es de otro monedero o de otro programa.",
+    badPreferences:
+      "Esa cuenta de preferencias no corresponde a esta ronda ni a ese participante.",
+    randomnessDone:
+      "La aleatoriedad de esta ronda ya llegó. No se puede pedir ni sobrescribir otra vez.",
+    badTickBudget: "Ese presupuesto de rondas de propuesta no es válido.",
+    overflow: "Un contador se desbordó. Esto es un fallo del programa, no tuyo.",
     unknown: "No se pudo completar la operación.",
   },
 

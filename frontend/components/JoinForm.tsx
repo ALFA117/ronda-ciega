@@ -11,7 +11,33 @@ import { Side } from "@/lib/constants";
 import { RoundAccount } from "@/lib/program";
 import { useT } from "@/lib/i18n";
 import { classifyError } from "@/lib/errors";
-import { Button, Label, Note, Panel } from "./ui";
+import {
+  byteLength,
+  checkProfile,
+  MAX_HANDLE_BYTES,
+  MAX_LINK_BYTES,
+  truncateToBytes,
+} from "@/lib/profile";
+import { Button, ErrorText, Label, Note, Panel } from "./ui";
+
+/**
+ * A byte count, shown only once it starts to matter.
+ *
+ * The limit the program enforces is in bytes, so for anyone whose handle has
+ * an accent in it the number on screen has to be bytes too — otherwise the
+ * counter agrees with the box right up until the wallet refuses.
+ */
+function ByteCount({ text, max }: { text: string; max: number }) {
+  const used = byteLength(text);
+  if (used < max * 0.75) return null;
+  return (
+    <span
+      className={`tnum font-mono text-2xs ${used > max ? "text-open" : "text-muted"}`}
+    >
+      {used}/{max}
+    </span>
+  );
+}
 
 export function JoinForm({
   round,
@@ -35,8 +61,10 @@ export function JoinForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const profileError = checkProfile(handle, link);
+
   async function join() {
-    if (!wallet.publicKey) return;
+    if (!wallet.publicKey || profileError) return;
     setBusy(true);
     setError(null);
     try {
@@ -95,26 +123,41 @@ export function JoinForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>{t.join.handle}</Label>
+          <div className="flex items-baseline justify-between gap-2">
+            <Label>{t.join.handle}</Label>
+            <ByteCount text={handle} max={MAX_HANDLE_BYTES} />
+          </div>
+          {/* Capped on the way in rather than refused on the way out: the
+              limit is felt while typing instead of discovered by a wallet
+              prompt. maxLength cannot do this job — it counts UTF-16 units
+              and the program counts bytes. */}
           <input
             value={handle}
-            maxLength={32}
-            onChange={(e) => setHandle(e.target.value)}
+            onChange={(e) =>
+              setHandle(truncateToBytes(e.target.value, MAX_HANDLE_BYTES))
+            }
             placeholder="@tu_handle"
             className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
           />
         </div>
         <div className="space-y-2">
-          <Label>{t.join.link}</Label>
+          <div className="flex items-baseline justify-between gap-2">
+            <Label>{t.join.link}</Label>
+            <ByteCount text={link} max={MAX_LINK_BYTES} />
+          </div>
           <input
             value={link}
-            maxLength={96}
-            onChange={(e) => setLink(e.target.value)}
+            onChange={(e) => setLink(truncateToBytes(e.target.value, MAX_LINK_BYTES))}
             placeholder="github.com/…"
             className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
           />
         </div>
       </div>
+
+      {/* Reachable by pasting, which the cap above does not intercept. */}
+      {profileError && profileError !== "handleEmpty" && (
+        <ErrorText>{t.join.profileErrors[profileError]}</ErrorText>
+      )}
 
       <Note>
         {t.join.profileNote}
@@ -129,7 +172,7 @@ export function JoinForm({
       <Button
         onClick={join}
         busy={busy}
-        disabled={!wallet.publicKey || handle.trim().length === 0}
+        disabled={!wallet.publicKey || !!profileError}
       >
         {wallet.publicKey ? t.join.submit : t.join.connect}
       </Button>

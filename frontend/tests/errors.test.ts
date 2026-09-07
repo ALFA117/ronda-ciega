@@ -109,3 +109,79 @@ describe("Errores del programa, sin logs del TEE", () => {
     assert.equal(classifyError(new Error("value 42 out of range")), "unknown");
   });
 });
+
+describe("Los códigos del programa que faltaban", () => {
+  // Ten of the program's nineteen codes were mapped and the other nine fell
+  // through to "unknown" — which reads as "The operation could not be
+  // completed" for a failure the program explained precisely. Two of the nine
+  // are the ones a real person actually hits.
+
+  test("6000 es una fecha límite ya pasada, no un error desconocido", () => {
+    // The reported symptom: creating a round with an empty "closes in" box
+    // sent a deadline of now, the program refused it, and the page said the
+    // round could not be created without saying why.
+    assert.equal(
+      classifyError({ message: "custom program error: 0x1770" }),
+      "deadlinePast",
+    );
+    assert.equal(classifyError({ message: "Error Code: DeadlineInPast" }), "deadlinePast");
+  });
+
+  test("6011 es un perfil que no cabe", () => {
+    // The program measures bytes; the input counted characters. An accented
+    // handle passed the box and was refused on chain.
+    assert.equal(
+      classifyError({ message: "custom program error: 0x177b" }),
+      "profileTooLong",
+    );
+    assert.equal(
+      classifyError({ message: "Error Code: ProfileTooLong" }),
+      "profileTooLong",
+    );
+  });
+
+  test("los códigos del operador ya no son 'desconocido'", () => {
+    assert.equal(classifyError({ message: "custom program error: 0x1778" }), "wrongRound");
+    assert.equal(
+      classifyError({ message: "custom program error: 0x177a" }),
+      "sealIncomplete",
+    );
+    assert.equal(
+      classifyError({ message: "custom program error: 0x177e" }),
+      "badPreferences",
+    );
+    assert.equal(
+      classifyError({ message: "custom program error: 0x177f" }),
+      "randomnessDone",
+    );
+    assert.equal(
+      classifyError({ message: "custom program error: 0x1781" }),
+      "badTickBudget",
+    );
+    assert.equal(classifyError({ message: "custom program error: 0x1782" }), "overflow");
+  });
+
+  test("6012 es una clave de sesión inválida", () => {
+    assert.equal(classifyError({ message: "custom program error: 0x177c" }), "badSession");
+  });
+
+  test("los diecinueve códigos están cubiertos", () => {
+    // The point of this one is arithmetic, not any single mapping: every code
+    // the program can raise now has something to say.
+    const unmapped = [];
+    for (let code = 6000; code <= 6018; code++) {
+      const hex = "0x" + code.toString(16);
+      if (classifyError({ message: "custom program error: " + hex }) === "unknown") {
+        unmapped.push(code);
+      }
+    }
+    assert.deepEqual(unmapped, []);
+  });
+
+  test("un número suelto que se parece a un código sigue sin contar", () => {
+    // 6000 in a handle, a balance or a slot height must not be read as an
+    // error code. Only a number sitting beside code= or "custom program
+    // error:" counts.
+    assert.equal(classifyError({ message: "balance is 6011 lamports" }), "unknown");
+  });
+});

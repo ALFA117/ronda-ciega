@@ -186,6 +186,11 @@ export const en: Dictionary = {
     builderBlurb: "Technical profile. This side receives proposals and chooses.",
     sideNote:
       "Founders propose and builders choose. That makes the outcome founder-optimal — it's a property of the algorithm, and it's stated here rather than hidden.",
+    profileErrors: {
+      handleEmpty: "Put in a handle.",
+      handleTooLong: "The handle does not fit. The limit is 32 bytes: accents cost two and emoji cost four.",
+      linkTooLong: "The link does not fit. The limit is 96 bytes.",
+    },
     handle: "Handle",
     link: "Link",
     profileNote:
@@ -366,6 +371,21 @@ export const en: Dictionary = {
       "Your list is not valid: it is empty, repeats someone, or includes someone who is not in this round.",
     noRandomness:
       "Verifiable randomness is missing. Without it the matching refuses to run, because ties would fall to registration order.",
+    deadlinePast:
+      "The deadline had already passed when this was sent. The program refuses a round that is born closed.",
+    profileTooLong:
+      "The handle or the link does not fit. The program's limit is in bytes, not letters: accents and emoji cost two or more each.",
+    wrongRound: "That account belongs to a different round.",
+    sealIncomplete:
+      "Not every sealed list got in, so the round cannot move to matching. Run the sealing again.",
+    badSession:
+      "That session key does not apply here: it has expired, or it belongs to another wallet or another program.",
+    badPreferences:
+      "That preferences account does not belong to this round and that participant.",
+    randomnessDone:
+      "This round's randomness has already landed. It cannot be requested or overwritten again.",
+    badTickBudget: "That budget of proposal rounds is not valid.",
+    overflow: "A counter overflowed. That is a fault in the program, not in what you did.",
     unknown: "The operation could not be completed.",
   },
 

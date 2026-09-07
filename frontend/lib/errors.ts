@@ -19,6 +19,15 @@ export type Reason =
   | "sideFull"
   | "badRanking"
   | "noRandomness"
+  | "deadlinePast"
+  | "profileTooLong"
+  | "wrongRound"
+  | "sealIncomplete"
+  | "badSession"
+  | "badPreferences"
+  | "randomnessDone"
+  | "badTickBudget"
+  | "overflow"
   | "unknown";
 
 /**
@@ -32,6 +41,7 @@ export type Reason =
  * sealing a list came to be told the round could not be created.
  */
 const PROGRAM_ERRORS: Record<number, Reason> = {
+  6000: "deadlinePast", // DeadlineInPast
   6001: "roundClosed", // RoundClosed
   6002: "tooEarly", // RoundStillOpen
   6003: "roundClosed", // WrongRoundStatus
@@ -39,9 +49,17 @@ const PROGRAM_ERRORS: Record<number, Reason> = {
   6005: "notEnough", // NotEnoughParticipants
   6006: "badRanking", // InvalidRanking
   6007: "badRanking", // DuplicateInRanking
+  6008: "wrongRound", // WrongRound
   6009: "alreadyDone", // AlreadySealed
+  6010: "sealIncomplete", // SealIncomplete
+  6011: "profileTooLong", // ProfileTooLong
+  6012: "badSession", // InvalidSession
   6013: "alreadyDone", // AlreadyClosed
+  6014: "badPreferences", // InvalidPreferencesAccount
+  6015: "randomnessDone", // RandomnessAlreadyFulfilled
   6016: "noRandomness", // RandomnessMissing
+  6017: "badTickBudget", // InvalidTickBudget
+  6018: "overflow", // MathOverflow
 };
 
 /** Everything the error object knows, own and inherited, as one string. */
@@ -136,6 +154,15 @@ export function classifyError(e: unknown): Reason {
     alreadysealed: "alreadyDone",
     alreadyclosed: "alreadyDone",
     randomnessmissing: "noRandomness",
+    deadlineinpast: "deadlinePast",
+    profiletoolong: "profileTooLong",
+    wronground: "wrongRound",
+    sealincomplete: "sealIncomplete",
+    invalidsession: "badSession",
+    invalidpreferencesaccount: "badPreferences",
+    randomnessalreadyfulfilled: "randomnessDone",
+    invalidtickbudget: "badTickBudget",
+    mathoverflow: "overflow",
   };
   for (const [name, reason] of Object.entries(byName)) {
     if (text.includes(name)) return reason;

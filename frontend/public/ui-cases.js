@@ -318,6 +318,55 @@
       };
     },
 
+    /**
+     * A handle with accents in it must not be able to overflow the program.
+     *
+     * join_round checks handle.len(), and String::len() in Rust counts bytes.
+     * The input counted UTF-16 units, so thirty characters with three accents
+     * — thirty-three bytes — passed the box, got signed, and were refused on
+     * chain as ProfileTooLong. On a page whose audience writes Spanish this is
+     * the common name, not an edge case. The field now caps by byte, so what
+     * survives typing must always fit.
+     */
+    async handleEnBytes() {
+      const input = [...document.querySelectorAll("input")].find(
+        (i) => (i.placeholder || "").includes("handle"),
+      );
+      if (!input) return { pass: true, detail: "no aplica: sin formulario de entrada" };
+
+      const native = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value",
+      ).set;
+      const type = (v) => {
+        native.call(input, v);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      const bytes = (t) => new TextEncoder().encode(t).length;
+
+      const original = input.value;
+      const over = [];
+      const settle = () => new Promise((r) => setTimeout(r, 200));
+
+      // Each of these is within any character-based limit and over the byte one.
+      for (const v of ["ñ".repeat(30), "é".repeat(20), "😀".repeat(16), "a".repeat(40)]) {
+        type(v);
+        await settle();
+        if (bytes(input.value) > 32) {
+          over.push({ escrito: v.slice(0, 6) + "…", quedaron: bytes(input.value) });
+        }
+        // A cap that mangles a character is worse than one that refuses it.
+        if (input.value.includes("\uFFFD")) {
+          over.push({ escrito: v.slice(0, 6) + "…", quedaron: "carácter partido" });
+        }
+      }
+
+      type(original);
+      await settle();
+
+      return { pass: over.length === 0, detail: { pasaronDeLargo: over } };
+    },
+
     // ------------------------------------------------------------------ nav
     async secciones() {
       if (!document.getElementById("problema"))

@@ -249,6 +249,29 @@ head("Account sizes match the program");
     else if (a === b) ok(`${name} is ${a + 8} bytes in both places`);
     else bad(`${name}: Rust says ${a + 8}, frontend says ${b + 8}`);
   }
+
+  // The two limits a person can hit by typing their own name.
+  //
+  // join_round checks handle.len(), and String::len() in Rust counts bytes.
+  // The form used to count characters, so an accented handle passed the box
+  // and was refused on chain. lib/profile.ts now measures bytes, and these
+  // two numbers have to keep agreeing with the program or it is back.
+  const profile = readFileSync(
+    join(HERE, "..", "frontend", "lib", "profile.ts"),
+    "utf8",
+  );
+  for (const [rustName, tsName] of [
+    ["MAX_HANDLE_LEN", "MAX_HANDLE_BYTES"],
+    ["MAX_LINK_LEN", "MAX_LINK_BYTES"],
+  ]) {
+    const a = consts[rustName];
+    const m = profile.match(new RegExp(`export const ${tsName} = (\\d+);`));
+    const b = m ? Number(m[1]) : null;
+    if (a === undefined) bad(`${rustName}: not found in state.rs`);
+    else if (b === null) bad(`${tsName}: not found in lib/profile.ts`);
+    else if (a === b) ok(`${rustName} is ${a} in both places`);
+    else bad(`${rustName}: Rust says ${a}, frontend says ${b}`);
+  }
 }
 
 // --------------------------------------------------------------- live ---
