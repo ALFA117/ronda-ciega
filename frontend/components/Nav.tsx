@@ -96,9 +96,14 @@ export function Nav() {
 
   return (
     <>
+      {/* The header arrives by moving. Fading it in from opacity 0 made the
+          animation load-bearing for the whole navigation — logo, sections,
+          wallet button, theme and language — and this was also the one motion
+          in the app with no reduced-motion guard, so it ran regardless of the
+          preference. */}
       <motion.header
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={reduce ? undefined : { y: -10 }}
+        animate={reduce ? undefined : { y: 0 }}
         transition={easeEnter}
         className="sticky top-0 z-40 mb-6 px-3 pt-3 sm:px-5 sm:pt-4"
       >

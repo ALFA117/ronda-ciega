@@ -210,9 +210,47 @@
         }
       }
 
+      // Lines and nodes: the wires of a pairing and the dots at their ends.
+      // These carry the answer a panel exists to show, and neither the text
+      // sweep nor the bar checks can see them — a line has no text and is not
+      // a rect. pathLength 0 and scale 0 both render as nothing while the
+      // element is present, laid out, and reported as visible.
+      //
+      // Only drawings, never icons. The first version judged every path on the
+      // page and flagged the hamburger glyph inside a menu button that is
+      // display:none at this width, plus the pips of a dice icon — which are
+      // zero-length segments with round caps, drawn exactly as intended. An
+      // icon is at most a couple of dozen pixels; a chart or a match graph is
+      // not.
+      const DRAWING_MIN_PX = 60;
+      const flatMarks = [];
+      for (const el of document.querySelectorAll("svg line, svg path, svg circle")) {
+        const svg = el.closest("svg");
+        if (!svg) continue;
+        const frame = svg.getBoundingClientRect();
+        // Not laid out at all, or small enough to be an icon.
+        if (frame.width < DRAWING_MIN_PX && frame.height < DRAWING_MIN_PX) continue;
+        if (String(svg.getAttribute("class") || "").includes("lucide")) continue;
+
+        const cs = getComputedStyle(el);
+        if (cs.display === "none" || cs.visibility === "hidden") continue;
+        if (Number(cs.opacity) < 0.05) {
+          flatMarks.push(el.tagName + " opacidad " + cs.opacity);
+          continue;
+        }
+        const box = el.getBoundingClientRect();
+        if (box.width < 0.5 && box.height < 0.5) {
+          flatMarks.push(el.tagName + " sin tamaño");
+        }
+      }
+
       return {
-        pass: flatBars.length === 0 && flatRows.length === 0,
-        detail: { barrasEnCero: flatBars, filasEnCero: flatRows },
+        pass: flatBars.length === 0 && flatRows.length === 0 && flatMarks.length === 0,
+        detail: {
+          barrasEnCero: flatBars,
+          filasEnCero: flatRows,
+          marcasEnCero: flatMarks.slice(0, 6),
+        },
       };
     },
 

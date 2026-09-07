@@ -81,8 +81,8 @@ export function MatchGraph({
                 stroke="var(--sealed)"
                 strokeWidth={1.25}
                 strokeLinecap="round"
-                initial={reduce ? undefined : { pathLength: 0 }}
-                animate={reduce ? undefined : { pathLength: 1 }}
+                // Same rule as the playground: the wire is the answer.
+                initial={false}
                 transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                 style={{ opacity: 0.9 }}
               />
@@ -91,7 +91,7 @@ export function MatchGraph({
                 cy={yOf(l.from)}
                 r={2.5}
                 fill="var(--sealed)"
-                initial={reduce ? undefined : { scale: 0 }}
+                initial={reduce ? undefined : { scale: 0.8 }}
                 animate={reduce ? undefined : { scale: 1 }}
                 transition={{ type: "spring", stiffness: 420, damping: 22 }}
               />
@@ -100,7 +100,7 @@ export function MatchGraph({
                 cy={yOf(l.to)}
                 r={2.5}
                 fill="var(--sealed)"
-                initial={reduce ? undefined : { scale: 0 }}
+                initial={reduce ? undefined : { scale: 0.8 }}
                 animate={reduce ? undefined : { scale: 1 }}
                 transition={{
                   type: "spring",

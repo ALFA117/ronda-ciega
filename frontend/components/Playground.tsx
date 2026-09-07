@@ -241,9 +241,12 @@ export function Playground() {
                   stroke="var(--sealed)"
                   strokeWidth="1.5"
                   vectorEffect="non-scaling-stroke"
-                  initial={reduce ? undefined : { pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 0.9 }}
-                  transition={{ duration: 0.35 }}
+                  // A wire is the pairing, not decoration. Drawing it from
+                  // pathLength 0 means a stalled animation leaves the result
+                  // of the algorithm undrawn on a panel whose whole job is to
+                  // show it. The frame changes on every tick anyway, so the
+                  // entrance was buying very little.
+                  opacity={0.9}
                 />
               ),
             )}
