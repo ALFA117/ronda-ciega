@@ -720,6 +720,19 @@ pub mod ronda_ciega {
         randomness: [u8; 32],
     ) -> Result<()> {
         let round = &mut ctx.accounts.round;
+
+        // First answer wins. `request_round_randomness` only refuses once a
+        // seed is already stored, so two requests can both be in flight before
+        // either callback lands — and without this the second one overwrites
+        // the seed the round was matched with. The pairs would not change,
+        // having already been computed, but the round would then publish a
+        // seed that does not reproduce them, which is the one thing a
+        // verifiable tie-break cannot afford.
+        require!(
+            !round.randomness_fulfilled,
+            ErrorCode::RandomnessAlreadyFulfilled
+        );
+
         round.randomness = randomness;
         round.randomness_fulfilled = true;
 
