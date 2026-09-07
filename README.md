@@ -144,7 +144,10 @@ to break the tie — and breaking it by account index would quietly reward whoev
 which is exactly the bias the system claims to remove.
 
 Ties are broken with **MagicBlock VRF**, requested against the ephemeral queue when the round is
-delegated. The playground makes that arguable rather than asserted: reroll the tie-break on the
+delegated. The callback takes the first answer and refuses the rest: two requests can be in flight
+before either lands, and a second one overwriting the seed after the round was matched would leave
+the pairings published beside a seed that does not reproduce them — the one thing a replayable
+tie-break cannot survive. Live on devnet, and `negative:rollup` asks twice to prove it. The playground makes that arguable rather than asserted: reroll the tie-break on the
 same lists and the page counts how many of twenty-five seeds produce a different pairing. Often the
 answer is none — Gale-Shapley needs a tie-break only when a receiver has ranked *neither* of two
 proposers — and saying so is more convincing than implying the seed always matters. When it does

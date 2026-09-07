@@ -32,7 +32,18 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
-const IDL = require("../target/idl/ronda_ciega.json");
+/**
+ * The IDL the deployed site uses, not the one lying in target/.
+ *
+ * target/idl is a build artefact and gitignored, so it holds whatever branch
+ * was built last. Building the session-keys branch and then running a script
+ * on master produced a complaint about a missing sessionToken account — an
+ * error about a program that has no such account, raised by an IDL nobody
+ * meant to be reading. frontend/lib/idl.json is committed and is what
+ * ronda-ciega.vercel.app talks to, so a script claiming to exercise the
+ * product should hold the same description of it.
+ */
+const IDL = require("../frontend/lib/idl.json");
 const DEVNET = "https://api.devnet.solana.com";
 const TEE_RPC = "https://devnet-tee.magicblock.app";
 const TEE_VALIDATOR = new PublicKey("MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo");
