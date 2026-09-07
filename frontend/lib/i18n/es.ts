@@ -196,6 +196,32 @@ export const es = {
     youAreIn: "Estás dentro como",
   },
 
+  steps: {
+    title: "Tu recorrido",
+    of: "de",
+    connect: { name: "Conectar", now: "Conecta tu monedero para entrar a esta ronda." },
+    join: { name: "Entrar", now: "Elige tu lado y publica tu perfil. Es lo único público de todo esto." },
+    wait: {
+      name: "Esperar",
+      now: "Estás dentro. La ronda todavía no está en el rollup, así que tu lista privada aún no puede existir.",
+    },
+    rank: { name: "Sellar lista", now: "Ordena a la otra parte. Solo tú podrás leer esa lista." },
+    sealed: { name: "Sellada", now: "Tu lista está sellada. Puedes cambiarla mientras la ronda siga abierta." },
+    result: { name: "Resultado", now: "La ronda se resolvió. Abajo está tu par." },
+    done: "hecho",
+    signaturesOne: "1 firma",
+    signaturesTwo: "2 firmas",
+    signaturesNone: "sin firmas",
+    signaturesWhy: "una para el enclave, una para la transacción",
+    signaturesCached: "el enclave ya te conoce en este navegador",
+    connectClosed: "Esta ronda ya cerró. Conecta tu monedero para ver si te tocó par.",
+    notInRound: "No participaste en esta ronda. Abajo está lo que publicó.",
+    closedTitle: "Ronda cerrada",
+    youAre: "Eres",
+    matchedWith: "Emparejado con",
+    unmatched: "Sin par en esta ronda",
+  },
+
   ranking: {
     label: "Tu ranking privado",
     help: "Toca en orden, del que más quieres al que menos. Puedes dejar gente fuera: no listar a alguien es decir que prefieres quedarte sin par.",

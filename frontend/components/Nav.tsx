@@ -21,9 +21,9 @@ const WalletMultiButton = dynamic(
 /** Must stay in step with `links` below: a tracked section with no link
  * leaves the highlight nowhere to go while the reader is inside it. */
 const SECTION_IDS = [
+  "probar",
   "problema",
   "como-funciona",
-  "probar",
   "commit-reveal",
   "medido",
   "limites",
@@ -38,9 +38,9 @@ export function Nav() {
   const active = useActiveSection(SECTION_IDS);
 
   const links = [
+    { id: "probar", text: t.play.label },
     { id: "problema", text: t.problem.label },
     { id: "como-funciona", text: t.solution.label },
-    { id: "probar", text: t.play.label },
     { id: "commit-reveal", text: t.compare.label },
     { id: "medido", text: t.stats.label },
     { id: "limites", text: t.limits.label },

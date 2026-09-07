@@ -83,8 +83,22 @@ export default function Home() {
         <StatBand />
       </div>
 
+      {/* First, before a word of argument: the algorithm, running, on lists
+          the reader can reshuffle. The page used to bury this behind three
+          hundred words and nobody scrolled that far. */}
       <Section
         index="01"
+        label={t.play.label}
+        title={t.play.title}
+        lede={t.play.lede}
+        id="probar"
+        wide
+      >
+        <Playground />
+      </Section>
+
+      <Section
+        index="02"
         label={t.problem.label}
         title={t.problem.title}
         id="problema"
@@ -108,7 +122,7 @@ export default function Home() {
       </Section>
 
       <Section
-        index="02"
+        index="03"
         label={t.solution.label}
         title={t.solution.title}
         lede={t.solution.body}
@@ -116,18 +130,6 @@ export default function Home() {
         wide
       >
         <FlowDiagram />
-      </Section>
-
-      {/* The one place the mechanism can be operated rather than described. */}
-      <Section
-        index="03"
-        label={t.play.label}
-        title={t.play.title}
-        lede={t.play.lede}
-        id="probar"
-        wide
-      >
-        <Playground />
       </Section>
 
       <Section

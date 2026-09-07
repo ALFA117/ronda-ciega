@@ -197,6 +197,32 @@ export const en: Dictionary = {
     youAreIn: "You're in as",
   },
 
+  steps: {
+    title: "Where you are",
+    of: "of",
+    connect: { name: "Connect", now: "Connect your wallet to take part in this round." },
+    join: { name: "Join", now: "Pick your side and publish your profile. It is the only public part of this." },
+    wait: {
+      name: "Wait",
+      now: "You're in. The round isn't on the rollup yet, so your private list can't exist until it is.",
+    },
+    rank: { name: "Seal a list", now: "Order the other side. Nobody but you can read that list." },
+    sealed: { name: "Sealed", now: "Your list is sealed. You can replace it while the round is open." },
+    result: { name: "Result", now: "The round settled. Your pairing is below." },
+    done: "done",
+    signaturesOne: "1 signature",
+    signaturesTwo: "2 signatures",
+    signaturesNone: "no signature",
+    signaturesWhy: "one for the enclave, one for the transaction",
+    signaturesCached: "the enclave already knows you in this browser",
+    connectClosed: "This round is closed. Connect your wallet to see whether you were matched.",
+    notInRound: "You weren't in this round. What it published is below.",
+    closedTitle: "Round closed",
+    youAre: "You are",
+    matchedWith: "Matched with",
+    unmatched: "No pair in this round",
+  },
+
   ranking: {
     label: "Your private ranking",
     help: "Tap in order, from who you want most to least. You can leave people out: not listing someone says you'd rather stay unmatched.",

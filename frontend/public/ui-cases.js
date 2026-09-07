@@ -188,6 +188,33 @@
       };
     },
 
+    /**
+     * The measured band must show the measurements.
+     *
+     * These figures count up from zero on requestAnimationFrame, and rAF does
+     * not fire at all in a tab that is not compositing — it stops, it does not
+     * slow down. Caught in the wild reading "50 ms" and "16" where the real
+     * numbers are 671 and 214: a page whose whole argument is that its figures
+     * are counted rather than asserted, quietly asserting invented ones in the
+     * same type as the real ones. A timer now snaps each figure to the truth
+     * whether or not a frame was ever drawn, and this case is what says so.
+     */
+    async bandaMedida() {
+      const band = document.querySelector(".grid.grid-cols-2.border-y");
+      if (!band) return { pass: true, detail: "no aplica fuera de la portada" };
+      // Wait past the animation's own guard timer before judging it.
+      await new Promise((r) => setTimeout(r, 1600));
+      const nums = [...band.querySelectorAll(".tnum")].map((e) =>
+        (e.textContent || "").trim(),
+      );
+      const expected = ["671", "214", "1", "0"];
+      const wrong = expected.filter((v, i) => nums[i] !== v);
+      return {
+        pass: nums.length === 4 && !wrong.length,
+        detail: { leidos: nums, esperados: expected, discrepan: wrong },
+      };
+    },
+
     // ------------------------------------------------------------------ nav
     async secciones() {
       if (!document.getElementById("problema"))

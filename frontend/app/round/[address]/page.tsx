@@ -6,8 +6,7 @@ import { useRef } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { NOT_FOUND, useRound } from "@/hooks/useRound";
-import { JoinForm } from "@/components/JoinForm";
-import { RankingBuilder } from "@/components/RankingBuilder";
+import { YourStep } from "@/components/YourStep";
 import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
 import { VerifyPanel } from "@/components/VerifyPanel";
@@ -122,6 +121,17 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         </Reveal>
       )}
 
+      {/* The one thing this visitor came to do, before the four panels of
+          evidence aimed at someone who has not decided to take part yet. */}
+      <ErrorBoundary>
+        <YourStep
+          round={round}
+          participants={participants}
+          delegated={delegated}
+          onChanged={refresh}
+        />
+      </ErrorBoundary>
+
       <AnimatePresence mode="popLayout">
         {showTheater && (
           <motion.div
@@ -160,47 +170,6 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         delegated={delegated}
         onDone={refresh}
       />
-
-      <AnimatePresence mode="wait">
-        {round.status === "open" && !me && (
-          <motion.div
-            key="join"
-            initial={reduce ? undefined : { y: 12 }}
-            animate={reduce ? undefined : { y: 0 }}
-            exit={reduce ? undefined : { opacity: 0, y: -8 }}
-            transition={springLayout}
-          >
-            <JoinForm round={round} delegated={delegated} onJoined={refresh} />
-          </motion.div>
-        )}
-
-        {round.status === "open" && me && delegated && (
-          <motion.div key="rank">
-            <RankingBuilder
-              round={round}
-              me={me}
-              participants={participants}
-              onSubmitted={refresh}
-            />
-          </motion.div>
-        )}
-
-        {round.status === "open" && me && !delegated && (
-          <motion.div
-            key="wait"
-            initial={false}
-            animate={undefined}
-            exit={reduce ? undefined : { opacity: 0 }}
-          >
-            <Panel className="p-6">
-              <Note>
-                {t.join.youAreIn}{" "}
-                <span className="text-chalk">{me.handle}</span>. {t.join.waiting}
-              </Note>
-            </Panel>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="grid gap-6 sm:grid-cols-2">
         {(["founder", "builder"] as const).map((side) => (

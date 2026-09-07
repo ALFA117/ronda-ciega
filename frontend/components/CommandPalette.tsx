@@ -127,9 +127,9 @@ export function CommandPalette() {
     };
 
     const sections: Item[] = [
+      { id: "probar", label: t.play.label, kind: "section", go: jump("probar") },
       { id: "problema", label: t.problem.label, kind: "section", go: jump("problema") },
       { id: "como-funciona", label: t.solution.label, kind: "section", go: jump("como-funciona") },
-      { id: "probar", label: t.play.label, kind: "section", go: jump("probar") },
       { id: "commit-reveal", label: t.compare.label, kind: "section", go: jump("commit-reveal") },
       { id: "medido", label: t.stats.label, kind: "section", go: jump("medido") },
       { id: "limites", label: t.limits.label, kind: "section", go: jump("limites") },

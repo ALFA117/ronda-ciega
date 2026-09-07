@@ -1,0 +1,252 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { Check, Heart, HeartOff } from "lucide-react";
+import { ParticipantAccount, RoundAccount } from "@/lib/program";
+import { currentStep, isBystander, partnerIndex, type StepId } from "@/lib/steps";
+import { hasTeeSession } from "@/lib/tee";
+import { useT } from "@/lib/i18n";
+import { JoinForm } from "./JoinForm";
+import { RankingBuilder } from "./RankingBuilder";
+import { Label, Note, Panel } from "./ui";
+
+const WalletMultiButton = dynamic(
+  async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
+  { ssr: false },
+);
+
+/**
+ * The one panel a participant actually needs, at the top of the round.
+ *
+ * Before this, a round page was a stack of six panels — the theater, the trace
+ * check, the privacy check, the operator controls — and the single control the
+ * visitor came to use was somewhere underneath. Everything above it is proof
+ * aimed at a sceptic, which is the right content for the page and the wrong
+ * thing to meet a participant with. Reported as "muy laborioso": it was, but
+ * the work was scrolling and guessing, not signing.
+ *
+ * So the participant's own path gets stated as a rail of five steps with the
+ * current one open, and the proof panels move below it. The rail is also the
+ * honest answer to "how much more of this is there" — a question the old page
+ * never answered anywhere.
+ */
+
+export function YourStep({
+  round,
+  participants,
+  delegated,
+  onChanged,
+}: {
+  round: RoundAccount;
+  participants: ParticipantAccount[];
+  delegated: boolean;
+  onChanged: () => void;
+}) {
+  const wallet = useWallet();
+  const t = useT();
+
+  const me = participants.find(
+    (p) => wallet.publicKey && p.wallet.equals(wallet.publicKey),
+  );
+
+  // Whether the enclave still knows this wallet decides how many prompts the
+  // next action costs, and it changes underneath us when one is signed.
+  const [warm, setWarm] = useState(false);
+  useEffect(() => {
+    setWarm(hasTeeSession(wallet.publicKey ?? null));
+  }, [wallet.publicKey, round.rankingCount, delegated]);
+
+  const state = {
+    open: round.status === "open",
+    connected: !!wallet.publicKey,
+    joined: !!me,
+    delegated,
+  };
+  const current: StepId = currentStep(state);
+
+  // A closed round has no journey left to walk. Showing the rail there invited
+  // a visitor to "Join" a round that cannot be joined — the panel promising
+  // the one thing the program is guaranteed to refuse. So on a closed round the
+  // rail appears only for someone who actually walked it, and everyone else
+  // gets the single sentence that applies to them.
+  if (isBystander(state)) {
+    return (
+      <Panel className="space-y-4 p-5">
+        <Label>{t.steps.closedTitle}</Label>
+        <p className="text-sm leading-relaxed text-muted">
+          {wallet.publicKey ? t.steps.notInRound : t.steps.connectClosed}
+        </p>
+        {!wallet.publicKey && <WalletMultiButton />}
+      </Panel>
+    );
+  }
+
+  // The rail never shows "wait" as a station of its own: it is the same
+  // station as ranking, just not open yet. Five dots that sometimes mean four
+  // things is worse than four dots.
+  const rail: { id: StepId; name: string }[] = [
+    { id: "connect", name: t.steps.connect.name },
+    { id: "join", name: t.steps.join.name },
+    { id: "rank", name: me && round.rankingCount > 0 ? t.steps.sealed.name : t.steps.rank.name },
+    { id: "result", name: t.steps.result.name },
+  ];
+  const railIndex = rail.findIndex(
+    (s) => s.id === (current === "wait" ? "rank" : current),
+  );
+
+  return (
+    <Panel className="overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-edge px-5 py-3.5">
+        <Label>{t.steps.title}</Label>
+        <span className="tnum font-mono text-2xs text-muted">
+          {railIndex + 1} {t.steps.of} {rail.length}
+        </span>
+      </div>
+
+      {/* The rail. Each station is a dot and a word; done ones carry a tick so
+          progress reads without relying on colour alone. */}
+      <ol className="flex items-center gap-1 px-5 py-4 sm:gap-2">
+        {rail.map((s, i) => {
+          const done = i < railIndex;
+          const here = i === railIndex;
+          return (
+            <li key={s.id} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+              <span
+                aria-current={here ? "step" : undefined}
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[10px] transition-colors ${
+                  done
+                    ? "border-sealed/50 bg-sealed/15 text-sealed"
+                    : here
+                      ? "border-sealed bg-sealed text-onSealed"
+                      : "border-edge text-dim"
+                }`}
+              >
+                {done ? <Check className="h-3 w-3" aria-hidden /> : i + 1}
+              </span>
+              {/* Four station names do not fit on one line at 375px — they
+                  truncate to "Seal a l…", which is worse than not showing
+                  them. Below sm only the station you are standing on keeps
+                  its name; the rest are dots, and "n of 4" in the header says
+                  how far along they are. */}
+              <span
+                className={`truncate font-mono text-2xs ${
+                  here ? "inline text-chalk" : "hidden sm:inline"
+                } ${done ? "sm:text-muted" : here ? "" : "sm:text-dim"}`}
+              >
+                {s.name}
+                {done && <span className="sr-only"> — {t.steps.done}</span>}
+              </span>
+              {i < rail.length - 1 && (
+                <span
+                  aria-hidden
+                  className={`hidden h-px flex-1 sm:block ${
+                    done ? "bg-sealed/40" : "bg-edge"
+                  }`}
+                />
+              )}
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="space-y-4 border-t border-edge px-5 py-5">
+        <div className="space-y-1.5">
+          <p className="text-sm leading-relaxed">{t.steps[current].now}</p>
+          {current === "rank" && <SignatureCost warm={warm} />}
+        </div>
+
+        {current === "connect" && <WalletMultiButton />}
+
+        {current === "join" && (
+          <JoinForm round={round} delegated={delegated} onJoined={onChanged} />
+        )}
+
+        {current === "rank" && me && (
+          <RankingBuilder
+            round={round}
+            me={me}
+            participants={participants}
+            onSubmitted={() => {
+              setWarm(hasTeeSession(wallet.publicKey ?? null));
+              onChanged();
+            }}
+          />
+        )}
+
+        {current === "wait" && me && (
+          <Note>
+            {t.steps.youAre} <span className="text-chalk">{me.handle}</span>.
+          </Note>
+        )}
+
+        {current === "result" && (
+          <Outcome round={round} participants={participants} me={me} />
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+/**
+ * How many prompts the next action costs, said before it costs them.
+ *
+ * Two is the honest number on a cold browser — the enclave challenge and the
+ * transaction — and one once the enclave token is cached, which it now is
+ * across reloads. Naming the second one as "for the enclave" is the difference
+ * between a wallet popping up twice and a wallet popping up twice for reasons.
+ */
+function SignatureCost({ warm }: { warm: boolean }) {
+  const t = useT();
+  return (
+    <p className="font-mono text-2xs text-muted">
+      <span className="text-sealed">
+        {warm ? t.steps.signaturesOne : t.steps.signaturesTwo}
+      </span>{" "}
+      · {warm ? t.steps.signaturesCached : t.steps.signaturesWhy}
+    </p>
+  );
+}
+
+/** The answer, for the person who came for the answer. */
+function Outcome({
+  round,
+  participants,
+  me,
+}: {
+  round: RoundAccount;
+  participants: ParticipantAccount[];
+  me?: ParticipantAccount;
+}) {
+  const t = useT();
+  if (!me) return null;
+
+  // pairs is indexed by founder, so a builder has to be looked up the other
+  // way round. Getting this backwards silently tells half the round they were
+  // unmatched, which is why it is spelled out rather than inlined.
+  const partnerIdx = partnerIndex(round.pairs, me.side, me.index);
+  const partner =
+    partnerIdx === null
+      ? undefined
+      : participants.find((p) => p.side !== me.side && p.index === partnerIdx);
+
+  if (!partner) {
+    return (
+      <div className="flex items-center gap-2.5 font-mono text-sm text-muted">
+        <HeartOff className="h-4 w-4 shrink-0" aria-hidden />
+        {t.steps.unmatched}
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass glass-sealed flex items-center gap-3 rounded-xl px-4 py-3.5">
+      <Heart className="h-4 w-4 shrink-0 text-sealed" aria-hidden />
+      <div className="min-w-0">
+        <p className="font-mono text-2xs text-muted">{t.steps.matchedWith}</p>
+        <p className="truncate font-mono text-base text-chalk">{partner.handle}</p>
+      </div>
+    </div>
+  );
+}
