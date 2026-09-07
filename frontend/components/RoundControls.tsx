@@ -361,6 +361,15 @@ export function RoundControls({
         )}
       </div>
 
+      {/* Joining is an ordinary Solana transaction until the round is
+          delegated and a rollup transaction afterwards — and a wallet
+          simulates against L1, where a delegated account looks impossible, so
+          it refuses to sign. Delegating before anyone has joined turns the
+          easy half of the flow into the hard half for no reason. */}
+      {!delegated && participants.length === 0 && (
+        <Note>{t.controls.delegateLateHint}</Note>
+      )}
+
       {/* The one instruction a stuck operator needs, and only when stuck. */}
       {delegated && !round.randomnessFulfilled && round.status === "open" && (
         <Note>{t.controls.setupHint}</Note>

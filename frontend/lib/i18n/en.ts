@@ -230,6 +230,8 @@ export const en: Dictionary = {
     closed: "Round closed",
     completeSetup: "Complete the setup",
     needsQuorum: "Not enough people to close",
+    delegateLateHint:
+      "Leave delegating until last. Before it, joining is an ordinary Solana transaction; after it, joining is a rollup transaction, and wallets simulate those against L1, fail to make sense of them, and refuse to sign. Share the link, let people in, then delegate.",
     quorumHint:
       "This round needs {min} per side. It is short {f} founders and {b} builders. The minimum is per side, not the two added together.",
     matchStateExists: "The working memory already existed",

@@ -229,6 +229,8 @@ export const es = {
     closed: "Ronda cerrada",
     completeSetup: "Completar la preparación",
     needsQuorum: "Falta gente para poder cerrar",
+    delegateLateHint:
+      "Deja la delegación para el final. Antes de delegar, entrar a la ronda es una transacción normal de Solana; después es del rollup, y las billeteras la simulan contra L1, no la entienden y se niegan a firmar. Comparte el enlace, deja que entre la gente, y delega cuando ya estén.",
     quorumHint:
       "Esta ronda necesita {min} por lado. Faltan {f} founders y {b} builders. El mínimo es por lado, no la suma de los dos.",
     matchStateExists: "La memoria de trabajo ya existía",
