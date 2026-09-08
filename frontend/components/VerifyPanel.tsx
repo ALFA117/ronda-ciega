@@ -47,6 +47,7 @@ export function VerifyPanel({ round }: { round: RoundAccount }) {
     injective: t.verify.injective,
     inRange: t.verify.inRange,
     monotone: t.verify.monotone,
+    legalSteps: t.verify.legalSteps,
     matchesChain: t.verify.matchesChain,
   };
 

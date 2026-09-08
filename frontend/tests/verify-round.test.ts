@@ -101,3 +101,69 @@ describe("Verificación de una ronda transparente", () => {
     assert.equal(r.allPassed, true);
   });
 });
+
+describe("Pasos legales entre cuadros", () => {
+  // The four original checks each look at a single frame, or at the trace in
+  // aggregate. None of them looks at what happens BETWEEN two frames, so a
+  // trace could satisfy all four and still contain a move Gale-Shapley cannot
+  // make. Neither invariant below needs a preference list, which is why they
+  // can be checked at all.
+
+  const run = (frames: number[][], pairs: number[], nF = 3, nB = 3) =>
+    verifyRound({ frames, pairs, founderCount: nF, builderCount: nB });
+
+  test("una traza real pasa", () => {
+    const frames = [pad([0, NONE, NONE]), pad([0, 1, NONE]), pad([0, 1, 2])];
+    assert.equal(ok("legalSteps", run(frames, pad([0, 1, 2]))), true);
+  });
+
+  test("un desplazamiento sí es legal: el que pierde, lo pierde ante alguien", () => {
+    // Founder 0 held builder 0 and founder 1 takes it. That is the whole
+    // mechanism, and it must not be flagged.
+    const frames = [pad([0, NONE, NONE]), pad([NONE, 0, NONE])];
+    assert.equal(ok("legalSteps", run(frames, pad([NONE, 0, NONE]))), true);
+  });
+
+  test("cambiar de pareja EN UNA RONDA sí es legal aquí", () => {
+    // The rule I wrote first said this was impossible, on the reasoning that a
+    // founder only proposes while unmatched. True of the abstract algorithm,
+    // false of this implementation: a proposal round is one sequential loop,
+    // so a founder displaced by somebody with a lower index is unmatched again
+    // before the loop reaches them and re-pairs inside the same frame. Two of
+    // the three transparent demo rounds do exactly that, which is how the rule
+    // got found out.
+    const frames = [pad([0, NONE, NONE]), pad([1, 0, NONE])];
+    assert.equal(ok("legalSteps", run(frames, pad([1, 0, NONE]))), true);
+  });
+
+  test("pero el builder que soltó tiene que estar en manos de alguien", () => {
+    // Same shape, except nobody picked up builder 0. That is not a rejection,
+    // it is an edited trace.
+    const frames = [pad([0, NONE, NONE]), pad([1, NONE, NONE])];
+    const r = run(frames, pad([1, NONE, NONE]));
+    assert.equal(ok("legalSteps", r), false);
+    assert.match(r.checks.find((c) => c.id === "legalSteps")!.detail, /nobody/);
+  });
+
+  test("un emparejamiento no puede evaporarse", () => {
+    // Losing a builder to nobody is not a rejection: it is an edited trace.
+    const frames = [pad([0, 1, NONE]), pad([NONE, 1, NONE])];
+    const r = run(frames, pad([NONE, 1, NONE]));
+    assert.equal(ok("legalSteps", r), false);
+    assert.match(r.checks.find((c) => c.id === "legalSteps")!.detail, /nobody/);
+  });
+
+  test("una traza de un solo cuadro no tiene transiciones que juzgar", () => {
+    // A private round has exactly this shape, and reporting a failure about
+    // transitions it never published would be inventing one.
+    assert.equal(ok("legalSteps", run([pad([0, 1, 2])], pad([0, 1, 2]))), true);
+  });
+
+  test("y el detalle cuenta transiciones, no cuadros", () => {
+    const frames = [pad([0, NONE, NONE]), pad([0, 1, NONE]), pad([0, 1, 2])];
+    const detail = run(frames, pad([0, 1, 2])).checks.find(
+      (c) => c.id === "legalSteps",
+    )!.detail;
+    assert.equal(detail, "2 transitions");
+  });
+});

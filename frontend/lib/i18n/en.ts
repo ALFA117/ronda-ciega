@@ -272,7 +272,7 @@ export const en: Dictionary = {
     sessionCreated: "Session key authorised. Sealing a list no longer asks for a transaction signature.",
     seal: "Seal my list",
     signatureNote:
-      "Your wallet will ask for a signature. That signature is what proves to the enclave who you are, and it's the reason nobody else can read what you're about to write.",
+      "The transaction is signed by a session key in this browser, not by your wallet. What you sign is a message for the enclave: that is what proves to it who you are, and it is the reason nobody else can read what you are about to write. The session key can write your list. It can never read one back — the permission is derived from your wallet, not from whoever signs.",
     sealed: "List sealed",
     sealedNote:
       "Your ranking is in an account only your wallet can read. There is no instruction in the program that reveals it, not at the deadline and not after. You can replace it while the round is open.",
@@ -519,6 +519,7 @@ export const en: Dictionary = {
     injective: "No builder is held by two founders",
     inRange: "Every index refers to someone in this round",
     monotone: "The number of pairs never falls",
+    legalSteps: "Every step between frames is a move the algorithm can make",
     matchesChain: "The trace ends exactly where the chain says",
     passed: "It checks out.",
     failed: "It does not check out.",

@@ -271,7 +271,7 @@ export const es = {
     sessionCreated: "Clave de sesión autorizada. Las siguientes listas no piden firma de transacción.",
     seal: "Sellar mi lista",
     signatureNote:
-      "Tu wallet va a pedirte una firma. Esa firma es lo que le prueba al enclave quién eres, y es la razón por la que nadie más puede leer lo que estás por escribir.",
+      "La transacción la firma una clave de sesión de este navegador, no tu billetera. Lo que sí firmas tú es un mensaje para el enclave: eso es lo que le prueba quién eres, y es la razón por la que nadie más puede leer lo que estás por escribir. Esa clave puede escribir tu lista; leerla, nunca — el permiso se deriva de tu billetera, no de quien firma.",
     sealed: "Lista sellada",
     sealedNote:
       "Tu ranking está en una cuenta que solo tu wallet puede leer. No hay instrucción en el programa que la revele, ni al cerrar la ronda ni después. Puedes reemplazarla mientras la ronda siga abierta.",
@@ -446,6 +446,7 @@ export const es = {
     injective: "Ningún builder aparece tomado por dos founders",
     inRange: "Todos los índices existen en esta ronda",
     monotone: "El número de emparejados nunca retrocede",
+    legalSteps: "Cada paso entre cuadros es un movimiento que el algoritmo sí puede hacer",
     matchesChain: "La traza termina exactamente en el resultado en cadena",
     passed: "Cuadra.",
     failed: "No cuadra.",

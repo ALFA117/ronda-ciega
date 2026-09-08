@@ -73,7 +73,50 @@ export function verifyRound(input: {
     detail: counts.join(" → ") || "—",
   });
 
-  // 4. The last published frame is the result the chain reports.
+  // 4. No pairing in the trace simply evaporates.
+  //
+  //    The four checks around this one are each necessary and none of them
+  //    looks at what happens BETWEEN two frames, so a trace could satisfy all
+  //    of them and still contain a move the algorithm cannot make. This one
+  //    needs no preference list, which is why it can be checked at all: when a
+  //    founder stops holding a builder, somebody else must be holding that
+  //    builder in the next frame. A founder only ever loses one to a better
+  //    proposer, so a pairing that disappears with nobody taking it is not a
+  //    rejection — it is a trace that was edited.
+  //
+  //    A stricter rule was tried first and the real rounds falsified it: that
+  //    a founder matched in both frames must be matched to the SAME builder,
+  //    on the reasoning that a founder only proposes while unmatched. That is
+  //    true of the abstract algorithm and false of this implementation, which
+  //    runs a whole proposal round as one sequential loop. A founder displaced
+  //    by somebody with a LOWER index is unmatched again before the loop
+  //    reaches them, so they propose and re-pair inside the very same frame.
+  //    Two of the three transparent demo rounds do exactly that.
+  let legalSteps = true;
+  let illegal = "";
+  for (let i = 1; i < frames.length && legalSteps; i++) {
+    const before = slice(frames[i - 1]);
+    const after = slice(frames[i]);
+    for (let fdr = 0; fdr < founderCount; fdr++) {
+      const was = before[fdr];
+      if (was === NONE || after[fdr] === was) continue;
+      // They let go of `was`. Someone has to be holding it now.
+      if (!after.some((b, other) => other !== fdr && b === was)) {
+        legalSteps = false;
+        illegal = `frame ${i}: builder ${was} left founder ${fdr} and went to nobody`;
+        break;
+      }
+    }
+  }
+  checks.push({
+    id: "legalSteps",
+    ok: legalSteps,
+    detail: legalSteps
+      ? `${Math.max(frames.length - 1, 0)} transitions`
+      : illegal,
+  });
+
+  // 5. The last published frame is the result the chain reports.
   const last = frames.length ? slice(frames[frames.length - 1]) : [];
   const onChain = slice(pairs);
   const matchesChain =

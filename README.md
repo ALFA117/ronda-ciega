@@ -60,7 +60,8 @@ Three things run in your browser, against public data, with no wallet:
   *400 markets, 0 blocking pairs, 172 of them able to reach the tie-break, ~30 ms.*
 - **Any settled transparent round** publishes its full trace, and the round page recomputes it
   against what the chain says: no builder held twice, every index real, the pair count never
-  falling, the trace ending exactly where Solana says it ended.
+  falling, no pairing evaporating between frames, and the trace ending exactly where Solana says it
+  ended.
 - **Every round** derives the deterministic address of each preference list and goes looking for
   them on both chains, from your browser — **with the two controls that make an absence mean
   anything**. The panel asks L1 for the round's public account and gets it; asks the rollup for the
@@ -308,7 +309,7 @@ cargo test --package ronda-ciega   # 40 tests, host target, no validator
 ```
 
 ```bash
-cd frontend && npm test        # 183 unit tests, no network, ~1s
+cd frontend && npm test        # 202 unit tests, no network, ~1s
 npm run test:types             # types for the test suite
 OFFLINE=1 node scripts/verify.mjs   # the 46 checks that read the repo
 ```
