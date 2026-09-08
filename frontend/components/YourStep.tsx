@@ -198,9 +198,16 @@ export function YourStep({
           {current === "rank" && (
             <SignatureCost prompts={prompts} session={session} />
           )}
+          {/* True of the program, not of this page: close_round and tick take
+              no signer at all. The console that drives them is the round
+              authority's, though, so the pointer to it is only offered to
+              somebody who will actually find it there. */}
           {current === "sealed" && (
             <p className="font-mono text-2xs leading-relaxed text-muted">
               {t.steps.sealed.next}
+              {wallet.publicKey?.equals(round.authority) && (
+                <> {t.steps.sealed.nextYours}</>
+              )}
             </p>
           )}
         </div>

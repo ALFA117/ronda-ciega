@@ -272,7 +272,8 @@ export const en: Dictionary = {
     sealed: {
       name: "Sealed",
       now: "Your list is sealed. You can replace it while the round is open.",
-      next: "Once it closes, anyone can run the matching — you included, with the controls below. Nobody has to ask whoever opened the round.",
+      next: "Once the deadline passes, anyone can close the round and run the matching: neither instruction checks who signed. Nobody depends on whoever opened it still being around.",
+      nextYours: "And you opened this one, so the controls are further down this page.",
     },
     result: { name: "Result", now: "The round settled. Your pairing is below." },
     done: "done",

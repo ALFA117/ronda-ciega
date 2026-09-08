@@ -351,6 +351,33 @@ head("The README counts what is actually there");
   inProse("error codes", "the program's {n} error codes", errors);
 }
 
+// ------------------------------------------- nobody owns a round's progress ---
+//
+// Three places now say it in three registers: the README as a design claim,
+// the video script out loud, and the panel a participant reads after sealing
+// a list. All three rest on one fact about the program — close_round and tick
+// take no signer — and that fact is one `Signer<'info>` field away from
+// quietly becoming false. A round whose progress depends on whoever opened it
+// still being around is a different product from the one being described.
+head("Closing and ticking a round need no particular signer");
+{
+  const src = readFileSync(
+    join(HERE, "..", "programs", "ronda-ciega", "src", "lib.rs"),
+    "utf8",
+  );
+  for (const name of ["CloseRound", "Tick"]) {
+    const at = src.indexOf(`pub struct ${name}<'info> {`);
+    if (at < 0) {
+      bad(`${name} is not in the program any more`);
+      continue;
+    }
+    // Up to the closing brace in the first column: the end of the struct.
+    const body = src.slice(at).split(/^\}/m)[0];
+    if (body.includes("Signer<")) bad(`${name} now requires a signer`);
+    else ok(`${name} takes no signer`);
+  }
+}
+
 // ------------------------------------------------ the script's cue labels ---
 //
 // docs/VIDEO.md names the controls to click, in English, because that is the

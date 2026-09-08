@@ -271,7 +271,8 @@ export const es = {
     sealed: {
       name: "Sellada",
       now: "Tu lista está sellada. Puedes cambiarla mientras la ronda siga abierta.",
-      next: "Al cerrar, cualquiera puede correr el emparejamiento — tú incluido, con los controles de abajo. No hay que pedirle permiso a quien abrió la ronda.",
+      next: "Al vencer el plazo, cualquiera puede cerrar la ronda y correr el emparejamiento: ninguna de esas dos instrucciones comprueba quién firma. Nadie depende de que quien la abrió siga por aquí.",
+      nextYours: "Y la abriste tú, así que los controles están más abajo en esta misma página.",
     },
     result: { name: "Resultado", now: "La ronda se resolvió. Abajo está tu par." },
     done: "hecho",
