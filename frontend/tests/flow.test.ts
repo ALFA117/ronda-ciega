@@ -4,7 +4,6 @@ import {
   enclaveSpan,
   firstUnanswered,
   FLOW,
-  progress,
   stepState,
 } from "../lib/flow.ts";
 
@@ -56,19 +55,6 @@ describe("La región del enclave", () => {
       { id: "match", where: "enclave" },
     ] as const;
     assert.deepEqual(enclaveSpan(partido), { from: 0, to: 0 });
-  });
-});
-
-describe("El avance del riel", () => {
-  test("va de 0 a 1 y no se sale", () => {
-    assert.equal(progress(0, 3), 0);
-    assert.equal(progress(3, 3), 1);
-    assert.equal(progress(9, 3), 1);
-    assert.equal(progress(-2, 3), 0);
-  });
-
-  test("un riel sin pasos no avanza en vez de dividir entre cero", () => {
-    assert.equal(progress(1, 0), 0);
   });
 });
 

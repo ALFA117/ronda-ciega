@@ -48,12 +48,6 @@ export function enclaveSpan(flow: readonly FlowStep[] = FLOW): {
   return { from, to };
 }
 
-/** How far along a rail of `total` steps `done` steps is, as 0–1. */
-export function progress(done: number, total: number): number {
-  if (total <= 0) return 0;
-  return Math.min(1, Math.max(0, done / total));
-}
-
 /**
  * What a step on a rail is currently doing.
  *

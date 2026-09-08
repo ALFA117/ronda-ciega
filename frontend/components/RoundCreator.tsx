@@ -120,7 +120,15 @@ export function RoundCreator({ onCancel }: { onCancel?: () => void }) {
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <h2 className="text-lg font-medium tracking-tight">{r.title}</h2>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-medium tracking-tight">{r.title}</h2>
+          {/* The rail is the progress bar; this is the number you would have
+              had to count off it. Cheap, and it is the part somebody glances
+              at rather than reads. */}
+          <span className="tnum shrink-0 font-mono text-2xs text-muted">
+            {doneSteps.length}/{answered.length}
+          </span>
+        </div>
         <p className="text-xs text-muted">{r.lede}</p>
       </div>
 

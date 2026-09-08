@@ -22,7 +22,7 @@ import { Playground } from "@/components/Playground";
 import { LedgerProof } from "@/components/LedgerProof";
 import { RoundList } from "@/components/RoundList";
 import { Footer } from "@/components/Footer";
-import { CompareColumns } from "@/components/FlowDiagram";
+import { CompareColumns } from "@/components/CompareColumns";
 
 // Charts sit below the fold and pull their own code.
 const ConvergenceChart = dynamic(
