@@ -63,6 +63,11 @@ export function YourStep({
   // worse than never having promised.
   const [enclave, setEnclave] = useState(false);
   const [session, setSession] = useState(false);
+  // What this session watched happen. See StepInput.sealed: there is no
+  // cheap way to ask the chain whether THIS wallet has a list, and the
+  // question the round can answer — how many lists exist — is a different
+  // one that used to be answered in this one's place.
+  const [sealedByMe, setSealedByMe] = useState(false);
   useEffect(() => {
     let live = true;
     setEnclave(hasTeeSession(wallet.publicKey ?? null));
@@ -92,6 +97,7 @@ export function YourStep({
     joined: !!me,
     delegated,
     oppositeCount,
+    sealed: sealedByMe,
   };
   const current: StepId = currentStep(state);
 
@@ -119,11 +125,16 @@ export function YourStep({
   const rail: { id: StepId; name: string }[] = [
     { id: "connect", name: t.steps.connect.name },
     { id: "join", name: t.steps.join.name },
-    { id: "rank", name: me && round.rankingCount > 0 ? t.steps.sealed.name : t.steps.rank.name },
+    {
+      id: "rank",
+      name: sealedByMe ? t.steps.sealed.name : t.steps.rank.name,
+    },
     { id: "result", name: t.steps.result.name },
   ];
   const station: StepId =
-    current === "wait" || current === "alone" ? "rank" : current;
+    current === "wait" || current === "alone" || current === "sealed"
+      ? "rank"
+      : current;
   const railIndex = rail.findIndex((s) => s.id === station);
 
   return (
@@ -187,6 +198,11 @@ export function YourStep({
           {current === "rank" && (
             <SignatureCost prompts={prompts} session={session} />
           )}
+          {current === "sealed" && (
+            <p className="font-mono text-2xs leading-relaxed text-muted">
+              {t.steps.sealed.next}
+            </p>
+          )}
         </div>
 
         {current === "connect" && <WalletMultiButton />}
@@ -195,7 +211,7 @@ export function YourStep({
           <JoinForm round={round} delegated={delegated} onJoined={onChanged} />
         )}
 
-        {current === "rank" && me && (
+        {(current === "rank" || current === "sealed") && me && (
           <RankingBuilder
             round={round}
             me={me}
@@ -203,6 +219,7 @@ export function YourStep({
             onSubmitted={() => {
               setEnclave(hasTeeSession(wallet.publicKey ?? null));
               setSession(true);
+              setSealedByMe(true);
               onChanged();
             }}
           />

@@ -268,7 +268,11 @@ export const es = {
     copied: "Copiado",
     copyManually: "Copia este enlace:",
     rank: { name: "Sellar lista", now: "Ordena a la otra parte. Solo tú podrás leer esa lista." },
-    sealed: { name: "Sellada", now: "Tu lista está sellada. Puedes cambiarla mientras la ronda siga abierta." },
+    sealed: {
+      name: "Sellada",
+      now: "Tu lista está sellada. Puedes cambiarla mientras la ronda siga abierta.",
+      next: "Al cerrar, cualquiera puede correr el emparejamiento — tú incluido, con los controles de abajo. No hay que pedirle permiso a quien abrió la ronda.",
+    },
     result: { name: "Resultado", now: "La ronda se resolvió. Abajo está tu par." },
     done: "hecho",
     signaturesNone: "sin firmas",

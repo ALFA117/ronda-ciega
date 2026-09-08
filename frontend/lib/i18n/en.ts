@@ -269,7 +269,11 @@ export const en: Dictionary = {
     copied: "Copied",
     copyManually: "Copy this link:",
     rank: { name: "Seal a list", now: "Order the other side. Nobody but you can read that list." },
-    sealed: { name: "Sealed", now: "Your list is sealed. You can replace it while the round is open." },
+    sealed: {
+      name: "Sealed",
+      now: "Your list is sealed. You can replace it while the round is open.",
+      next: "Once it closes, anyone can run the matching — you included, with the controls below. Nobody has to ask whoever opened the round.",
+    },
     result: { name: "Result", now: "The round settled. Your pairing is below." },
     done: "done",
     signaturesNone: "no signatures",

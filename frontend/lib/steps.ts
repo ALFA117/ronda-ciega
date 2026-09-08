@@ -10,7 +10,14 @@ import { NONE } from "./constants";
  * So the logic is pure and tested, and the component only draws it.
  */
 
-export type StepId = "connect" | "join" | "wait" | "alone" | "rank" | "result";
+export type StepId =
+  | "connect"
+  | "join"
+  | "wait"
+  | "alone"
+  | "rank"
+  | "sealed"
+  | "result";
 
 export interface StepInput {
   /** Round status is "open" only while people can still take part. */
@@ -23,6 +30,22 @@ export interface StepInput {
   delegated: boolean;
   /** How many people are on the side this participant did NOT join. */
   oppositeCount: number;
+  /**
+   * Has this visitor sealed a list, as far as this browser knows.
+   *
+   * Optional, and false when nobody says otherwise, because it is the one
+   * input here that cannot be read back. A sealed list lives behind a
+   * permission naming its owner: proving it exists would cost the owner a
+   * signature, and asking the round how many lists it holds answers a
+   * different question — the rail used to read `rankingCount > 0` and told
+   * somebody who had just arrived that their list was already sealed,
+   * because seven other people's were.
+   *
+   * So this is what the session watched happen. After a reload it is false
+   * again, which is honest: the page does not know, and the ranking form
+   * below it has reset for the same reason, so the two agree.
+   */
+  sealed?: boolean;
 }
 
 export function currentStep({
@@ -31,6 +54,7 @@ export function currentStep({
   joined,
   delegated,
   oppositeCount,
+  sealed = false,
 }: StepInput): StepId {
   if (!connected) return "connect";
   if (!open) return "result";
@@ -46,7 +70,7 @@ export function currentStep({
   // side is not a step you are working through, it is a step you cannot
   // start, and the difference is the whole reason someone gets stuck.
   if (oppositeCount === 0) return "alone";
-  return "rank";
+  return sealed ? "sealed" : "rank";
 }
 
 /**

@@ -62,6 +62,39 @@ describe("currentStep", () => {
   });
 });
 
+describe("currentStep, después de sellar", () => {
+  test("sellar mueve el paso, y no sellar lo deja donde estaba", () => {
+    assert.equal(currentStep({ ...open, sealed: true }), "sealed");
+    assert.equal(currentStep({ ...open, sealed: false }), "rank");
+  });
+
+  test("sin decir nada, se asume que no", () => {
+    // El campo es opcional a propósito: una lista sellada vive detrás de un
+    // permiso que nombra a su dueño, así que preguntarle a la cadena si
+    // existe le costaría una firma. Lo que no se sabe se dibuja como "aún
+    // no", que es el lado en el que equivocarse no promete nada.
+    assert.equal(currentStep(open), "rank");
+  });
+
+  test("haber sellado no adelanta una ronda que ni siquiera está en el rollup", () => {
+    assert.equal(currentStep({ ...open, delegated: false, sealed: true }), "wait");
+  });
+
+  test("haber sellado no te saca de estar solo de tu lado", () => {
+    // Sellar con la otra parte vacía no es un estado que se pueda alcanzar,
+    // y si lo fuera, "sellada" taparía el aviso que explica el atasco.
+    assert.equal(currentStep({ ...open, oppositeCount: 0, sealed: true }), "alone");
+  });
+
+  test("al cerrar la ronda, sellada o no, lo que toca es el resultado", () => {
+    assert.equal(currentStep({ ...open, open: false, sealed: true }), "result");
+  });
+
+  test("un visitante sin monedero no puede haber sellado nada", () => {
+    assert.equal(currentStep({ ...open, connected: false, sealed: true }), "connect");
+  });
+});
+
 describe("isBystander", () => {
   test("closed round, never joined: no rail", () => {
     assert.equal(isBystander({ open: false, joined: false }), true);

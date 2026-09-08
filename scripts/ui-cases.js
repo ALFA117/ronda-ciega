@@ -306,10 +306,17 @@
       // branch every time — on the landing page — and asserted nothing about
       // the four figures it exists to guard, while reporting a pass. A case
       // that cannot fail is worse than a missing case: it occupies the slot.
+      //
+      // The path guard is not decoration. Without it the same lookup finds a
+      // match graph on a round page — four .tnum cells holding 0,1,2,3 — and
+      // reports the band as showing the wrong numbers. Loosening a selector
+      // to stop it skipping is how you trade a false pass for a false fail.
+      if (location.pathname !== "/")
+        return { pass: true, detail: "no aplica fuera de la portada" };
       const band = [...document.querySelectorAll("[class*='grid-cols-2']")].find(
         (e) => e.querySelectorAll(".tnum").length >= 4,
       );
-      if (!band) return { pass: true, detail: "no aplica fuera de la portada" };
+      if (!band) return { pass: false, detail: "la banda no está en la portada" };
       // Wait past the animation's own guard timer before judging it.
       await new Promise((r) => setTimeout(r, 1600));
       const nums = [...band.querySelectorAll(".tnum")].map((e) =>
