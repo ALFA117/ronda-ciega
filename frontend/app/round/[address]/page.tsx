@@ -56,7 +56,10 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         {missing ? (
           <p className="text-sm text-muted">{t.round.notFound}</p>
         ) : (
-          <ErrorText>{error}</ErrorText>
+          <ErrorText>
+            {t.errors[(error as keyof typeof t.errors) ?? "unknown"] ??
+              t.errors.unknown}
+          </ErrorText>
         )}
         <Link
           href="/"

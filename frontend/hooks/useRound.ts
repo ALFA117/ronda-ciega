@@ -12,6 +12,7 @@ import {
   RoundAccount,
 } from "@/lib/program";
 import { publicTeeConnection } from "@/lib/tee";
+import { classifyError, type Reason } from "@/lib/errors";
 
 /**
  * Sentinel for "there is no round at this address", so the page can say that
@@ -26,6 +27,15 @@ export interface RoundView {
   /** Once delegated, the live state lives on the rollup, not on L1. */
   delegated: boolean;
   loading: boolean;
+  /**
+   * NOT_FOUND, or a classified reason the page can translate.
+   *
+   * This used to be whatever the SDK threw. Everywhere else in the app a
+   * failure goes through classifyError and comes out as a sentence somebody
+   * can act on; this one path handed the reader "failed to get info about
+   * account" and left them to work out that devnet was busy. A raw message is
+   * not more honest than a translated one, it is just untranslated.
+   */
   error: string | null;
   refresh: () => Promise<void>;
 }
@@ -91,7 +101,7 @@ export function useRound(address: string): RoundView {
       } else if (/could not find|account does not exist|not found/i.test(msg)) {
         setError(NOT_FOUND);
       } else {
-        setError(msg);
+        setError(classifyError(e) satisfies Reason);
       }
     } finally {
       setLoading(false);

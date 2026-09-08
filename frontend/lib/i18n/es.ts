@@ -544,6 +544,7 @@ export const es = {
   },
 
   common: {
+    sectionFailed: "Esta sección no se pudo mostrar. El resto de la página sigue funcionando; recarga si quieres reintentarlo.",
     loading: "Cargando…",
     close: "Cerrar",
     error: "Algo falló",

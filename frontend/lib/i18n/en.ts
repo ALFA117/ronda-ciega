@@ -544,6 +544,7 @@ export const en: Dictionary = {
   },
 
   common: {
+    sectionFailed: "This section could not be shown. The rest of the page still works; reload to try it again.",
     loading: "Loading…",
     close: "Close",
     error: "Something failed",
