@@ -139,6 +139,26 @@ export function StartPanel() {
         </a>
       </div>
 
+      {/* Disconnected, this is one line and a button.
+          The whole round-creation form used to render to somebody with no
+          wallet: four hundred and thirty pixels of controls nobody in that
+          state can submit, between the headline and the first thing on the
+          page you can actually touch. Connecting is the one action available,
+          so it is the only one offered — and the form appearing the moment a
+          wallet arrives is exactly what it was asked to do. */}
+      {!connected ? (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 p-5 sm:p-6">
+          <div className="min-w-0 flex-1 space-y-1">
+            <h2 className="text-base font-medium tracking-tight">
+              {t.start.title}
+            </h2>
+            <p className="max-w-prose text-xs leading-relaxed text-muted">
+              {t.start.connectToOpen}
+            </p>
+          </div>
+          <WalletMultiButton />
+        </div>
+      ) : (
       <div className="grid gap-8 p-5 sm:p-6 lg:grid-cols-[1fr_18rem]">
         {/* ---------------------------------------------------- the form */}
         <div className="space-y-5">
@@ -213,13 +233,9 @@ export function StartPanel() {
           )}
 
           <div className="flex flex-wrap items-center gap-3">
-            {connected ? (
-              <Button onClick={create} busy={busy} disabled={!!minutesError}>
-                {t.create.submit}
-              </Button>
-            ) : (
-              <WalletMultiButton />
-            )}
+            <Button onClick={create} busy={busy} disabled={!!minutesError}>
+              {t.create.submit}
+            </Button>
             <span className="font-mono text-2xs text-dim">{t.create.devnetNote}</span>
           </div>
         </div>
@@ -248,6 +264,7 @@ export function StartPanel() {
           </a>
         </aside>
       </div>
+      )}
     </motion.section>
   );
 }

@@ -375,8 +375,39 @@
      * never be joined by anyone, with nothing anywhere saying why.
      */
     async ventanaDeRonda() {
-      const input = document.getElementById("closes-in");
-      if (!input) return { pass: true, detail: "no aplica: sin panel de creación" };
+      // Find the control by what it is, not by where it happens to be.
+      //
+      // This looked up #closes-in, which belongs to the panel a connected
+      // wallet sees. That panel now collapses to a line and a button when
+      // nobody is connected — right for the page, and it quietly turned this
+      // case into a skip: it reported "no aplica" and asserted nothing about
+      // the validation it exists to guard. The other creation form is one
+      // click away and runs the same check, so the case opens it.
+      //
+      // A number input bounded to the round window is a property of the real
+      // control rather than a hook added for testing, so nothing in the
+      // product has to know this case exists.
+      const roundWindow = () =>
+        [...document.querySelectorAll('input[type="number"]')].find(
+          (i) =>
+            i.getAttribute("min") === "1" &&
+            i.getAttribute("max") === "20160" &&
+            i.getBoundingClientRect().width > 0,
+        );
+
+      let input = roundWindow();
+      let opened = null;
+      if (!input) {
+        opened = [...document.querySelectorAll("button")].find((b) =>
+          /crear ronda|create round|new round|abrir ronda/i.test(b.innerText || ""),
+        );
+        if (opened) {
+          opened.click();
+          await new Promise((r) => setTimeout(r, 500));
+          input = roundWindow();
+        }
+      }
+      if (!input) return { pass: true, detail: "no aplica: sin formulario de creación" };
 
       const native = Object.getOwnPropertyDescriptor(
         window.HTMLInputElement.prototype,
@@ -409,10 +440,19 @@
 
       type(original);
       await settle();
+      // Leave the page as it was found: a form this case opened is a form the
+      // next case would otherwise measure.
+      if (opened) {
+        const close = [...document.querySelectorAll("button")].find((b) =>
+          /cancelar|cancel/i.test(b.innerText || ""),
+        );
+        if (close) close.click();
+        await settle();
+      }
 
       return {
         pass: bad.length === 0 && !stuck,
-        detail: { sinAviso: bad, seQuedaEnError: stuck },
+        detail: { sinAviso: bad, seQuedaEnError: stuck, abrioFormulario: !!opened },
       };
     },
 

@@ -147,6 +147,7 @@ export const en: Dictionary = {
     founders: "founders",
     builders: "builders",
     peek: "Preview the outcome",
+    moreRounds: "more rounds",
     emptyRounds: "empty rounds from test runs",
     hideEmpty: "Hide the empty ones",
     emptyNote:
@@ -349,6 +350,7 @@ export const en: Dictionary = {
     networkNote:
       "Your wallet has to be on Devnet too. On Mainnet the signature fails with a simulation error, because this program does not exist there.",
     faucet: "Get devnet SOL",
+    connectToOpen: "Connect your wallet to open a round. You can also join any of the open ones below.",
     whatHappens: "What happens next",
     steps: [
       "You share the round link.",

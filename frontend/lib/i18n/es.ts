@@ -146,6 +146,7 @@ export const es = {
     founders: "founders",
     builders: "builders",
     peek: "Ver el resultado sin entrar",
+    moreRounds: "rondas más",
     emptyRounds: "rondas vacías de pruebas",
     hideEmpty: "Ocultar las vacías",
     emptyNote:
@@ -348,6 +349,7 @@ export const es = {
     networkNote:
       "Tu billetera también tiene que estar en Devnet. Si está en Mainnet, la firma falla con un error de simulación: el programa no existe en esa red.",
     faucet: "Conseguir SOL de devnet",
+    connectToOpen: "Conecta tu monedero para abrir una ronda. También puedes entrar a cualquiera de las que están abiertas abajo.",
     whatHappens: "Lo que pasa después",
     steps: [
       "Compartes el enlace de la ronda.",

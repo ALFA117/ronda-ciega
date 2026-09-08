@@ -17,7 +17,6 @@ import { CreateRound } from "@/components/CreateRound";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
 import { StatBand } from "@/components/StatBand";
-import { RollupPulse } from "@/components/RollupPulse";
 import { Ticker } from "@/components/Ticker";
 import { StartPanel } from "@/components/StartPanel";
 import { Playground } from "@/components/Playground";
@@ -85,17 +84,13 @@ export default function Home() {
         <StartPanel />
       </div>
 
-      <div className="mt-8">
-        <StatBand />
-      </div>
-
-      {/* Four of the numbers above were measured once, by me, and written down.
-          This one is measured now, by the reader, against both endpoints. The
-          page argues that the rollup is fast; this is the version of that claim
-          nobody has to take my word for. */}
+      {/* Six figures in one frame: four measured once by me and written
+          down, two measured now by the reader against both endpoints. They
+          were two strips with a gap between them, which said "here are some
+          numbers" twice and cost two hundred pixels to do it. */}
       <div className="mt-8">
         <ErrorBoundary>
-          <RollupPulse />
+          <StatBand />
         </ErrorBoundary>
       </div>
 
@@ -113,16 +108,23 @@ export default function Home() {
         <Playground />
       </Section>
 
+{/* The problem and the obvious fix that does not work, in one section.
+          They were two, each paying for its own heading and its own eighty
+          pixels of top padding, for what is a single thought in two beats: why
+          nobody says who they want, and why sealing it with a hash does not
+          help. The commit-reveal anchor stays on the second beat so every link
+          to it still lands. */}
       <Section
         index="02"
         label={t.problem.label}
         title={t.problem.title}
         id="problema"
+        wide
       >
         {/* A numbered editorial list, not three equal cards. */}
         <ol className="divide-y divide-edge border-y border-edge">
           {t.problem.cards.map((c, i) => (
-            <li key={c.title} className="grid gap-3 py-6 sm:grid-cols-[3rem_1fr]">
+            <li key={c.title} className="grid gap-3 py-5 sm:grid-cols-[3rem_1fr]">
               <span className="tnum font-mono text-2xs text-muted">
                 {String(i + 1).padStart(2, "0")}
               </span>
@@ -135,6 +137,13 @@ export default function Home() {
             </li>
           ))}
         </ol>
+
+        <div id="commit-reveal" className="scroll-mt-28 pt-12 sm:pt-14">
+          <h3 className="display-sm [text-wrap:balance]">{t.compare.title}</h3>
+          <div className="mt-8">
+            <CompareColumns />
+          </div>
+        </div>
       </Section>
 
       <Section
@@ -150,16 +159,6 @@ export default function Home() {
 
       <Section
         index="04"
-        label={t.compare.label}
-        title={t.compare.title}
-        id="commit-reveal"
-        wide
-      >
-        <CompareColumns />
-      </Section>
-
-      <Section
-        index="05"
         label={t.stats.label}
         title={t.stats.title}
         id="medido"
@@ -196,14 +195,14 @@ export default function Home() {
       </Section>
 
       <Section
-        index="06"
+        index="05"
         label={t.limits.label}
         title={t.limits.title}
         id="limites"
       >
-        <ul className="grid gap-x-10 gap-y-7 sm:grid-cols-2">
+        <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
           {t.limits.items.map((l) => (
-            <li key={l.title} className="space-y-2 border-t border-edge pt-5">
+            <li key={l.title} className="space-y-1.5 border-t border-edge pt-4">
               <h3 className="font-mono text-2xs uppercase tracking-[0.14em] text-open">
                 {l.title}
               </h3>
@@ -214,7 +213,7 @@ export default function Home() {
       </Section>
 
       <Section
-        index="07"
+        index="06"
         label={t.rounds.label}
         title={t.rounds.note}
         id="rondas"

@@ -56,7 +56,16 @@ const MISSES_BEFORE_DOWN = 3;
 
 const isDown = (lane: Lane) => lane.misses >= MISSES_BEFORE_DOWN;
 
-export function RollupPulse() {
+/**
+ * `bare` drops the panel chrome so this can sit inside the measured band.
+ *
+ * Four figures measured once and written down, then two measured now — they
+ * are the same argument and they were two separate strips with a gap between
+ * them, 438 pixels of the page saying "here are some numbers" twice. Inside
+ * one frame the live pair reads as what it is: the part of the claim the
+ * reader does not have to take on trust.
+ */
+export function RollupPulse({ bare = false }: { bare?: boolean } = {}) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const shown = useOnScreen(ref, 120);
@@ -129,20 +138,50 @@ export function RollupPulse() {
   // slower one is always a readable fraction rather than a sliver.
   const peak = Math.max(rollupRate ?? 0, l1Rate ?? 0, 1);
 
+  const ratioLine =
+    times !== null ? (
+      <>
+        <span className="tnum text-sealed">{times.toFixed(1)}×</span>{" "}
+        {t.pulse.faster}
+      </>
+    ) : (
+      t.pulse.measuring
+    );
+
+  if (bare) {
+    return (
+      <div ref={ref}>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-1 pt-5 sm:px-7">
+          <Label>{t.pulse.title}</Label>
+          <span className="font-mono text-2xs text-muted">{ratioLine}</span>
+        </div>
+        <div className="sm:px-2">
+          <PulseLane
+            name={t.pulse.rollup}
+            host={t.pulse.rollupHost}
+            lane={rollup}
+            rate={rollupRate}
+            peak={peak}
+            tone="sealed"
+          />
+          <PulseLane
+            name={t.pulse.l1}
+            host={t.pulse.l1Host}
+            lane={l1}
+            rate={l1Rate}
+            peak={peak}
+            tone="open"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={ref} className="glass overflow-hidden rounded-2xl">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-edge px-5 py-3.5">
         <Label>{t.pulse.title}</Label>
-        <span className="font-mono text-2xs text-muted">
-          {times !== null ? (
-            <>
-              <span className="tnum text-sealed">{times.toFixed(1)}×</span>{" "}
-              {t.pulse.faster}
-            </>
-          ) : (
-            t.pulse.measuring
-          )}
-        </span>
+        <span className="font-mono text-2xs text-muted">{ratioLine}</span>
       </div>
 
       <div className="divide-y divide-edge">

@@ -4,17 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useOnScreen } from "@/hooks/useOnScreen";
 import { useT } from "@/lib/i18n";
+import { RollupPulse } from "./RollupPulse";
 
-/**
- * Four numbers the project actually measured, not four adjectives.
- *
- * Every value came off a real devnet run and is reproducible with
- * `scripts/spike.ts`. The zero is the one that carries the argument: zero
- * preference lists published, the whole claim as a single digit.
- *
- * Rules between the figures rather than four boxes — boxing each one turns a
- * statement into a dashboard.
- */
 const DURATION_MS = 900;
 
 /**
@@ -80,6 +71,22 @@ function Counter({ to, run }: { to: number; run: boolean }) {
   return <>{n}</>;
 }
 
+/**
+ * Six numbers the project actually measured, not six adjectives.
+ *
+ * The four above came off real devnet runs and are reproducible with
+ * `scripts/spike.ts`; the two below are measured in the reader's browser while
+ * they look at them. The zero is the one that carries the argument: zero
+ * preference lists published, the whole claim as a single digit.
+ *
+ * They used to be two strips with a gap between them, which said "here are
+ * some numbers" twice and spent two hundred pixels doing it. One frame, and
+ * the live pair reads as what it is — the half of the claim nobody has to take
+ * on trust.
+ *
+ * Rules between the figures rather than boxes around each: boxing them turns a
+ * statement into a dashboard.
+ */
 export function StatBand() {
   const t = useT();
   const reduce = useReducedMotion();
@@ -94,17 +101,15 @@ export function StatBand() {
   ];
 
   return (
-    <div
-      ref={ref}
-      className="grid grid-cols-2 border-y border-edge lg:grid-cols-4"
-    >
+    <div ref={ref} className="border-y border-edge">
+      <div className="grid grid-cols-2 lg:grid-cols-4">
       {stats.map((s, i) => (
         <motion.div
           key={s.label}
           initial={reduce ? undefined : { y: 12 }}
           animate={reduce || shown ? { y: 0 } : undefined}
           transition={{ delay: i * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className={`px-5 py-7 sm:px-7 ${
+          className={`px-5 py-6 sm:px-7 ${
             i % 2 === 1 ? "border-l border-edge" : ""
           } ${i >= 2 ? "border-t border-edge lg:border-t-0" : ""} ${
             i === 2 ? "lg:border-l" : ""
@@ -127,6 +132,13 @@ export function StatBand() {
           </div>
         </motion.div>
       ))}
+      </div>
+
+      {/* Measured now rather than measured once. Same frame, because it is the
+          same claim: the four above are mine, these two are the reader's. */}
+      <div className="border-t border-edge">
+        <RollupPulse bare />
+      </div>
     </div>
   );
 }
