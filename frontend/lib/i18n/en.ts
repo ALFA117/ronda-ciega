@@ -266,6 +266,7 @@ export const en: Dictionary = {
   ranking: {
     label: "Your private ranking",
     help: "Tap in order, from who you want most to least. You can leave people out: not listing someone says you'd rather stay unmatched.",
+    sessionCreated: "Session key authorised. Sealing a list no longer asks for a transaction signature.",
     seal: "Seal my list",
     signatureNote:
       "Your wallet will ask for a signature. That signature is what proves to the enclave who you are, and it's the reason nobody else can read what you're about to write.",

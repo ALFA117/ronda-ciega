@@ -271,7 +271,11 @@ async function main() {
     await programFor(erConn, p.kp)
       .methods.submitRanking(roundId, Buffer.from(rankingFor(p.side, p.idx)))
       .accountsPartial({
+        // The owner signs for themselves here, which is the no-token path:
+        // the program requires signer == wallet when session_token is absent.
+        signer: p.kp.publicKey,
         wallet: p.kp.publicKey,
+        sessionToken: null,
         round,
         participant,
         preferences,

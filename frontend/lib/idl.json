@@ -1248,9 +1248,29 @@
       ],
       "accounts": [
         {
-          "name": "wallet",
+          "name": "signer",
+          "docs": [
+            "Whoever is paying and signing this transaction: either `wallet`",
+            "itself, or a session signer holding a token `wallet` issued."
+          ],
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "wallet",
+          "docs": [
+            "a session key may be standing in for it — every account below is",
+            "seeded from this key, and the body proves the signer is entitled to",
+            "act for it."
+          ]
+        },
+        {
+          "name": "session_token",
+          "docs": [
+            "A token from the session-keys program authorising `signer` to act for",
+            "`wallet`. Absent when the owner signs for themselves."
+          ],
+          "optional": true
         },
         {
           "name": "round",
@@ -2194,6 +2214,30 @@
           },
           {
             "name": "Settled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SessionToken",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "valid_until",
+            "type": "i64"
           }
         ]
       }

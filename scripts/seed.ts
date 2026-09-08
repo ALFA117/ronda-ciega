@@ -311,7 +311,9 @@ async function seedRound(
     await prog(conn, p.kp)
       .methods.submitRanking(roundId, Buffer.from(ranking))
       .accountsPartial({
+        signer: p.kp.publicKey,
         wallet: p.kp.publicKey,
+        sessionToken: null,
         round,
         participant,
         preferences,

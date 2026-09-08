@@ -415,7 +415,9 @@ async function main() {
   await programFor(await teeConnectionFor(outsider), outsider)
     .methods.submitRanking(otherId, Buffer.from([0]))
     .accountsPartial({
+      signer: outsider.publicKey,
       wallet: outsider.publicKey,
+      sessionToken: null,
       round: otherRound,
       participant: otherPartOf(outsider),
       preferences: outsiderPrefs,
@@ -429,7 +431,9 @@ async function main() {
       .get(p.side + "-" + p.idx)!
       .methods.submitRanking(roundId, Buffer.from(ranking))
       .accountsPartial({
+        signer: p.kp.publicKey,
         wallet: p.kp.publicKey,
+        sessionToken: null,
         round,
         participant: partOf(p.kp),
         preferences: prefsOf(p.kp),
@@ -472,7 +476,9 @@ async function main() {
         .get("founder-0")!
         .methods.submitRanking(roundId, Buffer.from([0]))
         .accountsPartial({
+          signer: f0.kp.publicKey,
           wallet: f0.kp.publicKey,
+          sessionToken: null,
           round,
           participant: partOf(people[1].kp),
           preferences: prefsOf(f0.kp),

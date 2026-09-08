@@ -265,6 +265,7 @@ export const es = {
   ranking: {
     label: "Tu ranking privado",
     help: "Toca en orden, del que más quieres al que menos. Puedes dejar gente fuera: no listar a alguien es decir que prefieres quedarte sin par.",
+    sessionCreated: "Clave de sesión autorizada. Las siguientes listas no piden firma de transacción.",
     seal: "Sellar mi lista",
     signatureNote:
       "Tu wallet va a pedirte una firma. Esa firma es lo que le prueba al enclave quién eres, y es la razón por la que nadie más puede leer lo que estás por escribir.",
