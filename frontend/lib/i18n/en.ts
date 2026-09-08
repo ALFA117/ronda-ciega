@@ -37,6 +37,38 @@ export const en: Dictionary = {
     leaked: "Preference lists published. Ever.",
   },
 
+  flow: {
+    label: "How it works",
+    title: "The trusted third party is an enclave",
+    lede: "Lists are written inside a MagicBlock Private Ephemeral Rollup, behind a permission whose only member is you. The algorithm runs in there. Only the pairings come out.",
+    where: {
+      l1: "Solana L1",
+      enclave: "Inside the enclave",
+    },
+    steps: {
+      open: {
+        title: "A round opens",
+        body: "Whoever opens it sets how long it runs and what gets published.",
+      },
+      join: {
+        title: "People join",
+        body: "One public profile each: a handle and a side.",
+      },
+      seal: {
+        title: "You seal your list",
+        body: "It is written inside the enclave. Nobody else can read it.",
+      },
+      match: {
+        title: "The algorithm runs",
+        body: "Gale–Shapley, in there, in a single transaction.",
+      },
+      result: {
+        title: "Pairings come out",
+        body: "Only the pairings return to L1. The lists close without being revealed.",
+      },
+    },
+  },
+
   problem: {
     label: "The problem",
     title: "Nobody states who they actually want",
@@ -56,17 +88,6 @@ export const en: Dictionary = {
     ],
   },
 
-  solution: {
-    label: "The solution",
-    title: "The trusted third party is an enclave",
-    body: "Lists are written inside a MagicBlock Private Ephemeral Rollup, behind a permission whose only member is you. The algorithm runs in there. Only the pairings come out.",
-    steps: [
-      { title: "You join", body: "Your profile is public. On Solana L1." },
-      { title: "You seal a list", body: "The account is created inside the enclave." },
-      { title: "The algorithm runs", body: "One rollup transaction." },
-      { title: "Pairings come out", body: "Nothing else. Lists close without being revealed." },
-    ],
-  },
 
   compare: {
     label: "Why this isn't commit-reveal",
@@ -335,11 +356,42 @@ export const en: Dictionary = {
     closesIn: "Closes in",
     minutes: "minutes",
     transparent: "Transparent round",
+    private: "Private round",
+    privateNote:
+      "Publishes nothing about the process. The pairings come out and that is all: who proposed to whom, and in what order, is left nowhere. This is what you would want for a real round.",
     transparentNote:
       "Publishes the intermediate states so the algorithm can be watched running. That reveals who proposed to whom and in what order, which reconstructs much of everyone's ranking. Use it only for demos or when every participant agrees.",
     submit: "Create",
     cancel: "Cancel",
     devnetNote: "Devnet. No real money moves.",
+    rail: {
+      title: "Open a round",
+      lede: "Three answers and a signature.",
+      steps: [
+        {
+          title: "How long it runs",
+          body: "Once the deadline passes anyone can close it and run the algorithm.",
+        },
+        {
+          title: "What gets published",
+          body: "The pairings always come out. The intermediate steps are your call.",
+        },
+        {
+          title: "Sign and open it",
+          body: "One L1 transaction. The round is left with your wallet as its authority.",
+        },
+      ],
+      answered: {
+        window: "closes in {n} min",
+        transparent: "transparent",
+        private: "private",
+      },
+      connect: "Connect your wallet to sign",
+      signing: "Signing…",
+      confirming: "Confirming on L1…",
+      done: "Round open",
+      next: "What follows: share the link and everyone seals a list.",
+    },
   },
 
   start: {
@@ -352,13 +404,6 @@ export const en: Dictionary = {
       "Your wallet has to be on Devnet too. On Mainnet the signature fails with a simulation error, because this program does not exist there.",
     faucet: "Get devnet SOL",
     connectToOpen: "Connect your wallet to open a round. You can also join any of the open ones below.",
-    whatHappens: "What happens next",
-    steps: [
-      "You share the round link.",
-      "Everyone joins and writes their list inside the enclave.",
-      "At the deadline the algorithm runs in one transaction.",
-      "The pairings come out. The lists are destroyed unpublished.",
-    ],
     lowBalanceCta: "You need at least 0.05 devnet SOL to open a round.",
   },
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { HeroVisual } from "./HeroVisual";
+import { FlowMap } from "./Flow";
 import { PulseRatio } from "./PulseRatio";
 
 /**
@@ -106,13 +106,24 @@ export function Hero() {
         </motion.div>
       </motion.div>
 
+      {/* The whole sequence, under the sentence that claims it.
+          What sat here was a Gale-Shapley run replayed on invented people:
+          pretty, and an answer to a question nobody had asked yet. Somebody
+          three seconds into the page wants to know what the thing does, and
+          the shape of that answer is a flow, not a demo. The demo is section
+          01 and it is playable, which is a better version of the same idea.
+
+          `como-funciona` moves here with it. It was a section three screens
+          down that drew this same sequence a second time; every link to it
+          now lands on the drawing itself. */}
       <motion.div
-        className="mt-12"
+        id="como-funciona"
+        className="mt-12 scroll-mt-28"
         initial={reduce ? undefined : { y: 22 }}
         animate={reduce ? undefined : { y: 0 }}
         transition={{ delay: 0.35, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        <HeroVisual />
+        <FlowMap />
       </motion.div>
     </section>
   );

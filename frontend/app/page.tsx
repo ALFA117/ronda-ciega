@@ -13,7 +13,6 @@ import { useT } from "@/lib/i18n";
 import { Note, Panel } from "@/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PreflightBanner } from "@/components/Preflight";
-import { CreateRound } from "@/components/CreateRound";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
 import { StatBand } from "@/components/StatBand";
@@ -23,7 +22,7 @@ import { Playground } from "@/components/Playground";
 import { LedgerProof } from "@/components/LedgerProof";
 import { RoundList } from "@/components/RoundList";
 import { Footer } from "@/components/Footer";
-import { CompareColumns, FlowDiagram } from "@/components/FlowDiagram";
+import { CompareColumns } from "@/components/FlowDiagram";
 
 // Charts sit below the fold and pull their own code.
 const ConvergenceChart = dynamic(
@@ -148,17 +147,6 @@ export default function Home() {
 
       <Section
         index="03"
-        label={t.solution.label}
-        title={t.solution.title}
-        lede={t.solution.body}
-        id="como-funciona"
-        wide
-      >
-        <FlowDiagram />
-      </Section>
-
-      <Section
-        index="04"
         label={t.stats.label}
         title={t.stats.title}
         id="medido"
@@ -195,7 +183,7 @@ export default function Home() {
       </Section>
 
       <Section
-        index="05"
+        index="04"
         label={t.limits.label}
         title={t.limits.title}
         id="limites"
@@ -213,16 +201,12 @@ export default function Home() {
       </Section>
 
       <Section
-        index="06"
+        index="05"
         label={t.rounds.label}
         title={t.rounds.note}
         id="rondas"
         wide
       >
-        <div className="mb-6 flex justify-end">
-          <CreateRound />
-        </div>
-
         {rounds === null && (
           <div aria-live="polite">
             {[0, 1, 2].map((i) => (

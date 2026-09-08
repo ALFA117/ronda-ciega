@@ -36,6 +36,38 @@ export const es = {
     leaked: "Listas de preferencias publicadas. Nunca.",
   },
 
+  flow: {
+    label: "Cómo funciona",
+    title: "El tercero de confianza es un enclave",
+    lede: "Las listas se escriben dentro de un Private Ephemeral Rollup de MagicBlock, detrás de un permiso cuyo único miembro eres tú. El algoritmo corre ahí adentro. Solo salen los pares.",
+    where: {
+      l1: "Solana L1",
+      enclave: "Dentro del enclave",
+    },
+    steps: {
+      open: {
+        title: "Se abre la ronda",
+        body: "Quien la abre fija cuánto dura y qué se publica.",
+      },
+      join: {
+        title: "Entra cada quien",
+        body: "Un perfil público por persona: nombre y lado.",
+      },
+      seal: {
+        title: "Sellas tu lista",
+        body: "Se escribe dentro del enclave. Nadie más puede leerla.",
+      },
+      match: {
+        title: "Corre el algoritmo",
+        body: "Gale–Shapley, ahí adentro, en una sola transacción.",
+      },
+      result: {
+        title: "Salen los pares",
+        body: "Solo los pares vuelven a L1. Las listas se cierran sin revelarse.",
+      },
+    },
+  },
+
   problem: {
     label: "El problema",
     title: "Nadie declara a quién quiere de verdad",
@@ -55,17 +87,6 @@ export const es = {
     ],
   },
 
-  solution: {
-    label: "La solución",
-    title: "El tercero de confianza es un enclave",
-    body: "Las listas se escriben dentro de un Private Ephemeral Rollup de MagicBlock, detrás de un permiso cuyo único miembro eres tú. El algoritmo corre ahí adentro. Solo salen los pares.",
-    steps: [
-      { title: "Te registras", body: "Tu perfil es público. En Solana L1." },
-      { title: "Sellas tu lista", body: "La cuenta se crea dentro del enclave." },
-      { title: "Corre el algoritmo", body: "Una transacción del rollup." },
-      { title: "Salen los pares", body: "Nada más. Las listas se cierran sin revelarse." },
-    ],
-  },
 
   compare: {
     label: "Por qué no es un commit-reveal",
@@ -334,11 +355,42 @@ export const es = {
     closesIn: "Cierra en",
     minutes: "minutos",
     transparent: "Ronda transparente",
+    private: "Ronda privada",
+    privateNote:
+      "No publica nada del proceso. Salen los pares y ya: quién propuso a quién, y en qué orden, no queda en ninguna parte. Es lo que querrías para una ronda de verdad.",
     transparentNote:
       "Publica los estados intermedios para poder ver el algoritmo correr. Eso revela quién propuso a quién y en qué orden, lo que reconstruye buena parte de los rankings. Úsala solo para demos o cuando todos los participantes lo acepten.",
     submit: "Crear",
     cancel: "Cancelar",
     devnetNote: "Devnet. No se mueve dinero real.",
+    rail: {
+      title: "Abrir una ronda",
+      lede: "Tres respuestas y una firma.",
+      steps: [
+        {
+          title: "Cuánto dura",
+          body: "Al vencer el plazo cualquiera puede cerrarla y correr el algoritmo.",
+        },
+        {
+          title: "Qué se publica",
+          body: "Los pares siempre salen. Los pasos intermedios son tu decisión.",
+        },
+        {
+          title: "Firma y ábrela",
+          body: "Una transacción en L1. La ronda queda con tu billetera como autoridad.",
+        },
+      ],
+      answered: {
+        window: "cierra en {n} min",
+        transparent: "transparente",
+        private: "privada",
+      },
+      connect: "Conecta tu billetera para firmar",
+      signing: "Firmando…",
+      confirming: "Confirmando en L1…",
+      done: "Ronda abierta",
+      next: "Lo que sigue: comparte el enlace y cada quien sella su lista.",
+    },
   },
 
   start: {
@@ -351,13 +403,6 @@ export const es = {
       "Tu billetera también tiene que estar en Devnet. Si está en Mainnet, la firma falla con un error de simulación: el programa no existe en esa red.",
     faucet: "Conseguir SOL de devnet",
     connectToOpen: "Conecta tu monedero para abrir una ronda. También puedes entrar a cualquiera de las que están abiertas abajo.",
-    whatHappens: "Lo que pasa después",
-    steps: [
-      "Compartes el enlace de la ronda.",
-      "Cada quien entra y escribe su lista dentro del enclave.",
-      "Al cerrar, el algoritmo corre en una transacción.",
-      "Salen los pares. Las listas se destruyen sin publicarse.",
-    ],
     lowBalanceCta: "Necesitas al menos 0.05 SOL de devnet para crear una ronda.",
   },
 

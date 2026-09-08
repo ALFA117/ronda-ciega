@@ -20,7 +20,8 @@ lo hace mucho más difícil de romper en vivo.
 > Porque decirlo solo cuesta si el otro no corresponde. Así que la gente empieza por su tercera
 > opción, o espera. Y el mercado no empareja a quien se quiere: empareja a quien se atrevió."
 
-**En pantalla:** el hero. Las listas selladas resolviéndose en el gráfico.
+**En pantalla:** el hero. Debajo del titular, el diagrama de flujo: los cinco pasos y la banda
+del enclave sobre los dos de en medio. Se enciende solo, uno tras otro; no hay que tocarlo.
 
 ---
 

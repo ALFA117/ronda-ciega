@@ -298,7 +298,17 @@
      * whether or not a frame was ever drawn, and this case is what says so.
      */
     async bandaMedida() {
-      const band = document.querySelector(".grid.grid-cols-2.border-y");
+      // Found by what it holds, not by a stack of utility classes.
+      //
+      // It looked up ".grid.grid-cols-2.border-y", and those three classes
+      // have not been on one element since the band was split into an outer
+      // rule and an inner grid. So it took the "not on the landing page"
+      // branch every time — on the landing page — and asserted nothing about
+      // the four figures it exists to guard, while reporting a pass. A case
+      // that cannot fail is worse than a missing case: it occupies the slot.
+      const band = [...document.querySelectorAll("[class*='grid-cols-2']")].find(
+        (e) => e.querySelectorAll(".tnum").length >= 4,
+      );
       if (!band) return { pass: true, detail: "no aplica fuera de la portada" };
       // Wait past the animation's own guard timer before judging it.
       await new Promise((r) => setTimeout(r, 1600));
@@ -324,12 +334,23 @@
      * insist on digits.
      */
     async pulsoEnVivo() {
-      const pulse = [...document.querySelectorAll("div")].find(
-        (e) =>
-          e.className &&
-          String(e.className).includes("glass") &&
-          /slots\/s|measuring|midiendo/.test(e.innerText || ""),
-      );
+      // The host it polls is printed on it, in both languages, and is not a
+      // class anybody restyles. Looking for ".glass" instead meant this
+      // stopped finding the panel the day it moved inside the measured band
+      // and lost its own chrome — and, like bandaMedida beside it, went on
+      // reporting a pass for a check it was no longer running.
+      const HOSTS = ["devnet-tee.magicblock.app", "api.devnet.solana.com"];
+      const depth = (e) => {
+        let d = 0;
+        for (let n = e; n; n = n.parentElement) d++;
+        return d;
+      };
+      // The smallest box that holds BOTH lanes is the panel. One host alone
+      // would match the lane, and this case measures whether the panel is on
+      // screen before it demands a reading from it.
+      const pulse = [...document.querySelectorAll("div")]
+        .filter((e) => HOSTS.every((h) => (e.innerText || "").includes(h)))
+        .sort((a, b) => depth(b) - depth(a))[0];
       if (!pulse) return { pass: true, detail: "no aplica fuera de la portada" };
 
       pulse.scrollIntoView({ block: "center" });
@@ -377,16 +398,17 @@
     async ventanaDeRonda() {
       // Find the control by what it is, not by where it happens to be.
       //
-      // This looked up #closes-in, which belongs to the panel a connected
-      // wallet sees. That panel now collapses to a line and a button when
-      // nobody is connected — right for the page, and it quietly turned this
-      // case into a skip: it reported "no aplica" and asserted nothing about
-      // the validation it exists to guard. The other creation form is one
-      // click away and runs the same check, so the case opens it.
-      //
       // A number input bounded to the round window is a property of the real
       // control rather than a hook added for testing, so nothing in the
       // product has to know this case exists.
+      //
+      // It went looking for a second creation form for a while: the panel
+      // used to collapse to a line and a button when nobody was connected,
+      // which quietly turned this case into a skip that asserted nothing.
+      // The panel is a rail now and the first step of it is on screen for
+      // everybody, connected or not, so the control is simply here. The
+      // fallback stays because a case that can only run in one page state is
+      // a case that stops running the day that state changes.
       const roundWindow = () =>
         [...document.querySelectorAll('input[type="number"]')].find(
           (i) =>

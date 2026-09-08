@@ -137,7 +137,7 @@ head("Mobile form fields");
   // leaves the user pinching back out. Our own type scale defines `text-base`
   // as 15px, so "base" is not safe here — the size has to be explicit.
   const RISKY = /text-(xs|sm|2xs|base)/;
-  const files = ["JoinForm", "CreateRound"].map((n) =>
+  const files = ["JoinForm", "RoundCreator"].map((n) =>
     join(HERE, "..", "frontend", "components", `${n}.tsx`),
   );
   for (const file of files) {

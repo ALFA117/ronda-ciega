@@ -40,7 +40,7 @@ export function Nav() {
   const links = [
     { id: "probar", text: t.play.label },
     { id: "problema", text: t.problem.label },
-    { id: "como-funciona", text: t.solution.label },
+    { id: "como-funciona", text: t.flow.label },
     { id: "commit-reveal", text: t.compare.label },
     { id: "medido", text: t.stats.label },
     { id: "limites", text: t.limits.label },
