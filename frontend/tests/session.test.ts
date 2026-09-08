@@ -70,6 +70,14 @@ describe("Cuántas firmas cuesta lo siguiente", () => {
     assert.equal(await sessionState(rpc(token(NOW)), wallet, NOW), "expired");
   });
 
+  test("lo que vence en segundos no se promete como gratis", async () => {
+    // El programa mira el reloj del clúster y esto mira el del navegador. La
+    // diferencia son segundos, pero un token al que le quedan cuatro no vale
+    // prometerlo: para cuando la transacción aterriza ya no está.
+    assert.equal(await sessionState(rpc(token(NOW + 4)), wallet, NOW), "expired");
+    assert.equal(await sessionState(rpc(token(NOW + 61)), wallet, NOW), "live");
+  });
+
   test("una cuenta con otra forma se cobra, no se regala", async () => {
     assert.equal(await sessionState(rpc(token(NOW + 3600, 80)), wallet, NOW), "expired");
   });

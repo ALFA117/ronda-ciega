@@ -201,6 +201,18 @@ export function readValidUntil(data: Uint8Array): number | null {
 export type SessionState = "none" | "expired" | "live";
 
 /**
+ * How close to `valid_until` counts as expired already.
+ *
+ * The program compares against the cluster's clock and this compares against
+ * the browser's, and the gap between them is only ever a few seconds. But a
+ * token with four seconds left is not worth promising: by the time the
+ * transaction lands it is gone, and the person was told the action was free.
+ * The enclave cache next to this one uses the same minute for the same
+ * reason.
+ */
+const SKEW_SECONDS = 60;
+
+/**
  * Is this browser's session key authorised on chain, and still good?
  *
  * The interface promises a number of wallet prompts before it costs them, and
@@ -230,7 +242,7 @@ export async function sessionState(
     if (!info) return "none";
     const until = readValidUntil(info.data);
     if (until === null) return "expired";
-    return until > nowSeconds ? "live" : "expired";
+    return until - SKEW_SECONDS > nowSeconds ? "live" : "expired";
   } catch {
     return "none";
   }
