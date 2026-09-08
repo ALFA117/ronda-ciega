@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Connection } from "@solana/web3.js";
 import { CornerDownLeft, Hash, Search, Sparkles } from "lucide-react";
 import { DEVNET_RPC } from "@/lib/constants";
@@ -208,88 +208,92 @@ export function CommandPalette() {
         <kbd className="rounded border border-edge px-1.5 py-0.5 text-[10px]">⌘K</kbd>
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-[12vh]">
-            {/* No exit animation on a modal layer.
-                AnimatePresence keeps the element mounted until its exit
-                finishes, so where no animation runs a dismissed dialog stays
-                on screen — aria-expanded already false, focus still trapped
-                inside something the person asked to close. Collapse.tsx
-                reached this same conclusion after two animated versions both
-                failed; this is the same rule applied where the stakes are a
-                modal rather than a panel. */}
-            <motion.div
-              className="absolute inset-0 bg-bg/75 backdrop-blur-sm"
-              initial={reduce ? undefined : { opacity: 0 }}
-              animate={reduce ? undefined : { opacity: 1 }}
-              transition={{ duration: 0.15 }}
-              onClick={close}
-              aria-hidden
-            />
+      {/* Not wrapped in AnimatePresence, and no exit animation.
+          Removing the exit was not enough. AnimatePresence also holds a child
+          that is still animating IN: dismiss the layer 600ms after opening it,
+          while the entrance spring is mid-flight, and the node stays mounted
+          with the state already closed — a dialog the person dismissed, still
+          on screen, still holding focus. Where the frame loop is throttled, as
+          it is in a background tab or a screen recorder, it stays there. A
+          standing UI case caught it on the deployed site; every manual attempt
+          waited long enough for the spring to settle and never saw it.
 
-            <motion.div
-              ref={panelRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label={t.palette.open}
-              className="glass relative w-full max-w-lg overflow-hidden rounded-2xl"
-              initial={reduce ? undefined : { y: -12, scale: 0.98 }}
-              animate={reduce ? undefined : { y: 0, scale: 1 }}
-              transition={springPanel}
-            >
-              <div className="flex items-center gap-3 border-b border-edge px-4">
-                <Search className="h-4 w-4 shrink-0 text-muted" aria-hidden />
-                <input
-                  ref={inputRef}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  placeholder={t.palette.placeholder}
-                  aria-label={t.palette.placeholder}
-                  className="h-14 w-full bg-transparent font-mono text-[16px] text-chalk outline-none placeholder:text-dim"
-                />
-              </div>
+          Nothing here animates out, so the wrapper bought nothing and could
+          only delay removal. `open &&` unmounts the moment the state says
+          closed, which is what a dismissal means. Collapse.tsx reached the
+          same conclusion after two animated versions both failed. */}
+      {open && (
+        <motion.div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-[12vh]">
+          <motion.div
+            className="absolute inset-0 bg-bg/75 backdrop-blur-sm"
+            initial={reduce ? undefined : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: 1 }}
+            transition={{ duration: 0.15 }}
+            onClick={close}
+            aria-hidden
+          />
 
-              <ul ref={listRef} className="max-h-[46vh] overflow-y-auto p-2">
-                {filtered.length === 0 && (
-                  <li className="px-3 py-6 text-center font-mono text-2xs text-muted">
-                    {rounds === null ? t.common.loading : t.palette.empty}
-                  </li>
-                )}
+          <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.palette.open}
+            className="glass relative w-full max-w-lg overflow-hidden rounded-2xl"
+            initial={reduce ? undefined : { y: -12, scale: 0.98 }}
+            animate={reduce ? undefined : { y: 0, scale: 1 }}
+            transition={springPanel}
+          >
+            <div className="flex items-center gap-3 border-b border-edge px-4">
+              <Search className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder={t.palette.placeholder}
+                aria-label={t.palette.placeholder}
+                className="h-14 w-full bg-transparent font-mono text-[16px] text-chalk outline-none placeholder:text-dim"
+              />
+            </div>
 
-                {filtered.map((item, i) => (
-                  <li key={item.kind + item.id}>
-                    <button
-                      onClick={item.go}
-                      onMouseEnter={() => setCursor(i)}
-                      aria-current={i === cursor ? "true" : undefined}
-                      className={`flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left font-mono text-sm transition-colors ${
-                        i === cursor
-                          ? "bg-sealed/12 text-chalk"
-                          : "text-muted hover:text-chalk"
-                      }`}
-                    >
-                      {item.kind === "round" ? (
-                        <Hash className="h-3.5 w-3.5 shrink-0 text-sealed" aria-hidden />
-                      ) : (
-                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
-                      )}
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      {item.hint && (
-                        <span className="shrink-0 text-2xs text-muted">{item.hint}</span>
-                      )}
-                      {i === cursor && (
-                        <CornerDownLeft className="h-3 w-3 shrink-0 text-muted" aria-hidden />
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
+            <ul ref={listRef} className="max-h-[46vh] overflow-y-auto p-2">
+              {filtered.length === 0 && (
+                <li className="px-3 py-6 text-center font-mono text-2xs text-muted">
+                  {rounds === null ? t.common.loading : t.palette.empty}
+                </li>
+              )}
+
+              {filtered.map((item, i) => (
+                <li key={item.kind + item.id}>
+                  <button
+                    onClick={item.go}
+                    onMouseEnter={() => setCursor(i)}
+                    aria-current={i === cursor ? "true" : undefined}
+                    className={`flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left font-mono text-sm transition-colors ${
+                      i === cursor
+                        ? "bg-sealed/12 text-chalk"
+                        : "text-muted hover:text-chalk"
+                    }`}
+                  >
+                    {item.kind === "round" ? (
+                      <Hash className="h-3.5 w-3.5 shrink-0 text-sealed" aria-hidden />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+                    )}
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    {item.hint && (
+                      <span className="shrink-0 text-2xs text-muted">{item.hint}</span>
+                    )}
+                    {i === cursor && (
+                      <CornerDownLeft className="h-3 w-3 shrink-0 text-muted" aria-hidden />
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      )}
     </>
   );
 }

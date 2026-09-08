@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Menu, Search, X } from "lucide-react";
 import { easeEnter, springPanel, springSnappy } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
@@ -177,107 +177,111 @@ export function Nav() {
 
       {/* Below xl there were simply no section links at all. This is that
           menu, as a sheet rather than a cramped row. */}
-      <AnimatePresence>
-        {open && (
-          <motion.div className="fixed inset-0 z-50 xl:hidden">
-            {/* No exit animation on a modal layer.
-                AnimatePresence keeps the element mounted until its exit
-                finishes, so where no animation runs a dismissed dialog stays
-                on screen — aria-expanded already false, focus still trapped
-                inside something the person asked to close. Collapse.tsx
-                reached this same conclusion after two animated versions both
-                failed; this is the same rule applied where the stakes are a
-                modal rather than a panel. */}
-            <motion.div
-              className="absolute inset-0 bg-bg/70 backdrop-blur-sm"
-              initial={reduce ? undefined : { opacity: 0 }}
-              animate={reduce ? undefined : { opacity: 1 }}
-              transition={{ duration: 0.18 }}
-              onClick={() => setOpen(false)}
-              aria-hidden
-            />
+      {/* Not wrapped in AnimatePresence, and no exit animation.
+          Removing the exit was not enough. AnimatePresence also holds a child
+          that is still animating IN: dismiss the layer 600ms after opening it,
+          while the entrance spring is mid-flight, and the node stays mounted
+          with the state already closed — a dialog the person dismissed, still
+          on screen, still holding focus. Where the frame loop is throttled, as
+          it is in a background tab or a screen recorder, it stays there. A
+          standing UI case caught it on the deployed site; every manual attempt
+          waited long enough for the spring to settle and never saw it.
 
-            <motion.div
-              ref={sheetRef}
-              role="dialog"
-              aria-modal="true"
-              aria-label={t.nav.menu}
-              className="glass absolute inset-x-3 top-3 rounded-2xl p-3 sm:inset-x-5 sm:top-4"
-              initial={reduce ? undefined : { y: -14, scale: 0.98 }}
-              animate={reduce ? undefined : { y: 0, scale: 1 }}
-              transition={springPanel}
-              // Flick the sheet up to close it.
-              drag={reduce ? false : "y"}
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.3}
-              onDragEnd={(_, info) => {
-                if (info.offset.y < -60) setOpen(false);
-              }}
-            >
-              <div className="mb-2 flex items-center justify-between px-2">
-                <span className="font-mono text-2xs uppercase tracking-[0.18em] text-muted">
-                  {t.nav.menu}
-                </span>
-                <motion.button
-                  onClick={() => setOpen(false)}
-                  aria-label={t.common.close}
-                  whileTap={reduce ? undefined : { scale: 0.92 }}
-                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted hover:text-chalk"
-                >
-                  <X className="h-4 w-4" aria-hidden />
-                </motion.button>
-              </div>
+          Nothing here animates out, so the wrapper bought nothing and could
+          only delay removal. `open &&` unmounts the moment the state says
+          closed, which is what a dismissal means. Collapse.tsx reached the
+          same conclusion after two animated versions both failed. */}
+      {open && (
+        <motion.div className="fixed inset-0 z-50 xl:hidden">
+          <motion.div
+            className="absolute inset-0 bg-bg/70 backdrop-blur-sm"
+            initial={reduce ? undefined : { opacity: 0 }}
+            animate={reduce ? undefined : { opacity: 1 }}
+            transition={{ duration: 0.18 }}
+            onClick={() => setOpen(false)}
+            aria-hidden
+          />
 
-              {/* The palette's keyboard shortcut does not exist on a phone,
-                  so this is how it is reached there. */}
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  window.dispatchEvent(new Event("open-palette"));
-                }}
-                className="mb-2 flex h-12 w-full items-center gap-3 rounded-xl bg-surface2 px-3 font-mono text-sm text-muted transition-colors hover:text-chalk"
+          <motion.div
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.nav.menu}
+            className="glass absolute inset-x-3 top-3 rounded-2xl p-3 sm:inset-x-5 sm:top-4"
+            initial={reduce ? undefined : { y: -14, scale: 0.98 }}
+            animate={reduce ? undefined : { y: 0, scale: 1 }}
+            transition={springPanel}
+            // Flick the sheet up to close it.
+            drag={reduce ? false : "y"}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.3}
+            onDragEnd={(_, info) => {
+              if (info.offset.y < -60) setOpen(false);
+            }}
+          >
+            <div className="mb-2 flex items-center justify-between px-2">
+              <span className="font-mono text-2xs uppercase tracking-[0.18em] text-muted">
+                {t.nav.menu}
+              </span>
+              <motion.button
+                onClick={() => setOpen(false)}
+                aria-label={t.common.close}
+                whileTap={reduce ? undefined : { scale: 0.92 }}
+                className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted hover:text-chalk"
               >
-                <Search className="h-4 w-4" aria-hidden />
-                {t.palette.placeholder}
-              </button>
+                <X className="h-4 w-4" aria-hidden />
+              </motion.button>
+            </div>
 
-              {/* The bar drops these below sm; this is where they live there. */}
-              <div className="mb-2 flex items-center gap-2 sm:hidden">
-                <LocaleToggle />
-                <div className="wallet-block min-w-0 flex-1">
-                  <WalletMultiButton />
-                </div>
+            {/* The palette's keyboard shortcut does not exist on a phone,
+                so this is how it is reached there. */}
+            <button
+              onClick={() => {
+                setOpen(false);
+                window.dispatchEvent(new Event("open-palette"));
+              }}
+              className="mb-2 flex h-12 w-full items-center gap-3 rounded-xl bg-surface2 px-3 font-mono text-sm text-muted transition-colors hover:text-chalk"
+            >
+              <Search className="h-4 w-4" aria-hidden />
+              {t.palette.placeholder}
+            </button>
+
+            {/* The bar drops these below sm; this is where they live there. */}
+            <div className="mb-2 flex items-center gap-2 sm:hidden">
+              <LocaleToggle />
+              <div className="wallet-block min-w-0 flex-1">
+                <WalletMultiButton />
               </div>
+            </div>
 
-              <ul className="grid gap-1">
-                {links.map((l, i) => (
-                  <motion.li
-                    key={l.id}
-                    initial={reduce ? undefined : { x: -10 }}
-                    animate={reduce ? undefined : { opacity: 1, x: 0 }}
-                    transition={{ delay: 0.03 * i, ...springPanel }}
+            <ul className="grid gap-1">
+              {links.map((l, i) => (
+                <motion.li
+                  key={l.id}
+                  initial={reduce ? undefined : { x: -10 }}
+                  animate={reduce ? undefined : { opacity: 1, x: 0 }}
+                  transition={{ delay: 0.03 * i, ...springPanel }}
+                >
+                  <Link
+                    href={`#${l.id}`}
+                    onClick={() => setOpen(false)}
+                    className={`flex h-12 items-center justify-between rounded-xl px-3 font-mono text-sm transition-colors ${
+                      active === l.id
+                        ? "bg-sealed/12 text-chalk"
+                        : "text-muted hover:bg-surface2 hover:text-chalk"
+                    }`}
                   >
-                    <Link
-                      href={`#${l.id}`}
-                      onClick={() => setOpen(false)}
-                      className={`flex h-12 items-center justify-between rounded-xl px-3 font-mono text-sm transition-colors ${
-                        active === l.id
-                          ? "bg-sealed/12 text-chalk"
-                          : "text-muted hover:bg-surface2 hover:text-chalk"
-                      }`}
-                    >
-                      {l.text}
-                      <span className="tnum text-2xs text-muted">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                    </Link>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
+                    {l.text}
+                    <span className="tnum text-2xs text-muted">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </Link>
+                </motion.li>
+              ))}
+            </ul>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      )}
     </>
   );
 }
