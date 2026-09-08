@@ -161,16 +161,20 @@ to break the tie — and breaking it by account index would quietly reward whoev
 which is exactly the bias the system claims to remove.
 
 Ties are broken with **MagicBlock VRF**, requested against the ephemeral queue when the round is
-delegated. The callback takes the first answer and refuses the rest: two requests can be in flight
-before either lands, and a second one overwriting the seed after the round was matched would leave
-the pairings published beside a seed that does not reproduce them — the one thing a replayable
-tie-break cannot survive. Live on devnet, and `negative:rollup` asks twice to prove it. The playground makes that arguable rather than asserted: reroll the tie-break on the
+delegated. **Matching refuses to run until the callback lands** — `run_matching` and `tick` both
+return `RandomnessMissing` rather than settling a round on registration order. The seed is published
+on the round, so anyone can replay every tie-break without seeing a single preference.
+
+The callback takes the first answer and refuses the rest: two requests can be in flight before
+either lands, and a second one overwriting the seed after the round was matched would leave the
+pairings published beside a seed that does not reproduce them — the one thing a replayable
+tie-break cannot survive. Live on devnet, and `negative:rollup` asks twice to prove it.
+
+The playground makes the whole argument arguable rather than asserted: reroll the tie-break on the
 same lists and the page counts how many of twenty-five seeds produce a different pairing. Often the
-answer is none — Gale-Shapley needs a tie-break only when a receiver has ranked *neither* of two
+answer is none — Gale–Shapley needs a tie-break only when a receiver has ranked *neither* of two
 proposers — and saying so is more convincing than implying the seed always matters. When it does
-matter, it decided somebody's match. **Matching refuses to run until the callback lands** — `run_matching` and `tick` both
-return `RandomnessMissing` rather than settling a round on registration order. The seed is published on the round,
-so anyone can replay every tie-break without seeing a single preference.
+matter, it decided somebody's match.
 
 ## Transparent rounds, and why they're opt-in
 
@@ -324,6 +328,7 @@ npm run negative               # 11 refusals the program must make, on L1
 npm run operator-key           # a stranger key drives the rollup lifecycle
 npm run concurrency            # six wallets join at once, indices stay unique
 FULL=1 npm run negative        # + SideFull: fills a side with 16 (~0.1 SOL)
+npm run session                # the session-key path, end to end (~0.1 SOL, 2 min)
 npm run negative:rollup        # 26 refusals inside the TEE (~0.15 SOL, 3 min)
 npm run spike                  # the full lifecycle, including the privacy gate
 ```
