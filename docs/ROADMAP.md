@@ -10,7 +10,7 @@ Cada número de este documento salió de una corrida, no de una estimación.
 |---|---|---|---|---|---|
 | Instrucciones | 14 | Rutas | 3 | Unitarias, TypeScript | 177 |
 | Códigos de error | 19 | Componentes | 35 | Unitarias, Rust | 40 |
-| Estados de ronda | 4 | Hooks | 5 | Casos de interfaz | 17 |
+| Estados de ronda | 4 | Hooks | 5 | Casos de interfaz | 18 |
 | Máximo por lado | 16 | Idiomas | EN · ES | Comprobaciones fijas | 46 |
 | Cuadros de historial | 24 | Temas | claro · oscuro | Comprobaciones en vivo | 54 |
 | | | | | Negativos en L1 · rollup | 12 · 26 |

@@ -69,52 +69,70 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #ddd8cc;
-  --bg-deep: #d0cabc;
-  --surface: #e7e2d6;
-  --surface-2: #d0cabc;
-  --edge: #bdb5a4;
-  --edge-strong: #9c927e;
-  --text: #211e19;
-  --text-muted: #4f4940;
+  /* Measured, not chosen by eye — and rebuilt because the first one was flat.
+     The page and a card on it sat 3.5 points of L* apart, all of it warm
+     beige, so nothing read as raised and the eye had no structure to rest on.
+     Reported as "hurts to look at", which is what a single band of low-chroma
+     mud does: it is not glare, it is having nothing to focus on.
+
+     The glare ceiling caps the top of the scale, so the separation had to come
+     from pushing the ground down rather than the card up — which is the same
+     direction that reduces the lit area. Eight points now, and the ground is
+     further from the ceiling than it was.
+
+     Cool rather than warm: the dark theme is blue-black, and a light theme
+     carrying the same faint cast belongs with it. Every value below clears
+     4.5:1 against both the ground and the surface. */
+  --bg: #d3d5d9;
+  --bg-deep: #c8cace;
+  --surface: #eaecf0;
+  --surface-2: #dfe1e5;
+  --edge: #b7bac0;
+  --edge-strong: #91949a;
+  --text: #14171c;
+  --text-muted: #454b55;
 
   --sealed: #0a5b73;
   --sealed-dim: #084457;
-  --open: #7f1486;
+  --open: #8c1093;
 
   --sealed-rgb: 10, 91, 115;
-  --open-rgb: 127, 20, 134;
+  --open-rgb: 140, 16, 147;
 
   --chart-1: #00647f;
   --chart-2: #8a3d06;
 
   --on-sealed: #ffffff;
-  --text-dim: #615a4f;
+  --text-dim: #4d525c;
 
-  --card-top: rgba(255, 253, 248, 0.6);
+  --card-top: rgba(255, 255, 255, 0.7);
   --card-wash: linear-gradient(
     180deg,
-    rgba(250, 247, 240, 0.5) 0%,
-    rgba(33, 30, 25, 0.02) 100%
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(20, 23, 28, 0.02) 100%
   );
-  --shadow-card: 0 1px 2px rgba(20, 18, 15, 0.05), 0 10px 24px -14px rgba(20, 18, 15, 0.18);
-  --shadow-lift: 0 2px 8px rgba(20, 18, 15, 0.07), 0 24px 50px -22px rgba(20, 18, 15, 0.26);
-  --grain-opacity: 0.022;
+  /* A shade deeper than before. On a ground eight points below the card the
+     shadow is doing real work now, and the old one was tuned for surfaces
+     that barely differed. */
+  --shadow-card: 0 1px 2px rgba(20, 23, 28, 0.06), 0 10px 24px -14px rgba(20, 23, 28, 0.22);
+  --shadow-lift: 0 2px 8px rgba(20, 23, 28, 0.08), 0 24px 50px -22px rgba(20, 23, 28, 0.3);
+  --grain-opacity: 0.02;
 
-  --ghost: rgba(20, 18, 15, 0.055);
+  --ghost: rgba(20, 23, 28, 0.055);
 
-  /* Warm-tinted rather than white. Glass built out of pure white on a light
-     page is a lamp, and it was undoing the darker ground underneath it. */
+  /* Tinted rather than pure white. Glass built out of white on a light page
+     is a lamp, and it was undoing the darker ground underneath it — the same
+     reason the ground is where it is. Cool now, to match. */
   --glass-bg: linear-gradient(
     160deg,
-    rgba(247, 244, 236, 0.6) 0%,
-    rgba(226, 220, 206, 0.32) 55%,
-    rgba(240, 236, 226, 0.46) 100%
+    rgba(252, 253, 255, 0.62) 0%,
+    rgba(223, 227, 234, 0.34) 55%,
+    rgba(240, 243, 247, 0.48) 100%
   );
-  --glass-border: rgba(33, 30, 25, 0.16);
-  --glass-inset: rgba(255, 253, 248, 0.55);
-  --glass-shadow: 0 8px 22px -12px rgba(33, 30, 25, 0.28);
-  --glass-sheen: rgba(255, 253, 248, 0.5);
+  --glass-border: rgba(20, 23, 28, 0.16);
+  --glass-inset: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 22px -12px rgba(20, 23, 28, 0.3);
+  --glass-sheen: rgba(255, 255, 255, 0.55);
 }
 
 @layer base {
@@ -175,6 +193,13 @@
      instead of going milky. */
   .glass {
     background-image: var(--glass-bg);
+    /* The gradient above lives in background-image, so anything with a
+       user-agent background-color composites the glass on top of that instead
+       of on the page. A form control does: with color-scheme light an input
+       is pure white, which made the one field on the front page the brightest
+       thing on it — a lamp inside a panel, on a theme whose ground is kept
+       below a glare ceiling on purpose. */
+    background-color: transparent;
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid var(--glass-border);

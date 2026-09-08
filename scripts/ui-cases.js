@@ -554,6 +554,64 @@
       return { pass: faint.length === 0, detail: { problemas: faint } };
     },
 
+    /**
+     * Nothing on a light page may render brighter than the surface token.
+     *
+     * verify.mjs checks that --surface is not #ffffff, which is a check on the
+     * palette and not on what appears. A control can be white without any
+     * token saying so: .glass puts its tint in background-image, so an element
+     * carrying a user-agent background-color composites the glass on top of
+     * that instead of on the page — and with color-scheme light an input is
+     * pure white. The one field on the front page was the brightest thing on
+     * it, on a theme whose ground is deliberately kept below a glare ceiling.
+     *
+     * Measures what is painted, in whichever theme is on.
+     */
+    async sinLuminarias() {
+      if (document.documentElement.dataset.theme !== "light") {
+        return { pass: true, detail: "solo aplica en modo claro" };
+      }
+
+      const lum = (rgb) => {
+        const n = (rgb.match(/[\d.]+/g) || []).map(Number);
+        if (n.length < 3) return null;
+        // Fully transparent paints nothing.
+        if (n.length > 3 && n[3] === 0) return null;
+        const [r, g, b] = n.slice(0, 3).map((v) => {
+          const c = v / 255;
+          return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+
+      const ceiling = lum(
+        getComputedStyle(document.documentElement).getPropertyValue("--surface").trim()
+          ? getComputedStyle(document.body).backgroundColor
+          : "rgb(255,255,255)",
+      );
+
+      const brighter = [];
+      for (const e of document.querySelectorAll("main *, header *, footer *")) {
+        const cs = getComputedStyle(e);
+        if (cs.display === "none" || cs.visibility === "hidden") continue;
+        const box = e.getBoundingClientRect();
+        if (box.width < 8 || box.height < 8) continue;
+        const l = lum(cs.backgroundColor);
+        // 0.85 is the surface ceiling verify.mjs enforces on the token; the
+        // same number is the right one for anything actually painted.
+        if (l !== null && l > 0.85) {
+          brighter.push(
+            e.tagName + " " + cs.backgroundColor + " " + String(e.className).slice(0, 24),
+          );
+        }
+      }
+
+      return {
+        pass: brighter.length === 0,
+        detail: { fondoPagina: ceiling?.toFixed(3), masBrillantes: brighter.slice(0, 5) },
+      };
+    },
+
     // ------------------------------------------------------------------ nav
     async secciones() {
       if (!document.getElementById("problema"))
