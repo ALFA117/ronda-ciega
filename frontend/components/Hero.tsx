@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown } from "lucide-react";
@@ -42,31 +42,41 @@ export function Hero() {
             first thing on the page — was blank until an animation ran, and
             stayed blank when one did not. Now the words are in the document at
             full opacity and the motion is something the page can lose. */}
+        {/* The space between the words is a text node, not a margin. A
+            margin looks the same and reads as one long word: it is what the
+            clipboard copies, what find-in-page searches, and what a screen
+            reader announces — and this sentence is the first thing the page
+            says. Inline-block words separated by real whitespace lay out the
+            same way and survive being read by something that is not an eye. */}
         <h1 key={t.hero.headline} className="display max-w-[16ch]">
           <span className="block">
             {headline.map((w, i) => (
-              <span
-                key={i}
-                className="rc-word mr-[0.22em]"
-                style={reduce ? undefined : { animationDelay: `${i * 55}ms` }}
-              >
-                {w}
-              </span>
+              <Fragment key={i}>
+                {i > 0 && " "}
+                <span
+                  className="rc-word"
+                  style={reduce ? undefined : { animationDelay: `${i * 55}ms` }}
+                >
+                  {w}
+                </span>
+              </Fragment>
             ))}
           </span>
           <span className="block text-muted">
             {subline.map((w, i) => (
-              <span
-                key={i}
-                className="rc-word mr-[0.22em]"
-                style={
-                  reduce
-                    ? undefined
-                    : { animationDelay: `${(headline.length + i) * 55}ms` }
-                }
-              >
-                {w}
-              </span>
+              <Fragment key={i}>
+                {i > 0 && " "}
+                <span
+                  className="rc-word"
+                  style={
+                    reduce
+                      ? undefined
+                      : { animationDelay: `${(headline.length + i) * 55}ms` }
+                  }
+                >
+                  {w}
+                </span>
+              </Fragment>
             ))}
           </span>
         </h1>

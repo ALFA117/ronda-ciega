@@ -933,6 +933,60 @@
       };
     },
 
+    /**
+     * Words separated by a margin instead of a space.
+     *
+     * The hero headline animates one word at a time, so each word is its own
+     * inline-block. Written as a margin the line looks right and reads as
+     * "Saywhoyouwant" — which is what the clipboard copies, what find-in-page
+     * searches, what a social preview scrapes, and what a screen reader says
+     * out loud about the first sentence on the page. Nothing visual catches
+     * this; the layout is identical either way.
+     *
+     * Flagged only between two inline neighbours that both end and begin in
+     * letters, neither of which is a control of its own — a nav with two
+     * links spaced by margin reads as two links and is not this bug.
+     */
+    async palabrasPegadas() {
+      const control = (e) =>
+        !!e.closest("a, button, [role], label") || e.hasAttribute("aria-hidden");
+      const word = /[A-Za-zÀ-ÿ]{2}/;
+      const pegadas = [];
+
+      for (const parent of document.querySelectorAll("h1,h2,h3,h4,p,li,span,div")) {
+        const kids = [...parent.children];
+        for (let i = 1; i < kids.length; i++) {
+          const a = kids[i - 1];
+          const b = kids[i];
+          if (control(a) || control(b)) continue;
+
+          const da = getComputedStyle(a).display;
+          const db = getComputedStyle(b).display;
+          if (!da.startsWith("inline") || !db.startsWith("inline")) continue;
+
+          let between = "";
+          for (let n = a.nextSibling; n && n !== b; n = n.nextSibling) {
+            between += n.textContent || "";
+          }
+          if (/\s/.test(between)) continue;
+
+          const ta = (a.textContent || "").trim();
+          const tb = (b.textContent || "").trim();
+          if (!word.test(ta.slice(-2)) || !word.test(tb.slice(0, 2))) continue;
+
+          const gap =
+            parseFloat(getComputedStyle(a).marginRight || 0) +
+            parseFloat(getComputedStyle(b).marginLeft || 0);
+          if (gap > 0.5) pegadas.push(ta.slice(-10) + " | " + tb.slice(0, 10));
+        }
+      }
+
+      return {
+        pass: pegadas.length === 0,
+        detail: { pegadas: pegadas.slice(0, 8), total: pegadas.length },
+      };
+    },
+
     async ticker() {
       const t = document.querySelector('a[aria-label*="ltim"], a[aria-label*="Latest"]');
       if (!t) return { pass: true, detail: "sin rondas cerradas: no debe mostrarse" };
