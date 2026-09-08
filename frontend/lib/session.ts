@@ -30,6 +30,26 @@ export const SESSION_HOURS = 2;
 
 const STORAGE_PREFIX = "rc-session-key:";
 
+/**
+ * The two methods of `localStorage` this module uses, and nothing else.
+ *
+ * A bare reference to a global that does not exist throws a ReferenceError
+ * rather than reading as `undefined`, and this file is imported by a
+ * server-rendered page and by the test runner, neither of which has a
+ * `localStorage` at all. Going through `globalThis` turns that absence into a
+ * value the code can check — and, not incidentally, lets the tests typecheck
+ * against a config with no DOM library, which is what keeps browser
+ * assumptions from drifting into lib/ unnoticed.
+ */
+type Slot = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+};
+
+function storage(): Slot | null {
+  return (globalThis as { localStorage?: Slot }).localStorage ?? null;
+}
+
 export interface SessionKey {
   keypair: Keypair;
   publicKey: PublicKey;
@@ -56,8 +76,10 @@ export function sessionKey(wallet: PublicKey): SessionKey {
   const slot = STORAGE_PREFIX + wallet.toBase58();
   let keypair: Keypair | null = null;
 
+  const store = storage();
+
   try {
-    const stored = localStorage.getItem(slot);
+    const stored = store?.getItem(slot);
     if (stored) {
       const bytes = Uint8Array.from(JSON.parse(stored));
       if (bytes.length === 64) keypair = Keypair.fromSecretKey(bytes);
@@ -69,7 +91,7 @@ export function sessionKey(wallet: PublicKey): SessionKey {
   if (!keypair) {
     keypair = Keypair.generate();
     try {
-      localStorage.setItem(slot, JSON.stringify(Array.from(keypair.secretKey)));
+      store?.setItem(slot, JSON.stringify(Array.from(keypair.secretKey)));
     } catch {
       /* not persisted; the next load authorises a new one */
     }
@@ -156,30 +178,60 @@ export function sessionExpiry(): number {
 }
 
 /**
- * Is this browser's session key already authorised on chain?
+ * A SessionToken is 8 bytes of discriminator, three pubkeys, then `valid_until`.
+ *
+ * Reading another program's account layout by hand is normally a bad trade,
+ * and the first version of this file refused to do it. What changes the trade
+ * is that the layout is not another program's secret here: `submit_ranking`
+ * takes an `Account<'info, SessionToken>`, so the struct is declared in our
+ * own IDL, and a change to it would stop the program compiling long before it
+ * could mislead anyone reading these eight bytes.
+ */
+const VALID_UNTIL_AT = 8 + 32 * 3;
+const SESSION_TOKEN_LEN = VALID_UNTIL_AT + 8;
+
+/** Unix seconds at which the token stops working, or `null` if this is not one. */
+export function readValidUntil(data: Uint8Array): number | null {
+  if (data.length !== SESSION_TOKEN_LEN) return null;
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  return Number(view.getBigInt64(VALID_UNTIL_AT, true));
+}
+
+/** What this browser's session key is worth right now. */
+export type SessionState = "none" | "expired" | "live";
+
+/**
+ * Is this browser's session key authorised on chain, and still good?
  *
  * The interface promises a number of wallet prompts before it costs them, and
- * that number now depends on two caches rather than one: the enclave token in
+ * that number depends on two caches rather than one: the enclave token in
  * localStorage, and this account on L1. Getting it wrong in the cheap
  * direction is the bad one — telling somebody an action is free and then
  * opening their wallet is worse than not having claimed anything.
  *
- * Existence, not validity. A token that has expired still exists, and reading
- * `valid_until` means parsing an account laid out by someone else's program;
- * the honest fallback is that the program refuses an expired token by name and
- * the caller starts a fresh session. So this answers "has one been made", and
- * the refusal answers "is it still good".
+ * Which is why this reads `valid_until` rather than stopping at "the account
+ * exists". A token expires after a couple of hours and its account stays
+ * behind, so existence alone answers "free" to exactly the person who came
+ * back tomorrow — the case the promise was written for. Everything this
+ * cannot read confidently is reported as a cost instead: an RPC that will not
+ * answer, an account of an unexpected length, storage that will not open.
+ * Those all over-count the prompts, which is the direction that keeps it.
  */
-export async function hasSessionToken(
-  connection: { getAccountInfo(a: PublicKey): Promise<unknown | null> },
+export async function sessionState(
+  connection: {
+    getAccountInfo(a: PublicKey): Promise<{ data: Uint8Array } | null>;
+  },
   wallet: PublicKey,
-): Promise<boolean> {
+  nowSeconds: number = Math.floor(Date.now() / 1000),
+): Promise<SessionState> {
   try {
     const token = sessionTokenPda(sessionKey(wallet).publicKey, wallet);
-    return (await connection.getAccountInfo(token)) !== null;
+    const info = await connection.getAccountInfo(token);
+    if (!info) return "none";
+    const until = readValidUntil(info.data);
+    if (until === null) return "expired";
+    return until > nowSeconds ? "live" : "expired";
   } catch {
-    // An RPC that will not answer is not evidence of anything. Say no, which
-    // over-counts the prompts rather than under-counting them.
-    return false;
+    return "none";
   }
 }

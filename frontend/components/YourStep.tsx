@@ -7,7 +7,7 @@ import { Check, Copy, Heart, HeartOff, Users } from "lucide-react";
 import { ParticipantAccount, RoundAccount } from "@/lib/program";
 import { currentStep, isBystander, partnerIndex, type StepId } from "@/lib/steps";
 import { hasTeeSession } from "@/lib/tee";
-import { hasSessionToken } from "@/lib/session";
+import { sessionState } from "@/lib/session";
 import { useT } from "@/lib/i18n";
 import { JoinForm } from "./JoinForm";
 import { RankingBuilder } from "./RankingBuilder";
@@ -70,8 +70,8 @@ export function YourStep({
       setSession(false);
       return;
     }
-    hasSessionToken(connection, wallet.publicKey).then((yes) => {
-      if (live) setSession(yes);
+    sessionState(connection, wallet.publicKey).then((state) => {
+      if (live) setSession(state === "live");
     });
     return () => {
       live = false;
