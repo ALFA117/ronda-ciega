@@ -92,9 +92,16 @@ su propio control, en veinte segundos.*
 
 Ordenar tres nombres, "Sellar mi lista", **mostrar el prompt del monedero**.
 
-> "Dos firmas la primera vez: una prueba al enclave quién soy, la otra es la transacción. El token
-> del enclave dura horas y sobrevive recargas, así que a partir de ahí es una sola. La página lo
-> dice antes de pedirlas."
+> "Dos firmas la primera vez, y ninguna después. Una autoriza una clave de sesión —una transacción
+> normal de L1, que el monedero simula sin problema. La otra le prueba al enclave quién soy, y es
+> una firma sobre un *mensaje*: no hay nada que simular, así que no hay nada que rechazar.
+>
+> A partir de ahí sello listas sin tocar el monedero. Lo que esa clave puede hacer es escribir.
+> Leer, nunca: el permiso de la cuenta se deriva de mi billetera, no de quien firma."
+
+**En pantalla:** el contador de firmas del panel, que dice el número antes de pedirlo. Si ya
+sellaste una vez en ese navegador dirá **"sin firmas"** — vale la pena enseñarlo dos veces
+seguidas para que se vea el cambio.
 
 **Si algo falla aquí, corta y sigue.** Los pasos 1 y 2 ya demostraron el sistema.
 

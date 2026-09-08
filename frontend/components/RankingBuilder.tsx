@@ -156,15 +156,14 @@ export function RankingBuilder({
       const session = sessionKey(owner);
       const token = sessionTokenPda(session.publicKey, owner);
 
-      // Authorise the session key once, if it is not already authorised.
+      // Authorise the session key, if it is not already authorised.
       //
       // This is an ordinary L1 transaction to a program that exists on L1,
       // which is exactly what a wallet can simulate — so it is the one
       // signature this flow still costs, and the one that will not be refused.
       // The transfer rides along because the session key pays the rollup fee
       // afterwards and starts with nothing.
-      const existing = await connection.getAccountInfo(token);
-      if (!existing) {
+      const authorise = async () => {
         const tx = new Transaction()
           .add(createSessionIx(owner, session.publicKey, sessionExpiry()))
           .add(
@@ -185,7 +184,9 @@ export function RankingBuilder({
         });
         await connection.confirmTransaction(sig, "confirmed");
         toast(t.ranking.sessionCreated);
-      }
+      };
+
+      if (!(await connection.getAccountInfo(token))) await authorise();
 
       // The enclave still learns who you are from YOUR signature — this one is
       // over a message, not a transaction, so there is nothing for a wallet to
@@ -196,21 +197,36 @@ export function RankingBuilder({
       const program = getProgram(conn, session as any);
       const preferences = preferencesPda(round.address, owner);
 
-      await program.methods
-        .submitRanking(
-          new BN(round.roundId.toString()),
-          Buffer.from(chosen.map((c) => c.index)),
-        )
-        .accountsPartial({
-          signer: session.publicKey,
-          wallet: owner,
-          sessionToken: token,
-          round: round.address,
-          participant: participantPda(round.address, owner),
-          preferences,
-          preferencesPermission: permissionPdaFromAccount(preferences),
-        })
-        .rpc();
+      const send = () =>
+        program.methods
+          .submitRanking(
+            new BN(round.roundId.toString()),
+            Buffer.from(chosen.map((c) => c.index)),
+          )
+          .accountsPartial({
+            signer: session.publicKey,
+            wallet: owner,
+            sessionToken: token,
+            round: round.address,
+            participant: participantPda(round.address, owner),
+            preferences,
+            preferencesPermission: permissionPdaFromAccount(preferences),
+          })
+          .rpc();
+
+      try {
+        await send();
+      } catch (e) {
+        // A session token that exists is not necessarily a session token that
+        // works: they expire, and the account outlives the authority it
+        // carried. Checking that from here would mean parsing an account laid
+        // out by somebody else's program, so the program's own refusal is the
+        // check — it names InvalidSession, and the answer to it is a fresh
+        // session rather than an error the person can do nothing about.
+        if (classifyError(e) !== "badSession") throw e;
+        await authorise();
+        await send();
+      }
 
       setDone(true);
       toast(t.ranking.sealed);

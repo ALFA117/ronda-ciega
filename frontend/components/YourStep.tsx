@@ -2,11 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Check, Copy, Heart, HeartOff, Users } from "lucide-react";
 import { ParticipantAccount, RoundAccount } from "@/lib/program";
 import { currentStep, isBystander, partnerIndex, type StepId } from "@/lib/steps";
 import { hasTeeSession } from "@/lib/tee";
+import { hasSessionToken } from "@/lib/session";
 import { useT } from "@/lib/i18n";
 import { JoinForm } from "./JoinForm";
 import { RankingBuilder } from "./RankingBuilder";
@@ -45,18 +46,39 @@ export function YourStep({
   onChanged: () => void;
 }) {
   const wallet = useWallet();
+  const { connection } = useConnection();
   const t = useT();
 
   const me = participants.find(
     (p) => wallet.publicKey && p.wallet.equals(wallet.publicKey),
   );
 
-  // Whether the enclave still knows this wallet decides how many prompts the
-  // next action costs, and it changes underneath us when one is signed.
-  const [warm, setWarm] = useState(false);
+  // How many wallet prompts sealing a list will cost.
+  //
+  // Two caches decide it now, not one: the enclave token in localStorage, and
+  // the session token on L1. With both, sealing costs nothing at all — the
+  // session key signs the transaction and the enclave already knows who you
+  // are. With neither it is two. The cheap direction is the dangerous one to
+  // get wrong: promising a free action and then opening somebody's wallet is
+  // worse than never having promised.
+  const [enclave, setEnclave] = useState(false);
+  const [session, setSession] = useState(false);
   useEffect(() => {
-    setWarm(hasTeeSession(wallet.publicKey ?? null));
-  }, [wallet.publicKey, round.rankingCount, delegated]);
+    let live = true;
+    setEnclave(hasTeeSession(wallet.publicKey ?? null));
+    if (!wallet.publicKey) {
+      setSession(false);
+      return;
+    }
+    hasSessionToken(connection, wallet.publicKey).then((yes) => {
+      if (live) setSession(yes);
+    });
+    return () => {
+      live = false;
+    };
+  }, [wallet.publicKey, connection, round.rankingCount, delegated]);
+
+  const prompts = (enclave ? 0 : 1) + (session ? 0 : 1);
 
   // The side this person did NOT join is the one they will rank, and an
   // empty one is why somebody ends up staring at a form they cannot use.
@@ -162,7 +184,9 @@ export function YourStep({
       <div className="space-y-4 border-t border-edge px-5 py-5">
         <div className="space-y-1.5">
           <p className="text-sm leading-relaxed">{t.steps[current].now}</p>
-          {current === "rank" && <SignatureCost warm={warm} />}
+          {current === "rank" && (
+            <SignatureCost prompts={prompts} session={session} />
+          )}
         </div>
 
         {current === "connect" && <WalletMultiButton />}
@@ -177,7 +201,8 @@ export function YourStep({
             me={me}
             participants={participants}
             onSubmitted={() => {
-              setWarm(hasTeeSession(wallet.publicKey ?? null));
+              setEnclave(hasTeeSession(wallet.publicKey ?? null));
+              setSession(true);
               onChanged();
             }}
           />
@@ -255,19 +280,41 @@ function Alone({ side, needed }: { side: "founder" | "builder"; needed: number }
 /**
  * How many prompts the next action costs, said before it costs them.
  *
- * Two is the honest number on a cold browser — the enclave challenge and the
- * transaction — and one once the enclave token is cached, which it now is
- * across reloads. Naming the second one as "for the enclave" is the difference
- * between a wallet popping up twice and a wallet popping up twice for reasons.
+ * Two on a cold browser: one authorising a session key, one proving to the
+ * enclave who you are. Both are cached — the session key on chain, the enclave
+ * token in this browser — so the count falls to one and then to none, and the
+ * reason is named each time. A wallet popping up twice for reasons is a
+ * different experience from a wallet popping up twice.
  */
-function SignatureCost({ warm }: { warm: boolean }) {
+function SignatureCost({
+  prompts,
+  session,
+}: {
+  prompts: number;
+  /** Which of the two is already done decides which reason is left to give. */
+  session: boolean;
+}) {
   const t = useT();
+
+  const count =
+    prompts === 0
+      ? t.steps.signaturesNone
+      : prompts === 1
+        ? t.steps.signaturesOne
+        : t.steps.signaturesTwo;
+
+  const why =
+    prompts === 0
+      ? t.steps.signaturesWhyNone
+      : prompts === 2
+        ? t.steps.signaturesWhyTwo
+        : session
+          ? t.steps.signaturesWhyEnclave
+          : t.steps.signaturesWhySession;
+
   return (
     <p className="font-mono text-2xs text-muted">
-      <span className="text-sealed">
-        {warm ? t.steps.signaturesOne : t.steps.signaturesTwo}
-      </span>{" "}
-      · {warm ? t.steps.signaturesCached : t.steps.signaturesWhy}
+      <span className="text-sealed">{count}</span> · {why}
     </p>
   );
 }

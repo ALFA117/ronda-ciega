@@ -154,3 +154,32 @@ export function createSessionIx(
 export function sessionExpiry(): number {
   return Math.floor(Date.now() / 1000) + SESSION_HOURS * 3600;
 }
+
+/**
+ * Is this browser's session key already authorised on chain?
+ *
+ * The interface promises a number of wallet prompts before it costs them, and
+ * that number now depends on two caches rather than one: the enclave token in
+ * localStorage, and this account on L1. Getting it wrong in the cheap
+ * direction is the bad one — telling somebody an action is free and then
+ * opening their wallet is worse than not having claimed anything.
+ *
+ * Existence, not validity. A token that has expired still exists, and reading
+ * `valid_until` means parsing an account laid out by someone else's program;
+ * the honest fallback is that the program refuses an expired token by name and
+ * the caller starts a fresh session. So this answers "has one been made", and
+ * the refusal answers "is it still good".
+ */
+export async function hasSessionToken(
+  connection: { getAccountInfo(a: PublicKey): Promise<unknown | null> },
+  wallet: PublicKey,
+): Promise<boolean> {
+  try {
+    const token = sessionTokenPda(sessionKey(wallet).publicKey, wallet);
+    return (await connection.getAccountInfo(token)) !== null;
+  } catch {
+    // An RPC that will not answer is not evidence of anything. Say no, which
+    // over-counts the prompts rather than under-counting them.
+    return false;
+  }
+}

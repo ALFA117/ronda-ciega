@@ -104,11 +104,27 @@ otherwise. `lib/autopilot.ts` decides the sequence and is tested on its own — 
 early wastes a transaction, and finishing a moment early destroys the working memory of a round
 that has not produced its pairings yet.
 
-A participant still signs, and the page now says how often before it asks. The enclave's auth
-challenge is one prompt and the transaction is the other, so a cold browser costs two; the token is
-valid for hours and survives reloads, so everything after that costs one. It used to be two every
-time, because the token lived in a module-level Map that every page load threw away. Disconnecting
-clears it.
+A participant signs twice, once, or not at all, and the page says which before it asks.
+
+Sealing a list used to cost a wallet prompt every time, and it was the prompt a wallet is most
+likely to refuse: once a round is delegated, a transaction against it cannot be simulated on L1.
+`submit_ranking` takes a **session token** now. `wallet` stops being a signer and becomes the
+account every PDA is seeded from, `signer` is whoever pays, and the token proves that signer is
+entitled to act for that wallet. Without a token the signer must BE the owner, exactly as before.
+
+What a session key cannot do is read. Every account is seeded from the owner's wallet, and the
+permission on a `Preferences` account lists the owner and the round — derived from the seeding key,
+never from the signer. **A session key can write a list. It can never read one back**, and that
+asymmetry is what makes handing it a browser key safe at all.
+
+So a cold browser costs two prompts: one ordinary L1 transaction authorising the session key, which
+a wallet simulates perfectly well, and one signed *message* proving to the enclave who you are —
+a message has nothing to simulate and nothing to refuse. Both are cached, the session on chain and
+the enclave token in the browser, so the second seal costs nothing. A session that has expired is
+refused by name and replaced rather than reported.
+
+Identity deliberately does not move: the enclave's idea of who you are stays tied to your wallet
+signature, never to the browser key.
 
 ## How it runs
 
