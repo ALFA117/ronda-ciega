@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { SystemProgram } from "@solana/web3.js";
@@ -64,6 +64,8 @@ export function RoundCreator({ onCancel }: { onCancel?: () => void }) {
   const [chose, setChose] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
+  /** The id the last attempt used, so a failed confirmation can go looking. */
+  const roundIdRef = useRef<BN | null>(null);
 
   const connected = !!wallet.publicKey;
   const minutesError = checkMinutes(minutes);
@@ -80,6 +82,7 @@ export function RoundCreator({ onCancel }: { onCancel?: () => void }) {
     try {
       const program = getProgram(connection, wallet as any);
       const roundId = new BN(Date.now());
+      roundIdRef.current = roundId;
       const round = roundPda(wallet.publicKey, roundId);
       const deadline = new BN(
         Math.floor(Date.now() / 1000) + minutesToSeconds(minutes),
@@ -110,6 +113,26 @@ export function RoundCreator({ onCancel }: { onCancel?: () => void }) {
       setPhase("done");
       router.push(`/round/${round.toBase58()}`);
     } catch (e) {
+      // A confirmation that gives up is not the same as a round that was not
+      // created. The blockhash window is about a minute; a slow devnet, or a
+      // laptop that slept for ten seconds, can blow through it while the
+      // transaction lands perfectly well. Reporting a failure there loses
+      // somebody the round they just paid rent for, and the address is
+      // derived rather than returned — so we can simply go and look.
+      //
+      // Checked before the error is shown, and only ever able to turn a
+      // failure into a success: if the account is not there, or the lookup
+      // itself fails, the original error stands.
+      try {
+        const round = roundPda(wallet.publicKey, roundIdRef.current!);
+        if (await connection.getAccountInfo(round)) {
+          setPhase("done");
+          router.push(`/round/${round.toBase58()}`);
+          return;
+        }
+      } catch {
+        /* the RPC is having a bad time too; report what actually failed */
+      }
       setError(t.errors[classifyError(e)]);
       setPhase("idle");
     }

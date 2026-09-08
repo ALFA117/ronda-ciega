@@ -313,9 +313,9 @@ cargo test --package ronda-ciega   # 40 tests, host target, no validator
 ```
 
 ```bash
-cd frontend && npm test        # 202 unit tests, no network, ~1s
+cd frontend && npm test        # 232 unit tests, no network, ~2s
 npm run test:types             # types for the test suite
-OFFLINE=1 node scripts/verify.mjs   # the 46 checks that read the repo
+OFFLINE=1 node scripts/verify.mjs   # the checks that read the repo
 ```
 
 The rest costs SOL and needs a funded devnet wallet, so it stays manual and out
@@ -323,7 +323,7 @@ of CI. A pipeline that goes red because devnet is having a bad day is one people
 learn to ignore.
 
 ```bash
-npm run verify                 # 54 checks, including the deployed site
+npm run verify                 # the same, plus the deployed site
 npm run negative               # 11 refusals the program must make, on L1
 npm run operator-key           # a stranger key drives the rollup lifecycle
 npm run concurrency            # six wallets join at once, indices stay unique

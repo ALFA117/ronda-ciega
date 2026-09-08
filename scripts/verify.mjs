@@ -8,7 +8,7 @@
  *   node scripts/verify.mjs
  *   BASE=http://localhost:3040 node scripts/verify.mjs
  */
-import { readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
@@ -277,6 +277,80 @@ head("Account sizes match the program");
 // --------------------------------------------------------------- live ---
 // Everything above reads the repository and is deterministic. What follows
 // asks the deployed site questions, so it belongs to a different category:
+// -------------------------------------------------- the README's numbers ---
+//
+// Every count the README states has been wrong at least once, because a
+// number in prose is the one part of a repository nothing recompiles. The
+// three below are derivable, so they are derived and compared: a suite that
+// grows while the sentence does not now turns this red. The counts that are
+// not derivable were taken out of the README instead of guessed at here.
+head("The README counts what is actually there");
+{
+  const readme = readFileSync(join(HERE, "..", "README.md"), "utf8");
+  const hits = (file, re) => (readFileSync(file, "utf8").match(re) || []).length;
+
+  const testDir = join(HERE, "..", "frontend", "tests");
+  let ts = 0;
+  for (const f of readdirSync(testDir).filter((n) => n.endsWith(".test.ts"))) {
+    ts += hits(join(testDir, f), /^\s*test\(/gm);
+  }
+  const rust = hits(
+    join(HERE, "..", "programs", "ronda-ciega", "src", "lib.rs"),
+    /#\[test\]/g,
+  );
+  const cases = hits(join(HERE, "ui-cases.js"), /^    async /gm);
+
+  // The README spells small numbers out, so the check has to as well. Only
+  // 0-99: nothing counted here is bigger, and a number that grows past that
+  // wants a digit in the prose anyway.
+  const ONES = [
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+    "sixteen", "seventeen", "eighteen", "nineteen",
+  ];
+  const TENS = [
+    "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy",
+    "eighty", "ninety",
+  ];
+  const spell = (n) => {
+    if (n < 20) return ONES[n];
+    if (n > 99) return null;
+    const tens = TENS[Math.floor(n / 10)];
+    const ones = n % 10;
+    return ones ? `${tens}-${ONES[ones]}` : tens;
+  };
+
+  const claim = (label, re, actual) => {
+    const m = readme.match(re);
+    if (!m) return bad(`the README no longer states ${label}`);
+    if (Number(m[1]) === actual) ok(`README: ${actual} ${label}`);
+    else bad(`README says ${m[1]} ${label}; there are ${actual}`);
+  };
+
+  claim("TypeScript unit tests", /npm test\s+#\s*(\d+) unit tests/, ts);
+  claim("Rust tests", /ronda-ciega\s+#\s*(\d+) tests, host target/, rust);
+
+  // These are spelled out in prose rather than in a code block, so they are
+  // matched as words. Prose is where a stale number survives longest: nobody
+  // greps a paragraph for a figure they are about to invalidate.
+  const inProse = (label, phrase, n) => {
+    const word = spell(n);
+    if (word && new RegExp(phrase.replace("{n}", word), "i").test(readme)) {
+      ok(`README: ${n} ${label}`);
+    } else {
+      bad(`README does not say "${phrase.replace("{n}", word ?? n)}"; there are ${n}`);
+    }
+  };
+
+  inProse("UI cases", "The {n} UI cases", cases);
+  inProse("Rust unit tests", "{n} Rust unit tests", rust);
+
+  const errors = JSON.parse(
+    readFileSync(join(HERE, "..", "frontend", "lib", "idl.json"), "utf8"),
+  ).errors.length;
+  inProse("error codes", "the program's {n} error codes", errors);
+}
+
 // it can fail for reasons that have nothing to do with the commit. CI runs
 // with OFFLINE=1, because a pipeline that goes red when Vercel hiccups is a
 // pipeline people learn to ignore.
