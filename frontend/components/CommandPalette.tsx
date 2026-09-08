@@ -191,7 +191,12 @@ export function CommandPalette() {
       <button
         onClick={() => setOpen(true)}
         aria-label={t.palette.open}
-        className="glass fixed bottom-5 right-5 z-30 hidden h-11 items-center gap-2 rounded-xl px-3.5 font-mono text-2xs text-muted transition-colors hover:text-chalk lg:flex"
+        /* xl, not lg: the menu button is xl:hidden, so between 1024 and
+           1279 both were on screen at once — and the menu sheet carries its
+           own search row, which made three ways into one thing and two of
+           them visible together. Above xl the sheet is gone and this is the
+           only way in; below it, the sheet is. */
+        className="glass fixed bottom-5 right-5 z-30 hidden h-11 items-center gap-2 rounded-xl px-3.5 font-mono text-2xs text-muted transition-colors hover:text-chalk xl:flex"
       >
         <Search className="h-3.5 w-3.5" aria-hidden />
         {t.palette.open}

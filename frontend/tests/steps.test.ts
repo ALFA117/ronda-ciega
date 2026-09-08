@@ -3,14 +3,28 @@ import assert from "node:assert/strict";
 import { NONE } from "../lib/constants.ts";
 import { currentStep, isBystander, partnerIndex } from "../lib/steps.ts";
 
-const open = { open: true, connected: true, joined: true, delegated: true };
+// A round with people on both sides, so oppositeCount never becomes the
+// reason a case takes a branch it was not written to test.
+const open = {
+  open: true,
+  connected: true,
+  joined: true,
+  delegated: true,
+  oppositeCount: 4,
+};
 
 describe("currentStep", () => {
   test("a visitor with no wallet is asked to connect, whatever else is true", () => {
     for (const o of [true, false]) {
       for (const d of [true, false]) {
         assert.equal(
-          currentStep({ open: o, connected: false, joined: false, delegated: d }),
+          currentStep({
+            open: o,
+            connected: false,
+            joined: false,
+            delegated: d,
+            oppositeCount: 4,
+          }),
           "connect",
         );
       }
@@ -36,7 +50,13 @@ describe("currentStep", () => {
     // leave them looking at a ranking form the program will now refuse.
     assert.equal(currentStep({ ...open, open: false }), "result");
     assert.equal(
-      currentStep({ open: false, connected: true, joined: false, delegated: true }),
+      currentStep({
+        open: false,
+        connected: true,
+        joined: false,
+        delegated: true,
+        oppositeCount: 4,
+      }),
       "result",
     );
   });
@@ -86,5 +106,45 @@ describe("partnerIndex", () => {
 
   test("an index past the end of pairs is unmatched, not undefined", () => {
     assert.equal(partnerIndex(pairs, "founder", 99), null);
+  });
+});
+
+describe("solo de un lado", () => {
+  // Reported from a real round: somebody opened one, joined as the only
+  // builder, and the panel put them on "seal a list" with a form that said
+  // there was nobody to rank and a button that could not be pressed. Every
+  // sentence was true and none of them said what had gone wrong.
+  const joined = { open: true, connected: true, joined: true, delegated: true };
+
+  test("joined and delegated with an empty opposite side is not ranking", () => {
+    assert.equal(currentStep({ ...joined, oppositeCount: 0 }), "alone");
+  });
+
+  test("one person on the other side is enough to start", () => {
+    // The round still cannot close — quorum is two per side — but a list can
+    // be written, and telling someone they are alone when they are not is its
+    // own kind of wrong.
+    assert.equal(currentStep({ ...joined, oppositeCount: 1 }), "rank");
+  });
+
+  test("being alone does not outrank the reasons that come before it", () => {
+    // A round that has not reached the rollup cannot hold a ranking either,
+    // and that is the more useful thing to say first.
+    assert.equal(
+      currentStep({ ...joined, delegated: false, oppositeCount: 0 }),
+      "wait",
+    );
+    // And a closed round reports its result, however empty the sides were.
+    assert.equal(
+      currentStep({ ...joined, open: false, oppositeCount: 0 }),
+      "result",
+    );
+  });
+
+  test("someone who has not joined is never alone, they are joining", () => {
+    assert.equal(
+      currentStep({ ...joined, joined: false, oppositeCount: 0 }),
+      "join",
+    );
   });
 });

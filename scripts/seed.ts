@@ -131,6 +131,21 @@ const BUILDER_RANKINGS = BUILDERS.map((_, i) =>
 
 const ONLY = process.env.ONLY;
 
+/**
+ * How long the open round stays open, in hours.
+ *
+ * Six was the default and six is wrong for the only thing this round is for:
+ * it exists so a wallet can join and seal on camera, and the recording is not
+ * the same afternoon as the seeding. A round that closed overnight leaves the
+ * live demo with nothing to join and no sign of why — the page correctly says
+ * the round is closed, which is the least useful true thing it could say ten
+ * minutes before a take.
+ *
+ * Set OPEN_HOURS to override. The program puts no ceiling on a deadline; the
+ * create form caps at fourteen days because past that it is a typo.
+ */
+const OPEN_HOURS = Number(process.env.OPEN_HOURS ?? 120);
+
 function loadAuthority(): Keypair {
   const p = path.join(os.homedir(), ".config", "solana", "id.json");
   return Keypair.fromSecretKey(
@@ -307,7 +322,12 @@ async function seedRound(
   ok(`${people.length} rankings sealed (contents never logged)`);
 
   if (!opts.settle) {
-    ok(`left OPEN — closes in ~${Math.round(opts.windowSec / 60)} min`);
+    const closesAt = new Date(Date.now() + opts.windowSec * 1000);
+    const hours = opts.windowSec / 3600;
+    ok(
+      `left OPEN — closes ${closesAt.toISOString().slice(0, 16).replace("T", " ")} UTC ` +
+        `(${hours >= 48 ? Math.round(hours / 24) + " days" : Math.round(hours) + " h"})`,
+    );
     console.log(`   https://ronda-ciega.vercel.app/round/${round.toBase58()}`);
     return round;
   }
@@ -442,7 +462,7 @@ async function main() {
         transparent: true,
         settle: false,
         label: "Open (join and seal live from a wallet)",
-        windowSec: 60 * 60 * 6,
+        windowSec: Math.round(60 * 60 * OPEN_HOURS),
       },
     },
   ];

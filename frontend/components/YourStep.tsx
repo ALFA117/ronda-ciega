@@ -3,14 +3,14 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Check, Heart, HeartOff } from "lucide-react";
+import { Check, Copy, Heart, HeartOff, Users } from "lucide-react";
 import { ParticipantAccount, RoundAccount } from "@/lib/program";
 import { currentStep, isBystander, partnerIndex, type StepId } from "@/lib/steps";
 import { hasTeeSession } from "@/lib/tee";
 import { useT } from "@/lib/i18n";
 import { JoinForm } from "./JoinForm";
 import { RankingBuilder } from "./RankingBuilder";
-import { Label, Note, Panel } from "./ui";
+import { Button, Label, Note, Panel } from "./ui";
 
 const WalletMultiButton = dynamic(
   async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
@@ -58,11 +58,18 @@ export function YourStep({
     setWarm(hasTeeSession(wallet.publicKey ?? null));
   }, [wallet.publicKey, round.rankingCount, delegated]);
 
+  // The side this person did NOT join is the one they will rank, and an
+  // empty one is why somebody ends up staring at a form they cannot use.
+  const oppositeCount = me
+    ? participants.filter((p) => p.side !== me.side).length
+    : 0;
+
   const state = {
     open: round.status === "open",
     connected: !!wallet.publicKey,
     joined: !!me,
     delegated,
+    oppositeCount,
   };
   const current: StepId = currentStep(state);
 
@@ -83,18 +90,19 @@ export function YourStep({
     );
   }
 
-  // The rail never shows "wait" as a station of its own: it is the same
-  // station as ranking, just not open yet. Five dots that sometimes mean four
-  // things is worse than four dots.
+  // The rail never shows "wait" or "alone" as stations of their own: both are
+  // the ranking station, just not reachable yet — one because the round is not
+  // on the rollup, the other because there is nobody to rank. Dots that
+  // sometimes mean one thing and sometimes another are worse than fewer dots.
   const rail: { id: StepId; name: string }[] = [
     { id: "connect", name: t.steps.connect.name },
     { id: "join", name: t.steps.join.name },
     { id: "rank", name: me && round.rankingCount > 0 ? t.steps.sealed.name : t.steps.rank.name },
     { id: "result", name: t.steps.result.name },
   ];
-  const railIndex = rail.findIndex(
-    (s) => s.id === (current === "wait" ? "rank" : current),
-  );
+  const station: StepId =
+    current === "wait" || current === "alone" ? "rank" : current;
+  const railIndex = rail.findIndex((s) => s.id === station);
 
   return (
     <Panel className="overflow-hidden">
@@ -175,6 +183,13 @@ export function YourStep({
           />
         )}
 
+        {current === "alone" && me && (
+          <Alone
+            side={me.side}
+            needed={Math.max(round.minPerSide, 1)}
+          />
+        )}
+
         {current === "wait" && me && (
           <Note>
             {t.steps.youAre} <span className="text-chalk">{me.handle}</span>.
@@ -186,6 +201,54 @@ export function YourStep({
         )}
       </div>
     </Panel>
+  );
+}
+
+/**
+ * Joined, on the rollup, and alone on your side of the market.
+ *
+ * There is nothing to rank and no button that will work, so the only useful
+ * thing this panel can do is say that plainly and hand over the link that
+ * fixes it. Reported from a real round: the rail said "seal a list", the form
+ * said there was nobody to rank, and neither said the round needed other
+ * people or how to get them there.
+ */
+function Alone({ side, needed }: { side: "founder" | "builder"; needed: number }) {
+  const t = useT();
+  const [copied, setCopied] = useState(false);
+
+  const share = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access is refused in plenty of ordinary situations — an
+      // insecure origin, a browser setting, a page without focus. Selecting
+      // the address bar is the fallback everybody already knows, so say that
+      // rather than fail silently or pretend it worked.
+      window.prompt(t.steps.copyManually, url);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="glass flex items-start gap-3 rounded-xl px-4 py-3.5">
+        <Users className="mt-0.5 h-4 w-4 shrink-0 text-open" aria-hidden />
+        <p className="text-xs leading-relaxed text-muted">
+          {(side === "founder" ? t.steps.aloneFounder : t.steps.aloneBuilder).replace(
+            "{n}",
+            String(needed),
+          )}
+        </p>
+      </div>
+
+      <Button variant="sealed" onClick={share}>
+        <Copy className="h-3.5 w-3.5" aria-hidden />
+        {copied ? t.steps.copied : t.steps.copyInvite}
+      </Button>
+    </div>
   );
 }
 
