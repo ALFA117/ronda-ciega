@@ -199,7 +199,6 @@ export const es = {
     connect: "Conecta tu wallet",
     waiting:
       "Espera a que quien organiza delegue la ronda al rollup — tu lista privada no puede existir hasta entonces.",
-    youAreIn: "Estás dentro como",
   },
 
   autopilot: {
@@ -224,6 +223,7 @@ export const es = {
     rollupHost: "devnet-tee.magicblock.app",
     l1: "Solana L1",
     l1Host: "api.devnet.solana.com",
+    heroLine: "más rápido que L1, medido en tu navegador ahora mismo",
     faster: "más rápido",
     measuring: "midiendo…",
     perSecond: "slots/s",
@@ -252,7 +252,6 @@ export const es = {
     done: "hecho",
     signaturesOne: "1 firma",
     signaturesTwo: "2 firmas",
-    signaturesNone: "sin firmas",
     signaturesWhy: "una para el enclave, una para la transacción",
     signaturesCached: "el enclave ya te conoce en este navegador",
     connectClosed: "Esta ronda ya cerró. Conecta tu monedero para ver si te tocó par.",
@@ -314,8 +313,6 @@ export const es = {
     ingested: "listas ingeridas al enclave",
     matched: "Matching completo en UNA transacción del rollup",
     vrfRequested: "Aleatoriedad VRF solicitada al oráculo",
-    vrfWaiting: "Esperando la aleatoriedad del oráculo…",
-    vrfReady: "Aleatoriedad verificable lista",
     undelegate: "Destruir listas y devolver a L1",
     rankingsDestroyed: "listas destruidas dentro del enclave",
     memoryDestroyed: "Memoria de trabajo destruida",

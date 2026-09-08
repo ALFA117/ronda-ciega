@@ -100,3 +100,35 @@ export async function fetchSlot(url: string): Promise<number> {
     clearTimeout(timer);
   }
 }
+
+/**
+ * The measured ratio, published once and read from wherever.
+ *
+ * The hero wants to say how much faster the rollup is, and so does the band
+ * further down. Both polling would double the requests every visitor makes to
+ * a public devnet RPC to answer the same question twice, and the two would
+ * disagree by a sample or so while they did it. One poller writes here; anyone
+ * else subscribes.
+ *
+ * Deliberately not React state: the writer is a component and the readers are
+ * components, but the value is neither's — it belongs to the page.
+ */
+let ratioNow: number | null = null;
+const listeners = new Set<() => void>();
+
+export function publishRatio(value: number | null) {
+  if (value === ratioNow) return;
+  ratioNow = value;
+  listeners.forEach((fn) => fn());
+}
+
+export function subscribeRatio(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
+}
+
+export function readRatio(): number | null {
+  return ratioNow;
+}

@@ -200,7 +200,6 @@ export const en: Dictionary = {
     connect: "Connect your wallet",
     waiting:
       "Wait for the organiser to delegate the round to the rollup — your private list can't exist until then.",
-    youAreIn: "You're in as",
   },
 
   autopilot: {
@@ -225,6 +224,7 @@ export const en: Dictionary = {
     rollupHost: "devnet-tee.magicblock.app",
     l1: "Solana L1",
     l1Host: "api.devnet.solana.com",
+    heroLine: "faster than L1, measured in your browser right now",
     faster: "faster",
     measuring: "measuring…",
     perSecond: "slots/s",
@@ -253,7 +253,6 @@ export const en: Dictionary = {
     done: "done",
     signaturesOne: "1 signature",
     signaturesTwo: "2 signatures",
-    signaturesNone: "no signature",
     signaturesWhy: "one for the enclave, one for the transaction",
     signaturesCached: "the enclave already knows you in this browser",
     connectClosed: "This round is closed. Connect your wallet to see whether you were matched.",
@@ -315,8 +314,6 @@ export const en: Dictionary = {
     ingested: "lists ingested into the enclave",
     matched: "Matching completed in ONE rollup transaction",
     vrfRequested: "VRF randomness requested from the oracle",
-    vrfWaiting: "Waiting for the oracle's randomness…",
-    vrfReady: "Verifiable randomness ready",
     undelegate: "Destroy lists and commit to L1",
     rankingsDestroyed: "rankings destroyed inside the enclave",
     memoryDestroyed: "Working memory destroyed",

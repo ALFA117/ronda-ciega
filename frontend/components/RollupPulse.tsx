@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { DEVNET_RPC, TEE_RPC } from "@/lib/constants";
 import {
   fetchSlot,
+  publishRatio,
   groupDigits,
   ratio,
   slotsPerSecond,
@@ -68,7 +69,18 @@ const isDown = (lane: Lane) => lane.misses >= MISSES_BEFORE_DOWN;
 export function RollupPulse({ bare = false }: { bare?: boolean } = {}) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
-  const shown = useOnScreen(ref, 120);
+  // Negative margin, and the sign is the whole point: useOnScreen tests
+  // `top < innerHeight - margin`, so a positive margin SHRINKS the trigger
+  // area and a negative one extends it past the fold. Six hundred the wrong way
+  // round made this start later, not sooner.
+  //
+  // Sooner matters because the hero states this measurement and cannot state
+  // it before the poller has run. Waiting for the band to be strictly visible
+  // meant the headline figure only ever appeared to someone who scrolled past
+  // it and came back. This starts while the band is still below the fold —
+  // within a second of load on a normal viewport — and still starts nothing
+  // for a reader who never leaves the hero.
+  const shown = useOnScreen(ref, -600);
 
   const [rollup, setRollup] = useState<Lane>(EMPTY);
   const [l1, setL1] = useState<Lane>(EMPTY);
@@ -133,6 +145,11 @@ export function RollupPulse({ bare = false }: { bare?: boolean } = {}) {
   const rollupRate = slotsPerSecond(rollup.samples);
   const l1Rate = slotsPerSecond(l1.samples);
   const times = ratio(rollupRate, l1Rate);
+
+  // Published so the hero can say the same number without polling for it.
+  useEffect(() => {
+    publishRatio(times);
+  }, [times]);
 
   // The bars are scaled against whichever lane is currently faster, so the
   // slower one is always a readable fraction rather than a sliver.

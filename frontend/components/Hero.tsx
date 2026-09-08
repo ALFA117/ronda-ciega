@@ -6,6 +6,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { ArrowDown } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { HeroVisual } from "./HeroVisual";
+import { PulseRatio } from "./PulseRatio";
 
 /**
  * Full-bleed hero.
@@ -76,7 +77,14 @@ export function Hero() {
           animate={reduce ? undefined : { y: 0 }}
           transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
-          <p className="lede max-w-prose text-chalk/85">{t.hero.lede}</p>
+          <div className="max-w-prose space-y-3">
+            <p className="lede text-chalk/85">{t.hero.lede}</p>
+            {/* The speed claim, as the reader's own measurement, in the first
+                thing anybody sees. Renders nothing until the band below has
+                actually measured it — a hero that reserves space for a number
+                it does not have is a hero with a hole in it. */}
+            <PulseRatio />
+          </div>
 
           <Link
             href="#rondas"
