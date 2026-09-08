@@ -351,6 +351,26 @@ head("The README counts what is actually there");
   inProse("error codes", "the program's {n} error codes", errors);
 }
 
+// ------------------------------------------------ the script's cue labels ---
+//
+// docs/VIDEO.md names the controls to click, in English, because that is the
+// language the recording is in. A renamed label is invisible until somebody
+// is on camera hunting for a button that no longer says that — so every
+// label the script puts in bold quotes has to exist in the English
+// dictionary. Recorded once a year, wrong at the worst possible moment.
+head("The video script names controls that exist");
+{
+  const script = readFileSync(join(HERE, "..", "docs", "VIDEO.md"), "utf8");
+  const en = readFileSync(join(HERE, "..", "frontend", "lib", "i18n", "en.ts"), "utf8");
+  const quoted = [...script.matchAll(/\*\*"([^"]{3,60})"\*\*/g)].map((m) => m[1]);
+  const unique = [...new Set(quoted)];
+  if (unique.length === 0) bad("the script no longer names any control");
+  for (const label of unique) {
+    if (en.includes(label)) ok(`script cue: "${label}"`);
+    else bad(`the script says to click "${label}", which is not in en.ts`);
+  }
+}
+
 // it can fail for reasons that have nothing to do with the commit. CI runs
 // with OFFLINE=1, because a pipeline that goes red when Vercel hiccups is a
 // pipeline people learn to ignore.

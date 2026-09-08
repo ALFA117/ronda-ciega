@@ -3,7 +3,9 @@
 Regla que gobierna todo: **el jurado son los ingenieros que escribieron el runtime.** No hay que
 explicarles qué es un ephemeral rollup. Hay que demostrarles que hacía falta uno.
 
-Grabar en **modo oscuro, idioma EN** (el submission es en inglés).
+Grabar en **modo oscuro, idioma EN** (el submission es en inglés). Los controles van nombrados
+como salen en pantalla, en inglés: buscarlos en español el día de la grabación es cómo se pierden
+veinte segundos de toma.
 
 **Lo que cambió desde la primera versión de este guion:** la página ahora ejecuta sus propias
 pruebas en el navegador de quien la ve. Antes había que irse al explorador a demostrar que una
@@ -73,7 +75,7 @@ Scrollear al panel de las dos cadenas. Dejar que cuente dos o tres segundos ante
 
 ### 2. La privacidad, con sus controles — 20 s
 
-Abrir una ronda liquidada, ir a **"What this round does not publish"**, pulsar el botón.
+Abrir una ronda liquidada, ir a **"What this round does not publish"**, pulsar **"Query the chain"**.
 
 > "Cada lista tiene una dirección derivada de la ronda y del monedero de su dueño, así que cualquiera
 > puede calcularlas. Estas son las doce de esta ronda.
@@ -91,7 +93,7 @@ su propio control, en veinte segundos.*
 
 ### 3. Sellar una lista — 20 s
 
-Ordenar tres nombres, "Sellar mi lista", **mostrar el prompt del monedero**.
+Ordenar tres nombres, **"Seal my list"**, **mostrar el prompt del monedero**.
 
 > "Dos firmas la primera vez, y ninguna después. Una autoriza una clave de sesión —una transacción
 > normal de L1, que el monedero simula sin problema. La otra le prueba al enclave quién soy, y es
@@ -101,10 +103,22 @@ Ordenar tres nombres, "Sellar mi lista", **mostrar el prompt del monedero**.
 > Leer, nunca: el permiso de la cuenta se deriva de mi billetera, no de quien firma."
 
 **En pantalla:** el contador de firmas del panel, que dice el número antes de pedirlo. Si ya
-sellaste una vez en ese navegador dirá **"sin firmas"** — vale la pena enseñarlo dos veces
+sellaste una vez en ese navegador dirá **"no signatures"** — vale la pena enseñarlo dos veces
 seguidas para que se vea el cambio.
 
 **Si algo falla aquí, corta y sigue.** Los pasos 1 y 2 ya demostraron el sistema.
+
+### 4. Abrir una ronda — 10 s, opcional
+
+Solo si sobra tiempo, y es la única toma donde se ve una transacción de L1 aterrizar. En el panel
+de arriba de la portada, **"Open a round"**: tres respuestas y una firma, y el riel va marcando
+cuál llevas. Al firmar dice **"Signing…"**, luego **"Confirming on L1…"**, luego **"Round open"**
+y salta a la ronda.
+
+> "Abrir una ronda es una transacción de L1 y ya. Lo que dura es la confirmación, y la página lo
+> dice mientras pasa en vez de quedarse pensando."
+
+*Es la toma más fácil de cortar si el tiempo aprieta: no prueba nada que las otras tres no prueben.*
 
 ---
 
@@ -125,9 +139,9 @@ seguidas para que se vea el cambio.
 
 ## 2:40 – 3:00 · Cierre: el VRF, tocándolo
 
-**En pantalla:** la sección 01, el playground. Pulsar **"Otro desempate"** sobre un mercado donde
-los empates deciden (si sale "no decide nada", pulsar "Listas nuevas" hasta que cambie — pasa en
-una de cada cinco).
+**En pantalla:** la sección 01, el playground. Pulsar **"Different tie-break"** sobre un mercado
+donde los empates deciden (si sale *"the tie-break decides nothing"*, pulsar **"New lists"** hasta
+que cambie — pasa en una de cada cinco).
 
 > "Los empates se rompen con VRF. Mismas listas, otra semilla, y el emparejamiento se mueve. Sin
 > aleatoriedad verificable esto lo decidiría el orden de registro: premiaría a quien llegó primero,
@@ -167,7 +181,9 @@ Cosas ciertas que no caben en tres minutos, por orden de peso:
 - [ ] Abrir `/proof` y correrlo una vez: confirmar 400 / 0 / 172
 - [ ] Abrir el panel de privacidad de la ronda que vas a usar y correrlo: **las cuatro filas en
       verde**. Si un control falla, es devnet, no el proyecto — reintentar
-- [ ] Confirmar que el panel de las dos cadenas está midiendo (no "measuring…")
+- [ ] Confirmar que el panel **"Both chains, right now"** está midiendo (no "measuring…")
+- [ ] Abrir la portada y ver el diagrama debajo del titular: los cinco pasos encendiéndose y la
+      banda **"Inside the enclave"** sobre los dos de en medio
 
 **Justo antes**
 
