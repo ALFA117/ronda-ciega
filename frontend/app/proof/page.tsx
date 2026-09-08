@@ -7,6 +7,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { DEVNET_RPC, PROGRAM_ID } from "@/lib/constants";
 import { getReadProgram, type RoundAccount } from "@/lib/program";
 import { fetchRounds } from "@/lib/rounds";
+import { publicTeeConnection } from "@/lib/tee";
 import { useT } from "@/lib/i18n";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LedgerProof } from "@/components/LedgerProof";
@@ -30,7 +31,11 @@ export default function ProofPage() {
     (async () => {
       try {
         const connection = new Connection(DEVNET_RPC, "confirmed");
-        const { rounds: found } = await fetchRounds(connection, getReadProgram(connection));
+        const { rounds: found } = await fetchRounds(
+          connection,
+          getReadProgram(connection),
+          publicTeeConnection(),
+        );
         // Only a transparent round publishes a trace to check.
         const checkable = found.filter((r) => r.transparent && r.status === "settled");
         setRounds(checkable);

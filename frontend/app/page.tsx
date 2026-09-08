@@ -8,6 +8,7 @@ import { Connection } from "@solana/web3.js";
 import { DEVNET_RPC } from "@/lib/constants";
 import { getReadProgram, RoundAccount } from "@/lib/program";
 import { fetchRounds, pickTickerRound } from "@/lib/rounds";
+import { publicTeeConnection } from "@/lib/tee";
 import { useT } from "@/lib/i18n";
 import { Note, Panel } from "@/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -50,7 +51,11 @@ export default function Home() {
       try {
         const connection = new Connection(DEVNET_RPC, "confirmed");
         const program = getReadProgram(connection);
-        const { rounds: found } = await fetchRounds(connection, program);
+        const { rounds: found } = await fetchRounds(
+          connection,
+          program,
+          publicTeeConnection(),
+        );
         setRounds(found);
       } catch {
         setRounds([]);

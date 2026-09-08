@@ -8,6 +8,7 @@ import { CornerDownLeft, Hash, Search, Sparkles } from "lucide-react";
 import { DEVNET_RPC } from "@/lib/constants";
 import { getReadProgram, RoundAccount } from "@/lib/program";
 import { fetchRounds } from "@/lib/rounds";
+import { publicTeeConnection } from "@/lib/tee";
 import { matches } from "@/lib/search";
 import { useT } from "@/lib/i18n";
 import { springPanel } from "@/lib/motion";
@@ -110,7 +111,11 @@ export function CommandPalette() {
     (async () => {
       try {
         const connection = new Connection(DEVNET_RPC, "confirmed");
-        const { rounds: found } = await fetchRounds(connection, getReadProgram(connection));
+        const { rounds: found } = await fetchRounds(
+          connection,
+          getReadProgram(connection),
+          publicTeeConnection(),
+        );
         setRounds(found);
       } catch {
         setRounds([]);
