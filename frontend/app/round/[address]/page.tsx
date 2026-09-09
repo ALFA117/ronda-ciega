@@ -11,6 +11,7 @@ import { RoundControls } from "@/components/RoundControls";
 import { MatchTheater } from "@/components/MatchTheater";
 import { VerifyPanel } from "@/components/VerifyPanel";
 import { PrivacyPanel } from "@/components/PrivacyPanel";
+import { SettlementTimeline } from "@/components/SettlementTimeline";
 import { Deadline } from "@/components/Deadline";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StickySummary } from "@/components/StickySummary";
@@ -155,6 +156,16 @@ export default function RoundPage({ params }: { params: { address: string } }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* What the round claims about its own speed, in seconds off the chain.
+          Only once it has finished: a timeline of one known time and three
+          dashes is a shape without a story, and the round's own status chips
+          already say it is open. */}
+      {round.settledTs > 0 && (
+        <ErrorBoundary>
+          <SettlementTimeline round={round} />
+        </ErrorBoundary>
+      )}
 
       {/* The trace this round published, checked against the chain in the
           reader's own browser. Renders nothing on a private round. */}

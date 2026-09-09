@@ -366,6 +366,33 @@ export const es = {
     wallClock: "ms de reloj de pared",
   },
 
+  timeline: {
+    title: "Cuánto tardó cada parte",
+    note: "Las horas marcadas como declaradas salen del identificador de la ronda, que eligió quien la abrió. Las demás son tiempos de bloque: eso lo vio la cadena, y lo puedes comprobar en el explorador.",
+    source: {
+      claimed: "declarada",
+      scheduled: "agendada",
+    },
+    steps: {
+      opened: {
+        name: "Se abrió",
+        body: "La primera transacción que tocó esta ronda.",
+      },
+      closed: {
+        name: "Cerró",
+        body: "Se acabó el plazo. Desde aquí, cualquiera puede correr el emparejamiento.",
+      },
+      settled: {
+        name: "Emparejó",
+        body: "El algoritmo convergió dentro del enclave. Este tramo es lo que tardó.",
+      },
+      paid: {
+        name: "Pagó",
+        body: "El escrow se movió a la contraparte, en L1.",
+      },
+    },
+  },
+
   deposit: {
     title: "Bloquea lo que ofreces",
     amount: "Cuánto quieres bloquear, en SOL",

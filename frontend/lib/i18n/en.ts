@@ -367,6 +367,33 @@ export const en: Dictionary = {
     wallClock: "ms wall clock",
   },
 
+  timeline: {
+    title: "How long each part took",
+    note: "Times marked claimed come from the round's identifier, which whoever opened it chose. The rest are block times: the chain saw those, and you can check them against an explorer.",
+    source: {
+      claimed: "claimed",
+      scheduled: "scheduled",
+    },
+    steps: {
+      opened: {
+        name: "Opened",
+        body: "The first transaction that ever touched this round.",
+      },
+      closed: {
+        name: "Closed",
+        body: "The deadline passed. From here, anyone can run the matching.",
+      },
+      settled: {
+        name: "Matched",
+        body: "The algorithm converged inside the enclave. This gap is what it took.",
+      },
+      paid: {
+        name: "Paid",
+        body: "The escrow moved to the counterparty, on L1.",
+      },
+    },
+  },
+
   deposit: {
     title: "Lock what you are offering",
     amount: "How much to lock, in SOL",
