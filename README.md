@@ -232,8 +232,8 @@ reads the *public* round account fine, so the empty result is the permission wor
 | | |
 |---|---|
 | Program | [`5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R`](https://explorer.solana.com/address/5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R?cluster=devnet) |
-| Demo round, **transparent** | [`7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4`](https://ronda-ciega.vercel.app/round/7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4) — 4×4, VRF fulfilled, settled in 3 rounds, committed back to L1. Records its frames, so the algorithm can be watched resolving. |
-| Demo round, **private** | [`3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3`](https://ronda-ciega.vercel.app/round/3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3) — the same eight people, the same rankings, the **same pairing**, and zero recorded frames. Read these two side by side: identical answer, no visibility into how. |
+| Demo round, **transparent** | [`7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4`](https://ronda-ciega.vercel.app/round/7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4) — 6×6, VRF fulfilled, settled in 3 proposal rounds, committed back to L1. Records its frames, so the algorithm can be watched resolving. |
+| Demo round, **private** | [`3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3`](https://ronda-ciega.vercel.app/round/3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3) — 6×6, the same twelve people, the same rankings, the **same pairing**, and zero recorded frames. Read these two side by side: identical answer, no visibility into how. |
 | Rollup | MagicBlock TEE ER — `https://devnet-tee.magicblock.app` |
 | VRF queue | `5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc` |
 

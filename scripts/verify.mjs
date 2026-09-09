@@ -462,16 +462,57 @@ if (process.env.OFFLINE === "1") {
 
   // The two demo rounds the README points at are the demo. If either one
   // stops resolving — a redeploy that closed accounts, a devnet reset, an
-  // address that was edited by hand — the front page of the repository sends
-  // a judge to a page that says "round not found". Every address in that
-  // table is read out of the README rather than restated here, so the check
-  // cannot drift from the claim it is checking.
-  head("The demo rounds the README points at are still there");
+  // address edited by hand — the front page of the repository sends a judge
+  // to a page that says "round not found".
+  //
+  // And the sentence beside each address is checked against the account it
+  // points at, because it was wrong: the README described both as 4×4 with
+  // eight people when both hold twelve. Nothing recomputes a description.
+  //
+  // The offsets come out of the IDL rather than being written down. Every
+  // field in Round is fixed width, so the position of any one of them is the
+  // sum of the widths before it — which means adding a field to the program
+  // moves these reads correctly instead of silently reading the wrong byte.
+  head("The demo rounds match what the README says about them");
   {
+    const idl = JSON.parse(
+      readFileSync(join(HERE, "..", "frontend", "lib", "idl.json"), "utf8"),
+    );
+    const round = idl.types.find((t) => t.name === "Round").type.fields;
+
+    const WIDTH = { pubkey: 32, u64: 8, i64: 8, u32: 4, u16: 2, u8: 1, bool: 1 };
+    const sizeOf = (type) => {
+      if (typeof type === "string") return WIDTH[type];
+      if (type.array) return type.array[1] * sizeOf(type.array[0]);
+      if (type.defined) return 1; // RoundStatus: a payload-free enum
+      return undefined;
+    };
+    const offsets = {};
+    let at = 8; // the account discriminator
+    for (const f of round) {
+      offsets[f.name] = at;
+      const w = sizeOf(f.type);
+      if (w === undefined) throw new Error(`cannot size Round.${f.name}`);
+      at += w;
+    }
+
+    // Which byte means settled is the variant's position, and there are four
+    // of them — Open, Sealing, Matching, Settled. Guessing at three would
+    // have read Matching, which is a round that has not finished.
+    const SETTLED = idl.types
+      .find((t) => t.name === "RoundStatus")
+      .type.variants.findIndex((v) => v.name === "Settled");
+
     const readme = readFileSync(join(HERE, "..", "README.md"), "utf8");
-    const rows = [...readme.matchAll(/\| Demo round, \*\*(\w+)\*\* \| \[`([1-9A-HJ-NP-Za-km-z]{32,44})`\]/g)];
+    const rows = [
+      ...readme.matchAll(
+        /\| Demo round, \*\*(\w+)\*\* \| \[`([1-9A-HJ-NP-Za-km-z]{32,44})`\][^|]*\| ?$/gm,
+      ),
+    ];
     if (rows.length === 0) bad("the README no longer lists any demo round");
-    for (const [, kind, address] of rows) {
+
+    for (const row of rows) {
+      const [line, kind, address] = row;
       try {
         const res = await fetch(DEVNET_RPC, {
           method: "POST",
@@ -483,9 +524,25 @@ if (process.env.OFFLINE === "1") {
             params: [address, { encoding: "base64" }],
           }),
         });
-        const body = await res.json();
-        if (body?.result?.value) ok(`${kind} demo round is on devnet`);
-        else bad(`${kind} demo round ${address} is not on devnet any more`);
+        const value = (await res.json())?.result?.value;
+        if (!value) {
+          bad(`${kind} demo round ${address} is not on devnet any more`);
+          continue;
+        }
+        const data = Buffer.from(value.data[0], "base64");
+        const founders = data[offsets.founder_count];
+        const builders = data[offsets.builder_count];
+        const transparent = data[offsets.transparent] === 1;
+        const settled = data[offsets.status] === SETTLED;
+
+        const said = (claim, actual) =>
+          actual
+            ? ok(`${kind} demo round: ${claim}`)
+            : bad(`${kind} demo round: the README says ${claim}, and it is not`);
+
+        said(`it is ${founders}×${builders}`, line.includes(`${founders}×${builders}`));
+        said(`it is ${transparent ? "transparent" : "private"}`, kind === (transparent ? "transparent" : "private"));
+        said("it settled", settled);
       } catch (e) {
         bad(`${kind} demo round: ${e.message}`);
       }

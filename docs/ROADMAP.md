@@ -68,13 +68,17 @@ no hay entrada que lo alcance.
 
 ## Q1 · Oct–Dic 2026 — que lo pueda operar alguien más
 
-Hoy funciona para ocho personas y una billetera que firma todo.
+Hoy el techo son dieciséis por lado — treinta y dos personas — y la ronda la
+conduce la billetera que la abrió.
 
 **Programa**
 
-1.1 **Claves de sesión.** Firmar una vez por ronda, no una por acción. El error
-`InvalidSession` ya está en el programa pero la interfaz no lo usa: hoy un
-participante firma seis veces.
+1.1 ~~**Claves de sesión.**~~ **Hecho.** Una clave de sesión guardada en el
+navegador firma la transacción, autorizada por un token en L1 que nombra a la
+billetera, al programa y a una caducidad de dos horas. Escribe la lista; leerla
+no puede, porque el permiso de la cuenta se deriva del dueño y no de quien
+firma. `npm run session` la ejerce de punta a punta contra devnet, con los tres
+rechazos que el programa tiene que dar.
 
 1.2 **Romper el techo de 16 por lado.** `MatchState` es un arreglo fijo en una
 sola cuenta efímera; paginarlo sube el límite a 64 sin tocar el algoritmo. El
