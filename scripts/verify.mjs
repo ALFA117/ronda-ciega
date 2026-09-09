@@ -506,7 +506,7 @@ if (process.env.OFFLINE === "1") {
     const readme = readFileSync(join(HERE, "..", "README.md"), "utf8");
     const rows = [
       ...readme.matchAll(
-        /\| Demo round, \*\*(\w+)\*\* \| \[`([1-9A-HJ-NP-Za-km-z]{32,44})`\][^|]*\| ?$/gm,
+        /\| Demo round, \*\*([\w ]+)\*\* \| \[`([1-9A-HJ-NP-Za-km-z]{32,44})`\][^|]*\| ?$/gm,
       ),
     ];
     if (rows.length === 0) bad("the README no longer lists any demo round");
@@ -541,8 +541,16 @@ if (process.env.OFFLINE === "1") {
             : bad(`${kind} demo round: the README says ${claim}, and it is not`);
 
         said(`it is ${founders}×${builders}`, line.includes(`${founders}×${builders}`));
-        said(`it is ${transparent ? "transparent" : "private"}`, kind === (transparent ? "transparent" : "private"));
         said("it settled", settled);
+        // The label is only a claim about visibility when it says so. A row
+        // headed "paid out" is making a different claim, and asserting
+        // transparency against it would be inventing one to check.
+        if (kind === "transparent" || kind === "private") {
+          said(
+            `it is ${transparent ? "transparent" : "private"}`,
+            kind === (transparent ? "transparent" : "private"),
+          );
+        }
       } catch (e) {
         bad(`${kind} demo round: ${e.message}`);
       }

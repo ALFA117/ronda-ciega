@@ -7,6 +7,7 @@
     "negative": "ts-node scripts/negative.ts",
     "seed": "ts-node scripts/seed.ts",
     "session": "ts-node scripts/session.ts",
+    "escrow": "ts-node scripts/escrow.ts",
     "verify": "node scripts/verify.mjs",
     "negative:rollup": "ts-node scripts/negative-rollup.ts",
     "concurrency": "ts-node scripts/concurrency.ts",

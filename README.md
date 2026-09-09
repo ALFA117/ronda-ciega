@@ -233,6 +233,7 @@ reads the *public* round account fine, so the empty result is the permission wor
 |---|---|
 | Program | [`5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R`](https://explorer.solana.com/address/5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R?cluster=devnet) |
 | Demo round, **transparent** | [`7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4`](https://ronda-ciega.vercel.app/round/7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4) — 6×6, VRF fulfilled, settled in 3 proposal rounds, committed back to L1. Records its frames, so the algorithm can be watched resolving. |
+| Demo round, **paid out** | [`8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR`](https://ronda-ciega.vercel.app/round/8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR) — 3×2 with real funds locked against it. Two buyers were paired and their escrows paid the sellers the matching chose; the third went unmatched and took his deposit back. Nobody signed to receive money. |
 | Demo round, **private** | [`3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3`](https://ronda-ciega.vercel.app/round/3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3) — 6×6, the same twelve people, the same rankings, the **same pairing**, and zero recorded frames. Read these two side by side: identical answer, no visibility into how. |
 | Rollup | MagicBlock TEE ER — `https://devnet-tee.magicblock.app` |
 | VRF queue | `5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc` |
@@ -329,6 +330,7 @@ npm run operator-key           # a stranger key drives the rollup lifecycle
 npm run concurrency            # six wallets join at once, indices stay unique
 FULL=1 npm run negative        # + SideFull: fills a side with 16 (~0.1 SOL)
 npm run session                # the session-key path, end to end (~0.1 SOL, 2 min)
+npm run escrow                 # the money path, end to end (~0.4 SOL, 4 min)
 npm run negative:rollup        # 26 refusals inside the TEE (~0.15 SOL, 3 min)
 npm run spike                  # the full lifecycle, including the privacy gate
 ```
