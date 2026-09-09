@@ -397,6 +397,9 @@ export const es = {
     title: "Bloquea lo que ofreces",
     amount: "Cuánto quieres bloquear, en SOL",
     submit: "Bloquear",
+    addMore: "Bloquear más",
+    lockedNote:
+      "Ya está en L1, en una cuenta que solo este programa puede tocar. Si sales emparejado, paga a tu contraparte al cerrar la ronda. Si no, lo recuperas tú.",
     locked: "bloqueados",
     errors: {
       notNumber: "Eso no es una cantidad.",

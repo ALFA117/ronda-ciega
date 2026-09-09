@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { Children, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Loader2 } from "lucide-react";
 import { easeEnter, riseIn, springSnappy, stagger } from "@/lib/motion";
@@ -236,11 +236,15 @@ export function StaggerList({
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const shown = useOnScreen(ref);
+  // How many are arriving decides how fast each one may. A list this wraps
+  // can hold three rounds or forty, and a fixed step turns the long case into
+  // two seconds of cascade that reads as a slow page.
+  const count = Children.count(children);
   return (
     <motion.div
       ref={ref}
       className={className}
-      variants={reduce ? undefined : stagger()}
+      variants={reduce ? undefined : stagger(0, count)}
       initial={reduce ? undefined : "hidden"}
       animate={reduce || shown ? "show" : "hidden"}
     >

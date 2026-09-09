@@ -39,10 +39,28 @@ export const easeExit: Transition = {
   ease: [0.4, 0, 1, 1],
 };
 
-export const stagger = (delayChildren = 0): Variants => ({
+/**
+ * A cascade, with a ceiling on how long it can take.
+ *
+ * At 45ms a row, a list of forty rounds spends nearly two seconds arriving
+ * and the last one shows up after the reader has already started scrolling —
+ * which reads as a slow page, not a considered one. `count` shortens the step
+ * so the whole run fits inside CASCADE_MS however many items there are; below
+ * that many it changes nothing.
+ */
+const CASCADE_MS = 360;
+const STEP_S = 0.045;
+
+export const stagger = (delayChildren = 0, count?: number): Variants => ({
   hidden: {},
   show: {
-    transition: { staggerChildren: 0.045, delayChildren },
+    transition: {
+      staggerChildren:
+        count && count > 1
+          ? Math.min(STEP_S, CASCADE_MS / 1000 / (count - 1))
+          : STEP_S,
+      delayChildren,
+    },
   },
 });
 

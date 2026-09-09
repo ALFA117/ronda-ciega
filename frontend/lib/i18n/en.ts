@@ -398,6 +398,9 @@ export const en: Dictionary = {
     title: "Lock what you are offering",
     amount: "How much to lock, in SOL",
     submit: "Lock it",
+    addMore: "Lock more",
+    lockedNote:
+      "It is on L1 now, in an account only this program can touch. If you are paired, it pays your counterparty when the round closes. If not, you take it back.",
     locked: "locked",
     errors: {
       notNumber: "That is not an amount.",

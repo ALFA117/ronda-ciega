@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { motion, useReducedMotion } from "framer-motion";
-import { Lock, Wallet } from "lucide-react";
+import { Lock, PenLine, Wallet } from "lucide-react";
 import BN from "bn.js";
 import { getProgram, RoundAccount } from "@/lib/program";
 import { escrowPda, participantPda } from "@/lib/pdas";
 import { classifyError } from "@/lib/errors";
 import { useT } from "@/lib/i18n";
-import { Button, ErrorText } from "./ui";
+import { springSnappy } from "@/lib/motion";
+import { Button, ErrorText, Note } from "./ui";
 
 /** What the deposit box accepts, in SOL. */
 const MIN_SOL = 0.001;
@@ -41,6 +42,8 @@ export function DepositPanel({
   const [sol, setSol] = useState("0.02");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** What landed, so the confirmation can name it rather than say "done". */
+  const [locked, setLocked] = useState<number | null>(null);
 
   const amount = Number(sol);
   const invalid =
@@ -71,12 +74,50 @@ export function DepositPanel({
           systemProgram: SystemProgram.programId,
         })
         .rpc();
+      setLocked(amount);
       onFunded();
     } catch (e) {
       setError(t.errors[classifyError(e)]);
     } finally {
       setBusy(false);
     }
+  }
+
+  // Sealing a list ends in a panel that says it worked. Locking money did
+  // not, and money is the one that deserves it more: the wallet closes, the
+  // rail moves on, and nothing on screen has said the amount left. This is
+  // the same shape as the sealed-list confirmation, in the escrow colour,
+  // naming the figure back.
+  if (locked !== null) {
+    return (
+      <motion.div
+        initial={reduce ? undefined : { y: 8 }}
+        animate={reduce ? undefined : { y: 0 }}
+        transition={springSnappy}
+        className="space-y-4 rounded-xl border border-escrow/45 bg-escrow/[0.07] p-4"
+      >
+        <div className="flex items-center gap-2.5">
+          <motion.span
+            initial={reduce ? undefined : { scale: 0.6 }}
+            animate={reduce ? undefined : { scale: 1 }}
+            transition={springSnappy}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-escrow/50 bg-escrow/10 text-escrow"
+          >
+            <Lock className="h-4 w-4" aria-hidden />
+          </motion.span>
+          <span className="font-mono text-2xs uppercase tracking-[0.16em] text-escrow">
+            <span className="tnum">{locked}</span> SOL {t.deposit.locked}
+          </span>
+        </div>
+
+        <Note>{t.deposit.lockedNote}</Note>
+
+        <Button variant="ghost" onClick={() => setLocked(null)}>
+          <PenLine className="h-3.5 w-3.5" aria-hidden />
+          {t.deposit.addMore}
+        </Button>
+      </motion.div>
+    );
   }
 
   return (
