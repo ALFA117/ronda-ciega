@@ -92,21 +92,29 @@ Abrir una ronda liquidada, ir a **"What this round does not publish"**, pulsar *
 *Este es el mejor plano del video. Es la afirmación central del proyecto ejecutándose en vivo, con
 su propio control, en veinte segundos.*
 
-### 3. El dinero, que es lo nuevo — 25 s
+### 3. El dinero, que es lo nuevo — 35 s
 
-Abrir la **ronda pagada**: `8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR`. Tres compradores, dos
-vendedores, con fondos bloqueados de verdad.
+Abrir la **ronda pagada**: `8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR`. Tres founders, dos
+builders, con fondos bloqueados de verdad. *(Los dos lados se llaman así en el programa y en el
+explorador. La página dice al lado quién paga y quién cobra, que es lo que importa aquí.)*
 
-> "Esto es lo que hace que sirva. Cada comprador bloqueó su oferta en una cuenta de Solana L1
+> "Esto es lo que hace que sirva. El lado que propone bloqueó su oferta en una cuenta de Solana L1
 > —pública, cualquiera la puede mirar— y **el dinero nunca entró al enclave**. El enclave decide a
 > quién; L1 guarda el qué.
 >
-> Cuando la ronda cerró, el pago se ejecutó contra el par que salió. El vendedor cobró **sin firmar
-> nada**: la instrucción no pide firmante, así que no depende de que yo siga aquí. Y al comprador
-> que no salió emparejado le volvió su depósito, también sin pedirle permiso a nadie.
+> Cuando la ronda cerró, el pago se ejecutó contra el par que salió. Quien cobró **no firmó nada**:
+> la instrucción no pide firmante, así que no depende de que yo siga aquí. Y a quien no salió
+> emparejado le volvió su depósito, también sin pedirle permiso a nadie.
 >
-> Intentar pagarle a un vendedor que el emparejamiento no eligió lo rechaza el programa con
+> Intentar pagarle a alguien que el emparejamiento no eligió lo rechaza el programa con
 > `NotYourPair`. Está en la suite, con las otras seis negativas."
+
+**Bajar a "Cuánto tardó cada parte".** Es el plano con la cifra que gana la discusión:
+
+> "Y esto no se lo tienen que creer. Estas horas son tiempos de bloque. La fecha límite pasó, el
+> algoritmo convergió **cuatro segundos después**, y **tres segundos más tarde** el dinero estaba en
+> la otra billetera. Del cierre al pago, siete segundos, y cada renglón se comprueba en el
+> explorador."
 
 *Si hay tiempo, enseñar `npm run escrow` corriendo: diecisiete comprobaciones y 0.02 SOL moviéndose
 de verdad. Es el plano más difícil de discutir de todo el video.*
