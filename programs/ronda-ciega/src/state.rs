@@ -182,3 +182,51 @@ impl MatchState {
         + MAX_PER_SIDE
         + 1;
 }
+
+/// What a locked deposit is currently doing.
+///
+/// Three states and no way back from the last two: an escrow is paid out or
+/// returned exactly once. The alternative — a boolean `closed` — cannot tell
+/// "this money reached its counterparty" from "this money came home", and
+/// those are the two things anybody looking at a settled round wants to know.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, Debug)]
+pub enum EscrowState {
+    /// Funded and waiting on the round.
+    Locked,
+    /// Paid to the counterparty the matching chose.
+    Settled,
+    /// Returned to its owner: unmatched, or the round never converged.
+    Refunded,
+}
+
+/// Money a buyer has locked against a round, on L1.
+///
+/// Deliberately its own account rather than fields on `Round`. Two reasons,
+/// and the second is the one that decided it:
+///
+/// A round is delegated to the enclave for its whole life and committed back
+/// when it settles. Funds must not take that trip — the point of the design is
+/// that the enclave decides *who*, and L1 keeps custody of *what*. An escrow
+/// that rode along would put the money inside the same trust boundary the
+/// privacy argument depends on.
+///
+/// And `Round` is already deployed with two demo rounds written against its
+/// layout. Adding a field to it makes those accounts undecodable, which breaks
+/// the two links the README sends people to. New behaviour that cannot be
+/// added without invalidating old accounts is new behaviour that belongs in a
+/// new account.
+#[account]
+pub struct Escrow {
+    pub round: Pubkey,
+    pub wallet: Pubkey,
+    /// Lamports held, excluding the rent that keeps this account alive. Kept
+    /// explicitly rather than read off the balance: rent is not the deposit,
+    /// and paying it out by accident would be paying out the account itself.
+    pub amount: u64,
+    pub state: EscrowState,
+    pub bump: u8,
+}
+
+impl Escrow {
+    pub const LEN: usize = 32 + 32 + 8 + 1 + 1;
+}

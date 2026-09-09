@@ -44,8 +44,8 @@ mod state;
 
 use error::ErrorCode;
 use state::{
-    MatchState, Participant, Preferences, Round, RoundStatus, Side, MAX_HANDLE_LEN, MAX_HISTORY,
-    MAX_LINK_LEN, MAX_PER_SIDE, NONE, UNRANKED,
+    Escrow, EscrowState, MatchState, Participant, Preferences, Round, RoundStatus, Side,
+    MAX_HANDLE_LEN, MAX_HISTORY, MAX_LINK_LEN, MAX_PER_SIDE, NONE, UNRANKED,
 };
 
 declare_id!("5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R");
@@ -54,6 +54,7 @@ pub const ROUND_SEED: &[u8] = b"round";
 pub const PARTICIPANT_SEED: &[u8] = b"participant";
 pub const PREFERENCES_SEED: &[u8] = b"preferences";
 pub const MATCH_STATE_SEED: &[u8] = b"match_state";
+pub const ESCROW_SEED: &[u8] = b"escrow";
 
 /// Members on a `Preferences` permission: the owner, plus the round PDA that
 /// pays its rent and therefore needs authority over it.
@@ -880,9 +881,285 @@ pub mod ronda_ciega {
         }
         Ok(())
     }
+
+    // ------------------------------------------------------------ escrow ---
+    //
+    // Where the private part stops and the public part starts.
+    //
+    // The enclave decides who is paired with whom and destroys the lists that
+    // decided it. None of that moves money: the funds sit on L1 the entire
+    // time, in an account this program owns, and the only thing the matching
+    // does to them is name a recipient. That split is the whole design. Money
+    // inside the enclave would put custody behind the same trust boundary the
+    // privacy argument leans on, and then "the enclave cannot be audited"
+    // stops being a fair trade and starts being a hole.
+    //
+    // So: `deposit_escrow` locks, `settle_pair` pays whoever the matching
+    // chose, `refund_escrow` returns what was never paired. Every one of them
+    // reads `round.pairs`, which is public, and none of them can see a list.
+
+    /// Lock lamports against a round, before it closes.
+    ///
+    /// Only while the round is open: a deposit that arrives after the lists
+    /// are sealed is money committed to a matching whose inputs are already
+    /// fixed, which is a different and worse game than everyone else played.
+    pub fn deposit_escrow(ctx: Context<DepositEscrow>, round_id: u64, amount: u64) -> Result<()> {
+        require_eq!(ctx.accounts.round.round_id, round_id);
+        require!(
+            ctx.accounts.round.status == RoundStatus::Open,
+            ErrorCode::RoundClosed
+        );
+        require!(
+            Clock::get()?.unix_timestamp < ctx.accounts.round.deadline_ts,
+            ErrorCode::RoundClosed
+        );
+        require!(amount > 0, ErrorCode::NothingToEscrow);
+
+        anchor_lang::system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.key(),
+                anchor_lang::system_program::Transfer {
+                    from: ctx.accounts.wallet.to_account_info(),
+                    to: ctx.accounts.escrow.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
+
+        let round_key = ctx.accounts.round.key();
+        let wallet_key = ctx.accounts.wallet.key();
+        let escrow = &mut ctx.accounts.escrow;
+        escrow.round = round_key;
+        escrow.wallet = wallet_key;
+        // Adding rather than assigning: topping up an existing lock is a
+        // second deposit, not a correction of the first.
+        escrow.amount = escrow
+            .amount
+            .checked_add(amount)
+            .ok_or(ErrorCode::MathOverflow)?;
+        escrow.state = EscrowState::Locked;
+        escrow.bump = ctx.bumps.escrow;
+
+        emit!(EscrowFunded {
+            round: round_key,
+            wallet: wallet_key,
+            amount: escrow.amount,
+        });
+        Ok(())
+    }
+
+    /// Pay one escrow to the counterparty the matching chose.
+    ///
+    /// Takes no signer, like `close_round` and `tick`: a payment only the
+    /// round's author can trigger is a payment that depends on them still
+    /// caring. What it does check is everything that makes the payment
+    /// correct — the round settled, both participants belong to it, the
+    /// pairing names exactly these two, and the account being paid is the
+    /// wallet that participant registered with.
+    pub fn settle_pair(ctx: Context<SettlePair>, round_id: u64) -> Result<()> {
+        let round = &ctx.accounts.round;
+        require_eq!(round.round_id, round_id);
+        require!(
+            round.status == RoundStatus::Settled,
+            ErrorCode::NotSettledYet
+        );
+
+        let payer = &ctx.accounts.payer_participant;
+        let payee = &ctx.accounts.payee_participant;
+
+        // Identity first: that these accounts are who they claim to be is a
+        // question about accounts, and stays here. Whether the payment is
+        // legal is a question about values, and lives in check_settle.
+        require_keys_eq!(payer.round, round.key(), ErrorCode::WrongRound);
+        require_keys_eq!(payee.round, round.key(), ErrorCode::WrongRound);
+        require_keys_eq!(
+            ctx.accounts.escrow.wallet,
+            payer.wallet,
+            ErrorCode::WrongRound
+        );
+        require_keys_eq!(
+            ctx.accounts.payee_wallet.key(),
+            payee.wallet,
+            ErrorCode::WrongRound
+        );
+
+        check_settle(
+            round.status,
+            payer.side,
+            payee.side,
+            payer.index,
+            payee.index,
+            &round.pairs,
+            ctx.accounts.escrow.state,
+        )?;
+
+        let amount = ctx.accounts.escrow.amount;
+        let round_key = round.key();
+        let from = payer.wallet;
+        let to = payee.wallet;
+
+        // Lamports move by direct arithmetic: a system-program transfer needs
+        // a system account on the sending side, and this one carries data. The
+        // rent is deliberately left behind for `close` to return to the
+        // depositor, because rent was never part of what was offered.
+        let escrow_info = ctx.accounts.escrow.to_account_info();
+        let payee_info = ctx.accounts.payee_wallet.to_account_info();
+        let taken = escrow_info
+            .lamports()
+            .checked_sub(amount)
+            .ok_or(ErrorCode::MathOverflow)?;
+        let given = payee_info
+            .lamports()
+            .checked_add(amount)
+            .ok_or(ErrorCode::MathOverflow)?;
+        **escrow_info.try_borrow_mut_lamports()? = taken;
+        **payee_info.try_borrow_mut_lamports()? = given;
+
+        let escrow = &mut ctx.accounts.escrow;
+        escrow.amount = 0;
+        escrow.state = EscrowState::Settled;
+
+        emit!(EscrowSettled {
+            round: round_key,
+            from,
+            to,
+            amount,
+        });
+        Ok(())
+    }
+
+    /// Return a deposit that was never paid out.
+    ///
+    /// Two ways to qualify, both checkable by anyone without asking: the round
+    /// settled and left this person unmatched, or the deadline passed and the
+    /// round never settled at all. The second is the one that matters — it
+    /// means money cannot be stranded by an operator who walks away.
+    pub fn refund_escrow(ctx: Context<RefundEscrow>, round_id: u64) -> Result<()> {
+        let round = &ctx.accounts.round;
+        require_eq!(round.round_id, round_id);
+        require_keys_eq!(
+            ctx.accounts.escrow.wallet,
+            ctx.accounts.wallet.key(),
+            ErrorCode::WrongRound
+        );
+
+        let participant = &ctx.accounts.participant;
+        require_keys_eq!(participant.round, round.key(), ErrorCode::WrongRound);
+        require_keys_eq!(
+            participant.wallet,
+            ctx.accounts.wallet.key(),
+            ErrorCode::WrongRound
+        );
+
+        check_refund(
+            round.status,
+            round.deadline_ts,
+            Clock::get()?.unix_timestamp,
+            participant.side,
+            participant.index,
+            &round.pairs,
+            ctx.accounts.escrow.state,
+        )?;
+
+        let round_key = round.key();
+        let wallet_key = ctx.accounts.wallet.key();
+        let amount = ctx.accounts.escrow.amount;
+        let escrow = &mut ctx.accounts.escrow;
+        escrow.amount = 0;
+        escrow.state = EscrowState::Refunded;
+
+        emit!(EscrowRefunded {
+            round: round_key,
+            wallet: wallet_key,
+            amount,
+        });
+        Ok(())
+    }
 }
 
+
 // ------------------------------------------------------------- helpers ---
+
+/// Is this payout legal?
+///
+/// Pulled out of the handler for the same reason `check_closable` was: the
+/// rule decides where money goes, and a rule that can only be exercised
+/// against a validator is a rule that gets exercised once, by hand, on the
+/// happy path. Everything it needs is a value, so everything it does can be
+/// tested — including the six ways it has to say no.
+///
+/// Deliberately takes `pairs` rather than the whole `Round`: the pairing is
+/// the only thing the enclave contributed and the only thing this decision is
+/// allowed to depend on.
+#[allow(clippy::too_many_arguments)]
+fn check_settle(
+    status: RoundStatus,
+    payer_side: Side,
+    payee_side: Side,
+    payer_index: u8,
+    payee_index: u8,
+    pairs: &[u8; MAX_PER_SIDE],
+    escrow_state: EscrowState,
+) -> Result<()> {
+    require!(status == RoundStatus::Settled, ErrorCode::NotSettledYet);
+    require!(payer_side == Side::Founder, ErrorCode::WrongSide);
+    require!(payee_side == Side::Builder, ErrorCode::WrongSide);
+    require!(
+        escrow_state == EscrowState::Locked,
+        ErrorCode::EscrowAlreadyDone
+    );
+
+    let paired = *pairs
+        .get(payer_index as usize)
+        .ok_or(ErrorCode::NoSuchParticipant)?;
+    require!(paired != NONE, ErrorCode::WentUnmatched);
+    require_eq!(paired, payee_index, ErrorCode::NotYourPair);
+    Ok(())
+}
+
+/// Is this refund legal?
+///
+/// Two doors, and the second is the one that makes the whole thing safe to
+/// put money into: a round that never settled releases every deposit once its
+/// deadline has passed. Nobody has to still be around, and nobody has to
+/// agree. Without that, an operator who loses interest half way through a
+/// round is an operator holding other people's money indefinitely.
+fn check_refund(
+    status: RoundStatus,
+    deadline_ts: i64,
+    now: i64,
+    side: Side,
+    index: u8,
+    pairs: &[u8; MAX_PER_SIDE],
+    escrow_state: EscrowState,
+) -> Result<()> {
+    require!(
+        escrow_state == EscrowState::Locked,
+        ErrorCode::EscrowAlreadyDone
+    );
+
+    if status != RoundStatus::Settled {
+        // Abandoned: past the deadline with no result.
+        require!(now >= deadline_ts, ErrorCode::NothingToRefund);
+        return Ok(());
+    }
+
+    // Settled: only the people it left out.
+    let unmatched = match side {
+        Side::Founder => {
+            *pairs
+                .get(index as usize)
+                .ok_or(ErrorCode::NoSuchParticipant)?
+                == NONE
+        }
+        // A builder never deposits, so a builder escrow is already an anomaly.
+        // Returning it is the only safe thing to do with one.
+        Side::Builder => true,
+    };
+    require!(unmatched, ErrorCode::NothingToRefund);
+    Ok(())
+}
+
 
 fn permission_member(pubkey: Pubkey) -> Member {
     Member {
@@ -1145,6 +1422,117 @@ pub struct RoundOpened {
     pub round: Pubkey,
     pub round_id: u64,
     pub deadline_ts: i64,
+}
+
+// ------------------------------------------------------ escrow accounts ---
+
+#[derive(Accounts)]
+#[instruction(round_id: u64)]
+pub struct DepositEscrow<'info> {
+    #[account(mut)]
+    pub wallet: Signer<'info>,
+    #[account(
+        seeds = [ROUND_SEED, round.authority.as_ref(), &round.round_id.to_le_bytes()],
+        bump = round.bump
+    )]
+    pub round: Account<'info, Round>,
+    /// Proves the depositor is in this round. Locking money against a market
+    /// you have not joined has no meaning, and an escrow with no participant
+    /// behind it can never be settled — only refunded, which is a stuck
+    /// account nobody asked for.
+    #[account(
+        seeds = [PARTICIPANT_SEED, round.key().as_ref(), wallet.key().as_ref()],
+        bump = participant.bump,
+        constraint = participant.wallet == wallet.key() @ ErrorCode::WrongRound,
+    )]
+    pub participant: Account<'info, Participant>,
+    #[account(
+        init_if_needed,
+        payer = wallet,
+        space = 8 + Escrow::LEN,
+        seeds = [ESCROW_SEED, round.key().as_ref(), wallet.key().as_ref()],
+        bump
+    )]
+    pub escrow: Account<'info, Escrow>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(round_id: u64)]
+pub struct SettlePair<'info> {
+    #[account(
+        seeds = [ROUND_SEED, round.authority.as_ref(), &round.round_id.to_le_bytes()],
+        bump = round.bump
+    )]
+    pub round: Account<'info, Round>,
+    pub payer_participant: Account<'info, Participant>,
+    pub payee_participant: Account<'info, Participant>,
+    /// The escrow is closed to the depositor, not to whoever sent the
+    /// transaction. `settle_pair` needs no signer, so a caller who could keep
+    /// the rent would be paid for other people's settlements.
+    #[account(
+        mut,
+        close = payer_wallet,
+        seeds = [ESCROW_SEED, round.key().as_ref(), payer_wallet.key().as_ref()],
+        bump = escrow.bump,
+    )]
+    pub escrow: Account<'info, Escrow>,
+    /// CHECK: matched against `payer_participant.wallet` in the handler, and
+    /// pinned by the escrow seeds above.
+    #[account(mut)]
+    pub payer_wallet: UncheckedAccount<'info>,
+    /// CHECK: matched against `payee_participant.wallet` in the handler.
+    #[account(mut)]
+    pub payee_wallet: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction(round_id: u64)]
+pub struct RefundEscrow<'info> {
+    #[account(mut)]
+    pub wallet: Signer<'info>,
+    #[account(
+        seeds = [ROUND_SEED, round.authority.as_ref(), &round.round_id.to_le_bytes()],
+        bump = round.bump
+    )]
+    pub round: Account<'info, Round>,
+    #[account(
+        seeds = [PARTICIPANT_SEED, round.key().as_ref(), wallet.key().as_ref()],
+        bump = participant.bump,
+    )]
+    pub participant: Account<'info, Participant>,
+    #[account(
+        mut,
+        close = wallet,
+        seeds = [ESCROW_SEED, round.key().as_ref(), wallet.key().as_ref()],
+        bump = escrow.bump,
+    )]
+    pub escrow: Account<'info, Escrow>,
+}
+
+// -------------------------------------------------------- escrow events ---
+
+#[event]
+pub struct EscrowFunded {
+    pub round: Pubkey,
+    pub wallet: Pubkey,
+    pub amount: u64,
+}
+
+/// The one event that says a private computation moved public money.
+#[event]
+pub struct EscrowSettled {
+    pub round: Pubkey,
+    pub from: Pubkey,
+    pub to: Pubkey,
+    pub amount: u64,
+}
+
+#[event]
+pub struct EscrowRefunded {
+    pub round: Pubkey,
+    pub wallet: Pubkey,
+    pub amount: u64,
 }
 
 #[event]
@@ -2156,6 +2544,284 @@ mod tests {
                         f,
                         b
                     ),
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------- escrow
+
+    /// A pairing table with `founder -> builder` for each entry given.
+    fn paired(entries: &[(u8, u8)]) -> [u8; MAX_PER_SIDE] {
+        let mut pairs = [NONE; MAX_PER_SIDE];
+        for (f, b) in entries {
+            pairs[*f as usize] = *b;
+        }
+        pairs
+    }
+
+    fn settle_ok(pairs: &[u8; MAX_PER_SIDE], f: u8, b: u8) -> Result<()> {
+        check_settle(
+            RoundStatus::Settled,
+            Side::Founder,
+            Side::Builder,
+            f,
+            b,
+            pairs,
+            EscrowState::Locked,
+        )
+    }
+
+    #[test]
+    fn a_matched_pair_can_be_paid() {
+        assert!(settle_ok(&paired(&[(0, 1)]), 0, 1).is_ok());
+    }
+
+    #[test]
+    fn paying_somebody_the_matching_did_not_choose_is_refused() {
+        // The whole attack, in one line: the pairing says founder 0 owes
+        // builder 1, and the transaction names builder 2 as the recipient.
+        // Nothing else in the instruction would notice — the accounts are
+        // real, the round settled, the escrow is funded.
+        assert!(settle_ok(&paired(&[(0, 1)]), 0, 2).is_err());
+    }
+
+    #[test]
+    fn an_unmatched_founder_pays_nobody() {
+        assert!(settle_ok(&paired(&[(1, 0)]), 0, 0).is_err());
+    }
+
+    #[test]
+    fn a_round_that_has_not_settled_pays_nothing() {
+        for status in [
+            RoundStatus::Open,
+            RoundStatus::Sealing,
+            RoundStatus::Matching,
+        ] {
+            let r = check_settle(
+                status,
+                Side::Founder,
+                Side::Builder,
+                0,
+                1,
+                &paired(&[(0, 1)]),
+                EscrowState::Locked,
+            );
+            assert!(r.is_err(), "{status:?} debería fallar");
+        }
+    }
+
+    #[test]
+    fn money_only_ever_runs_from_a_founder_to_a_builder() {
+        let pairs = paired(&[(0, 1)]);
+        // Both sides swapped: a builder trying to be paid by another builder.
+        assert!(check_settle(
+            RoundStatus::Settled,
+            Side::Builder,
+            Side::Builder,
+            0,
+            1,
+            &pairs,
+            EscrowState::Locked
+        )
+        .is_err());
+        // And a founder paying a founder.
+        assert!(check_settle(
+            RoundStatus::Settled,
+            Side::Founder,
+            Side::Founder,
+            0,
+            1,
+            &pairs,
+            EscrowState::Locked
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn an_escrow_pays_out_once() {
+        for state in [EscrowState::Settled, EscrowState::Refunded] {
+            let r = check_settle(
+                RoundStatus::Settled,
+                Side::Founder,
+                Side::Builder,
+                0,
+                1,
+                &paired(&[(0, 1)]),
+                state,
+            );
+            assert!(r.is_err(), "{state:?} debería estar cerrado");
+        }
+    }
+
+    #[test]
+    fn an_index_past_the_table_is_refused_rather_than_panicking() {
+        // NONE as an index is 255, well past MAX_PER_SIDE. Indexing with it
+        // would panic inside a program, which is a failed transaction with no
+        // error anybody can read.
+        assert!(settle_ok(&paired(&[(0, 1)]), NONE, 1).is_err());
+        assert!(settle_ok(&paired(&[(0, 1)]), MAX_PER_SIDE as u8, 1).is_err());
+    }
+
+    // ------------------------------------------------------------- refunds
+
+    #[test]
+    fn an_abandoned_round_releases_every_deposit() {
+        // The property that makes this safe to put money into: nobody has to
+        // still be around. Deadline passed, never settled, money comes home.
+        let r = check_refund(
+            RoundStatus::Open,
+            1_000,
+            1_000,
+            Side::Founder,
+            0,
+            &paired(&[]),
+            EscrowState::Locked,
+        );
+        assert!(r.is_ok());
+    }
+
+    #[test]
+    fn a_live_round_does_not_release_deposits() {
+        let r = check_refund(
+            RoundStatus::Open,
+            1_000,
+            999,
+            Side::Founder,
+            0,
+            &paired(&[]),
+            EscrowState::Locked,
+        );
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn the_deadline_second_itself_releases() {
+        // `>=`, not `>`. An off-by-one here strands money for one more slot,
+        // which is the kind of bug that only shows up with somebody's funds.
+        assert!(check_refund(
+            RoundStatus::Matching,
+            500,
+            500,
+            Side::Founder,
+            0,
+            &paired(&[]),
+            EscrowState::Locked
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn a_settled_round_refunds_only_who_it_left_out() {
+        let pairs = paired(&[(0, 0)]);
+        // Founder 0 matched: keeps nothing back.
+        assert!(check_refund(
+            RoundStatus::Settled,
+            0,
+            9_999,
+            Side::Founder,
+            0,
+            &pairs,
+            EscrowState::Locked
+        )
+        .is_err());
+        // Founder 1 unmatched: gets it back, even long past the deadline.
+        assert!(check_refund(
+            RoundStatus::Settled,
+            0,
+            9_999,
+            Side::Founder,
+            1,
+            &pairs,
+            EscrowState::Locked
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn a_builder_escrow_is_always_returned() {
+        // Builders do not deposit. One that exists is an anomaly, and the
+        // only safe thing to do with money that should not be there is give
+        // it back.
+        assert!(check_refund(
+            RoundStatus::Settled,
+            0,
+            1,
+            Side::Builder,
+            0,
+            &paired(&[(0, 0)]),
+            EscrowState::Locked
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn a_refund_happens_once() {
+        for state in [EscrowState::Settled, EscrowState::Refunded] {
+            assert!(check_refund(
+                RoundStatus::Open,
+                0,
+                9_999,
+                Side::Founder,
+                0,
+                &paired(&[]),
+                state
+            )
+            .is_err());
+        }
+    }
+
+    #[test]
+    fn a_settled_round_cannot_refund_an_index_past_the_table() {
+        assert!(check_refund(
+            RoundStatus::Settled,
+            0,
+            1,
+            Side::Founder,
+            NONE,
+            &paired(&[(0, 0)]),
+            EscrowState::Locked
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn settling_and_refunding_can_never_both_be_legal() {
+        // The invariant that keeps the two paths from paying the same lamports
+        // twice. Swept over every pairing of a four-founder round.
+        for f in 0..4u8 {
+            for b in 0..4u8 {
+                for status in [
+                    RoundStatus::Open,
+                    RoundStatus::Sealing,
+                    RoundStatus::Matching,
+                    RoundStatus::Settled,
+                ] {
+                    let pairs = paired(&[(0, 0), (2, 1)]);
+                    let can_settle = check_settle(
+                        status,
+                        Side::Founder,
+                        Side::Builder,
+                        f,
+                        b,
+                        &pairs,
+                        EscrowState::Locked,
+                    )
+                    .is_ok();
+                    let can_refund = check_refund(
+                        status,
+                        0,
+                        9_999,
+                        Side::Founder,
+                        f,
+                        &pairs,
+                        EscrowState::Locked,
+                    )
+                    .is_ok();
+                    assert!(
+                        !(can_settle && can_refund),
+                        "founder {f}, builder {b}, {status:?}: ambas rutas abiertas"
+                    );
                 }
             }
         }

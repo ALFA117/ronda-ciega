@@ -500,6 +500,138 @@
       ]
     },
     {
+      "name": "deposit_escrow",
+      "docs": [
+        "Lock lamports against a round, before it closes.",
+        "",
+        "Only while the round is open: a deposit that arrives after the lists",
+        "are sealed is money committed to a matching whose inputs are already",
+        "fixed, which is a different and worse game than everyone else played."
+      ],
+      "discriminator": [
+        226,
+        112,
+        158,
+        176,
+        178,
+        118,
+        153,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "wallet",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "round",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round.authority",
+                "account": "Round"
+              },
+              {
+                "kind": "account",
+                "path": "round.round_id",
+                "account": "Round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "participant",
+          "docs": [
+            "Proves the depositor is in this round. Locking money against a market",
+            "you have not joined has no meaning, and an escrow with no participant",
+            "behind it can never be settled — only refunded, which is a stuck",
+            "account nobody asked for."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  105,
+                  99,
+                  105,
+                  112,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "round_id",
+          "type": "u64"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "init_match_state",
       "docs": [
         "Create the algorithm's working memory inside the rollup, private with an",
@@ -906,6 +1038,125 @@
       ]
     },
     {
+      "name": "refund_escrow",
+      "docs": [
+        "Return a deposit that was never paid out.",
+        "",
+        "Two ways to qualify, both checkable by anyone without asking: the round",
+        "settled and left this person unmatched, or the deadline passed and the",
+        "round never settled at all. The second is the one that matters — it",
+        "means money cannot be stranded by an operator who walks away."
+      ],
+      "discriminator": [
+        107,
+        186,
+        89,
+        99,
+        26,
+        194,
+        23,
+        204
+      ],
+      "accounts": [
+        {
+          "name": "wallet",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "round",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round.authority",
+                "account": "Round"
+              },
+              {
+                "kind": "account",
+                "path": "round.round_id",
+                "account": "Round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "participant",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  116,
+                  105,
+                  99,
+                  105,
+                  112,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "round_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "request_round_randomness",
       "docs": [
         "Ask the oracle for the round's tie-break randomness.",
@@ -1217,6 +1468,113 @@
               }
             ]
           }
+        }
+      ],
+      "args": [
+        {
+          "name": "round_id",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_pair",
+      "docs": [
+        "Pay one escrow to the counterparty the matching chose.",
+        "",
+        "Takes no signer, like `close_round` and `tick`: a payment only the",
+        "round's author can trigger is a payment that depends on them still",
+        "caring. What it does check is everything that makes the payment",
+        "correct — the round settled, both participants belong to it, the",
+        "pairing names exactly these two, and the account being paid is the",
+        "wallet that participant registered with."
+      ],
+      "discriminator": [
+        204,
+        69,
+        214,
+        1,
+        120,
+        90,
+        148,
+        113
+      ],
+      "accounts": [
+        {
+          "name": "round",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  110,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round.authority",
+                "account": "Round"
+              },
+              {
+                "kind": "account",
+                "path": "round.round_id",
+                "account": "Round"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer_participant"
+        },
+        {
+          "name": "payee_participant"
+        },
+        {
+          "name": "escrow",
+          "docs": [
+            "The escrow is closed to the depositor, not to whoever sent the",
+            "transaction. `settle_pair` needs no signer, so a caller who could keep",
+            "the rent would be paid for other people's settlements."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "round"
+              },
+              {
+                "kind": "account",
+                "path": "payer_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer_wallet",
+          "docs": [
+            "pinned by the escrow seeds above."
+          ],
+          "writable": true
+        },
+        {
+          "name": "payee_wallet",
+          "writable": true
         }
       ],
       "args": [
@@ -1560,6 +1918,19 @@
   ],
   "accounts": [
     {
+      "name": "Escrow",
+      "discriminator": [
+        31,
+        213,
+        123,
+        187,
+        186,
+        22,
+        218,
+        155
+      ]
+    },
+    {
       "name": "Participant",
       "discriminator": [
         32,
@@ -1587,6 +1958,45 @@
     }
   ],
   "events": [
+    {
+      "name": "EscrowFunded",
+      "discriminator": [
+        228,
+        243,
+        166,
+        74,
+        22,
+        167,
+        157,
+        244
+      ]
+    },
+    {
+      "name": "EscrowRefunded",
+      "discriminator": [
+        132,
+        209,
+        49,
+        109,
+        135,
+        138,
+        28,
+        81
+      ]
+    },
+    {
+      "name": "EscrowSettled",
+      "discriminator": [
+        97,
+        27,
+        150,
+        55,
+        203,
+        179,
+        173,
+        23
+      ]
+    },
     {
       "name": "MatchStateClosed",
       "discriminator": [
@@ -1813,9 +2223,196 @@
       "code": 6018,
       "name": "MathOverflow",
       "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6019,
+      "name": "NothingToEscrow",
+      "msg": "An escrow has to hold something. Send an amount above zero"
+    },
+    {
+      "code": 6020,
+      "name": "NotSettledYet",
+      "msg": "The round has not settled, so there is no pairing to pay out yet"
+    },
+    {
+      "code": 6021,
+      "name": "WrongSide",
+      "msg": "A payment runs from a founder to a builder, and these are not"
+    },
+    {
+      "code": 6022,
+      "name": "NoSuchParticipant",
+      "msg": "That index is not a participant in this round"
+    },
+    {
+      "code": 6023,
+      "name": "WentUnmatched",
+      "msg": "This participant went unmatched, so there is nobody to pay"
+    },
+    {
+      "code": 6024,
+      "name": "NotYourPair",
+      "msg": "The matching did not pair these two"
+    },
+    {
+      "code": 6025,
+      "name": "EscrowAlreadyDone",
+      "msg": "This escrow was already paid out or already returned"
+    },
+    {
+      "code": 6026,
+      "name": "NothingToRefund",
+      "msg": "Nothing to refund: the round is still live and this deposit is still matched"
     }
   ],
   "types": [
+    {
+      "name": "Escrow",
+      "docs": [
+        "Money a buyer has locked against a round, on L1.",
+        "",
+        "Deliberately its own account rather than fields on `Round`. Two reasons,",
+        "and the second is the one that decided it:",
+        "",
+        "A round is delegated to the enclave for its whole life and committed back",
+        "when it settles. Funds must not take that trip — the point of the design is",
+        "that the enclave decides *who*, and L1 keeps custody of *what*. An escrow",
+        "that rode along would put the money inside the same trust boundary the",
+        "privacy argument depends on.",
+        "",
+        "And `Round` is already deployed with two demo rounds written against its",
+        "layout. Adding a field to it makes those accounts undecodable, which breaks",
+        "the two links the README sends people to. New behaviour that cannot be",
+        "added without invalidating old accounts is new behaviour that belongs in a",
+        "new account."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Lamports held, excluding the rent that keeps this account alive. Kept",
+              "explicitly rather than read off the balance: rent is not the deposit,",
+              "and paying it out by accident would be paying out the account itself."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "EscrowState"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowFunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowRefunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowSettled",
+      "docs": [
+        "The one event that says a private computation moved public money."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          },
+          {
+            "name": "from",
+            "type": "pubkey"
+          },
+          {
+            "name": "to",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EscrowState",
+      "docs": [
+        "What a locked deposit is currently doing.",
+        "",
+        "Three states and no way back from the last two: an escrow is paid out or",
+        "returned exactly once. The alternative — a boolean `closed` — cannot tell",
+        "\"this money reached its counterparty\" from \"this money came home\", and",
+        "those are the two things anybody looking at a settled round wants to know."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Locked"
+          },
+          {
+            "name": "Settled"
+          },
+          {
+            "name": "Refunded"
+          }
+        ]
+      }
+    },
     {
       "name": "MatchStateClosed",
       "type": {

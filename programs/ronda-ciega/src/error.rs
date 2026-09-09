@@ -40,4 +40,24 @@ pub enum ErrorCode {
     InvalidTickBudget,
     #[msg("Arithmetic overflow")]
     MathOverflow,
+
+    // Escrow. Every one of these is a refusal somebody can hit by accident,
+    // so each says which of the two accounts or which of the two states was
+    // wrong rather than reporting that something was.
+    #[msg("An escrow has to hold something. Send an amount above zero")]
+    NothingToEscrow,
+    #[msg("The round has not settled, so there is no pairing to pay out yet")]
+    NotSettledYet,
+    #[msg("A payment runs from a founder to a builder, and these are not")]
+    WrongSide,
+    #[msg("That index is not a participant in this round")]
+    NoSuchParticipant,
+    #[msg("This participant went unmatched, so there is nobody to pay")]
+    WentUnmatched,
+    #[msg("The matching did not pair these two")]
+    NotYourPair,
+    #[msg("This escrow was already paid out or already returned")]
+    EscrowAlreadyDone,
+    #[msg("Nothing to refund: the round is still live and this deposit is still matched")]
+    NothingToRefund,
 }
