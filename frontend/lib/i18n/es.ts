@@ -17,7 +17,7 @@ export const es = {
   hero: {
     headline: "Dices a quién quieres",
     subline: "sin que nadie sepa que lo dijiste.",
-    lede: "Matching estable donde las listas de preferencias nunca se publican. Ni al cerrar, ni después, ni para nadie.",
+    lede: "Bloqueas en L1 lo que ofreces. Tu lista se sella dentro de un enclave que nadie puede leer, ni siquiera quien abrió la ronda. Sale el par, y el pago se ejecuta solo. Las listas no se publican nunca — ni al cerrar, ni después, ni para nadie.",
     cta: "Ver rondas",
     sealed: "listas selladas",
     stable: "estable",
@@ -136,6 +136,10 @@ export const es = {
       {
         title: "Un pool chico filtra",
         body: "Con cuatro personas por lado, los pares revelan mucho del resto. La ronda exige un mínimo.",
+      },
+      {
+        title: "El monto es público, la elección no",
+        body: "Lo que bloqueas se ve en L1: es una cuenta como cualquier otra. Lo privado es a quién elegiste, que es lo que cuesta decir. Un mercado donde también el precio fuera secreto necesita que el dinero entre al enclave, y eso pondría la custodia detrás de la misma frontera que sostiene el argumento.",
       },
       {
         title: "No hay verificación de identidad",

@@ -7,11 +7,12 @@ Grabar en **modo oscuro, idioma EN** (el submission es en inglés). Los controle
 como salen en pantalla, en inglés: buscarlos en español el día de la grabación es cómo se pierden
 veinte segundos de toma.
 
-**Lo que cambió desde la primera versión de este guion:** la página ahora ejecuta sus propias
-pruebas en el navegador de quien la ve. Antes había que irse al explorador a demostrar que una
-cuenta no se puede leer; ahora es un botón que corre cuatro sondas con sus dos controles. Eso
-cambia la demo entera: **casi nada de lo que hay que enseñar necesita una firma**, lo cual también
-lo hace mucho más difícil de romper en vivo.
+**Lo que cambió desde la última versión:** ahora el emparejamiento **mueve dinero**. Hay un escrow
+en L1, y una ronda liquidada donde un vendedor cobró sin firmar nada. Eso reordena el video: lo
+que antes era "miren qué privado" ahora es "miren qué privado, **y por eso el pago sale solo**".
+
+Sigue siendo cierto que casi nada de lo que hay que enseñar necesita una firma, lo cual lo hace
+difícil de romper en vivo.
 
 ---
 
@@ -91,7 +92,28 @@ Abrir una ronda liquidada, ir a **"What this round does not publish"**, pulsar *
 *Este es el mejor plano del video. Es la afirmación central del proyecto ejecutándose en vivo, con
 su propio control, en veinte segundos.*
 
-### 3. Sellar una lista — 20 s
+### 3. El dinero, que es lo nuevo — 25 s
+
+Abrir la **ronda pagada**: `8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR`. Tres compradores, dos
+vendedores, con fondos bloqueados de verdad.
+
+> "Esto es lo que hace que sirva. Cada comprador bloqueó su oferta en una cuenta de Solana L1
+> —pública, cualquiera la puede mirar— y **el dinero nunca entró al enclave**. El enclave decide a
+> quién; L1 guarda el qué.
+>
+> Cuando la ronda cerró, el pago se ejecutó contra el par que salió. El vendedor cobró **sin firmar
+> nada**: la instrucción no pide firmante, así que no depende de que yo siga aquí. Y al comprador
+> que no salió emparejado le volvió su depósito, también sin pedirle permiso a nadie.
+>
+> Intentar pagarle a un vendedor que el emparejamiento no eligió lo rechaza el programa con
+> `NotYourPair`. Está en la suite, con las otras seis negativas."
+
+*Si hay tiempo, enseñar `npm run escrow` corriendo: diecisiete comprobaciones y 0.02 SOL moviéndose
+de verdad. Es el plano más difícil de discutir de todo el video.*
+
+---
+
+### 4. Sellar una lista — 20 s
 
 Ordenar tres nombres, **"Seal my list"**, **mostrar el prompt del monedero**.
 
@@ -106,9 +128,9 @@ Ordenar tres nombres, **"Seal my list"**, **mostrar el prompt del monedero**.
 sellaste una vez en ese navegador dirá **"no signatures"** — vale la pena enseñarlo dos veces
 seguidas para que se vea el cambio.
 
-**Si algo falla aquí, corta y sigue.** Los pasos 1 y 2 ya demostraron el sistema.
+**Si algo falla aquí, corta y sigue.** Los pasos 1, 2 y 3 ya demostraron el sistema.
 
-### 4. Abrir una ronda — 10 s, opcional
+### 5. Abrir una ronda — 10 s, opcional
 
 Solo si sobra tiempo, y es la única toma donde se ve una transacción de L1 aterrizar. En el panel
 de arriba de la portada, **"Open a round"**: tres respuestas y una firma, y el riel va marcando
@@ -181,6 +203,8 @@ Cosas ciertas que no caben en tres minutos, por orden de peso:
 - [ ] Abrir `/proof` y correrlo una vez: confirmar 400 / 0 / 172
 - [ ] Abrir el panel de privacidad de la ronda que vas a usar y correrlo: **las cuatro filas en
       verde**. Si un control falla, es devnet, no el proyecto — reintentar
+- [ ] Abrir la **ronda pagada** y confirmar que carga: es el plano nuevo y el que más pesa
+- [ ] Correr `npm run escrow` una vez la noche anterior: 17/17 y ~0.4 SOL. Si falla, hay tiempo
 - [ ] Confirmar que el panel **"Both chains, right now"** está midiendo (no "measuring…")
 - [ ] Abrir la portada y ver el diagrama debajo del titular: los cinco pasos encendiéndose y la
       banda **"Inside the enclave"** sobre los dos de en medio

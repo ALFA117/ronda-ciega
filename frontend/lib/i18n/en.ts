@@ -18,7 +18,7 @@ export const en: Dictionary = {
   hero: {
     headline: "Say who you want",
     subline: "without anyone knowing you said it.",
-    lede: "Stable matching where preference lists are never published. Not at the deadline, not afterwards, not to anyone.",
+    lede: "You lock what you are offering on L1. Your list is sealed inside an enclave nobody can read, not even whoever opened the round. The pairing comes out, and the payment settles itself. The lists are never published — not at the deadline, not afterwards, not to anyone.",
     cta: "See rounds",
     sealed: "sealed lists",
     stable: "stable",
@@ -137,6 +137,10 @@ export const en: Dictionary = {
       {
         title: "A small pool leaks",
         body: "With four people per side, the pairings reveal a lot about the rest. Rounds enforce a minimum.",
+      },
+      {
+        title: "The amount is public, the choice is not",
+        body: "What you lock is visible on L1 — it is an account like any other. What stays private is who you picked, which is the part that costs you to say. A market where the price were secret too needs the money inside the enclave, and that would put custody behind the same boundary the whole argument leans on.",
       },
       {
         title: "No identity verification",
