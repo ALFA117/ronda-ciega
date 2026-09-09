@@ -214,11 +214,13 @@ export const es = {
   join: {
     sideLabel: "Tu lado del mercado",
     founder: "Founder",
+    founderRole: "paga",
+    builderRole: "cobra",
     builder: "Builder",
-    founderBlurb: "Producto, go-to-market, distribución. Este lado propone.",
-    builderBlurb: "Perfil técnico. Este lado recibe propuestas y elige.",
+    founderBlurb: "Propone, y es el lado que bloquea fondos. Si sales emparejado, tu depósito paga a tu contraparte.",
+    builderBlurb: "Recibe propuestas y elige. No deposita nada, y cobra si sale emparejado.",
     sideNote:
-      "Los founders proponen y los builders eligen. Eso hace el resultado óptimo para los founders — es una propiedad del algoritmo, y se dice aquí en vez de esconderla.",
+      "Los founders proponen y los builders eligen. Eso hace el resultado óptimo para los founders — es una propiedad del algoritmo, y se dice aquí en vez de esconderla. Los nombres son los que usa el programa: los vas a ver igual en el explorador.",
     profileErrors: {
       handleEmpty: "Pon un handle.",
       handleTooLong: "El handle no cabe. El límite son 32 bytes: los acentos cuentan dos y los emoji cuatro.",

@@ -109,7 +109,21 @@ export function JoinForm({
                   : "border-edge hover:border-edgeStrong"
               }`}
             >
-              <div className="font-mono text-sm">{s === "founder" ? t.join.founder : t.join.builder}</div>
+              {/* The name is the program's, and the role beside it is what
+                  a person actually needs: one of these two sides locks money
+                  and the other receives it, and neither word says so. */}
+              <div className="flex items-baseline gap-2">
+                <span className="font-mono text-sm">
+                  {s === "founder" ? t.join.founder : t.join.builder}
+                </span>
+                <span
+                  className={`font-mono text-2xs uppercase tracking-[0.14em] ${
+                    s === "founder" ? "text-escrow" : "text-settled"
+                  }`}
+                >
+                  {s === "founder" ? t.join.founderRole : t.join.builderRole}
+                </span>
+              </div>
               <div className="mt-1 text-xs leading-relaxed text-muted">
                 {s === "founder" ? t.join.founderBlurb : t.join.builderBlurb}
               </div>

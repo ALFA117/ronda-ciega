@@ -215,11 +215,13 @@ export const en: Dictionary = {
   join: {
     sideLabel: "Your side of the market",
     founder: "Founder",
+    founderRole: "pays",
+    builderRole: "gets paid",
     builder: "Builder",
-    founderBlurb: "Product, go-to-market, distribution. This side proposes.",
-    builderBlurb: "Technical profile. This side receives proposals and chooses.",
+    founderBlurb: "Proposes, and is the side that locks funds. If you are paired, your deposit pays your counterparty.",
+    builderBlurb: "Receives proposals and chooses. Deposits nothing, and gets paid if paired.",
     sideNote:
-      "Founders propose and builders choose. That makes the outcome founder-optimal — it's a property of the algorithm, and it's stated here rather than hidden.",
+      "Founders propose and builders choose. That makes the outcome founder-optimal — it's a property of the algorithm, and it's stated here rather than hidden. The names are the program's own: you will see the same two in an explorer.",
     profileErrors: {
       handleEmpty: "Put in a handle.",
       handleTooLong: "The handle does not fit. The limit is 32 bytes: accents cost two and emoji cost four.",
