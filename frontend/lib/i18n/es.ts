@@ -39,7 +39,7 @@ export const es = {
   flow: {
     label: "Cómo funciona",
     title: "El tercero de confianza es un enclave",
-    lede: "Las listas se escriben dentro de un Private Ephemeral Rollup de MagicBlock, detrás de un permiso cuyo único miembro eres tú. El algoritmo corre ahí adentro. Solo salen los pares.",
+    lede: "El dinero se bloquea en L1. Las listas se escriben dentro de un Private Ephemeral Rollup de MagicBlock, detrás de un permiso cuyo único miembro eres tú. El algoritmo corre ahí adentro, decide, y solo salen los pares — que es lo único que hace falta para que el pago salga.",
     where: {
       l1: "Solana L1",
       enclave: "Dentro del enclave",
@@ -53,6 +53,10 @@ export const es = {
         title: "Entra cada quien",
         body: "Un perfil público por persona: nombre y lado.",
       },
+      fund: {
+        title: "Bloqueas lo que ofreces",
+        body: "El dinero queda en una cuenta en L1. Nadie puede moverlo, ni tú ni quien abrió la ronda.",
+      },
       seal: {
         title: "Sellas tu lista",
         body: "Se escribe dentro del enclave. Nadie más puede leerla.",
@@ -64,6 +68,10 @@ export const es = {
       result: {
         title: "Salen los pares",
         body: "Solo los pares vuelven a L1. Las listas se cierran sin revelarse.",
+      },
+      settle: {
+        title: "El dinero se mueve",
+        body: "Tu depósito paga a la contraparte que salió emparejada. Si no saliste, vuelve a ti.",
       },
     },
   },

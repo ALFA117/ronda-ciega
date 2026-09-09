@@ -79,6 +79,12 @@ const RULES = [
   ["text-dim", 4.5],
   ["sealed", 4.5],
   ["open", 4.5],
+  // Amber and green are the two hues that fail hardest on a light ground, and
+  // they are now the two that carry money. Held to the same 4.5 as the rest:
+  // "your funds are locked" is not decoration, and a reader who cannot make
+  // out the amber cannot tell locked from spent.
+  ["escrow", 4.5],
+  ["settled", 4.5],
   ["chart-1", 3],
   ["chart-2", 3],
 ];

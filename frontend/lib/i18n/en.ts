@@ -40,7 +40,7 @@ export const en: Dictionary = {
   flow: {
     label: "How it works",
     title: "The trusted third party is an enclave",
-    lede: "Lists are written inside a MagicBlock Private Ephemeral Rollup, behind a permission whose only member is you. The algorithm runs in there. Only the pairings come out.",
+    lede: "The money locks on L1. Lists are written inside a MagicBlock Private Ephemeral Rollup, behind a permission whose only member is you. The algorithm runs in there, decides, and only the pairings come out — which is all a payment needs.",
     where: {
       l1: "Solana L1",
       enclave: "Inside the enclave",
@@ -54,6 +54,10 @@ export const en: Dictionary = {
         title: "People join",
         body: "One public profile each: a handle and a side.",
       },
+      fund: {
+        title: "You lock what you are offering",
+        body: "The money sits in an account on L1. Nobody can move it — not you, not whoever opened the round.",
+      },
       seal: {
         title: "You seal your list",
         body: "It is written inside the enclave. Nobody else can read it.",
@@ -65,6 +69,10 @@ export const en: Dictionary = {
       result: {
         title: "Pairings come out",
         body: "Only the pairings return to L1. The lists close without being revealed.",
+      },
+      settle: {
+        title: "The money moves",
+        body: "Your deposit pays the counterparty the matching chose. If you were left out, it comes back.",
       },
     },
   },

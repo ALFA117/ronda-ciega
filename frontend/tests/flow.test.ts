@@ -27,32 +27,56 @@ describe("La secuencia que dibuja la página", () => {
   test("ningún identificador se repite", () => {
     assert.equal(new Set(FLOW.map((s) => s.id)).size, FLOW.length);
   });
+
+  test("el dinero entra y sale por L1, nunca por el enclave", () => {
+    // La afirmación entera del proyecto, como propiedad de los datos: los
+    // pasos con fondos de por medio están los dos fuera del recinto. Meter
+    // uno adentro pondría la custodia detrás de la misma frontera de
+    // confianza en la que se apoya el argumento de privacidad.
+    for (const step of FLOW.filter((s) => s.tone !== "neutral")) {
+      assert.equal(step.where, "l1", `${step.id} mueve dinero dentro del enclave`);
+    }
+  });
+
+  test("hay exactamente un paso que bloquea y uno que paga", () => {
+    assert.equal(FLOW.filter((s) => s.tone === "escrow").length, 1);
+    assert.equal(FLOW.filter((s) => s.tone === "settled").length, 1);
+  });
+
+  test("primero se bloquea y después se paga", () => {
+    const lock = FLOW.findIndex((s) => s.tone === "escrow");
+    const pay = FLOW.findIndex((s) => s.tone === "settled");
+    assert.ok(lock < pay, "el pago no puede ir antes que el depósito");
+  });
 });
 
 describe("La región del enclave", () => {
   test("cubre exactamente el tramo de adentro", () => {
-    assert.deepEqual(enclaveSpan(), { from: 2, to: 3 });
+    assert.deepEqual(enclaveSpan(), { from: 3, to: 4 });
   });
 
   test("se calcula, no se escribe: mover el tramo mueve la banda", () => {
     const otro = [
-      { id: "open", where: "l1" },
-      { id: "seal", where: "enclave" },
-      { id: "match", where: "enclave" },
-      { id: "result", where: "enclave" },
+      { id: "open", where: "l1", tone: "neutral" },
+      { id: "seal", where: "enclave", tone: "neutral" },
+      { id: "match", where: "enclave", tone: "neutral" },
+      { id: "result", where: "enclave", tone: "neutral" },
     ] as const;
     assert.deepEqual(enclaveSpan(otro), { from: 1, to: 3 });
   });
 
   test("sin nada adentro no hay banda que dibujar", () => {
-    assert.equal(enclaveSpan([{ id: "open", where: "l1" }] as const), null);
+    assert.equal(
+      enclaveSpan([{ id: "open", where: "l1", tone: "neutral" }] as const),
+      null,
+    );
   });
 
   test("solo toma el primer tramo, que es el que la banda puede pintar", () => {
     const partido = [
-      { id: "seal", where: "enclave" },
-      { id: "join", where: "l1" },
-      { id: "match", where: "enclave" },
+      { id: "seal", where: "enclave", tone: "neutral" },
+      { id: "join", where: "l1", tone: "neutral" },
+      { id: "match", where: "enclave", tone: "neutral" },
     ] as const;
     assert.deepEqual(enclaveSpan(partido), { from: 0, to: 0 });
   });

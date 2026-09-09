@@ -2,17 +2,53 @@
 
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, KeyRound, Lock, Send, Users } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Check,
+  KeyRound,
+  Lock,
+  Send,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useOnScreen } from "@/hooks/useOnScreen";
-import { enclaveSpan, FLOW, StepState } from "@/lib/flow";
+import { enclaveSpan, FLOW, StepState, Tone } from "@/lib/flow";
 
 const ICONS = {
   open: Send,
   join: Users,
+  fund: Wallet,
   seal: Lock,
   match: KeyRound,
   result: Check,
+  settle: ArrowRightLeft,
+} as const;
+
+/**
+ * The two steps where money is on the line get their own colour.
+ *
+ * Not decoration. Cyan already means sealed and magenta means public, and a
+ * deposit is neither — it is public, and yours, and not spendable. Painting it
+ * in a role that already means something else would make the diagram argue for
+ * something it does not say.
+ */
+const TONE = {
+  neutral: {
+    node: "border-sealed/55 bg-sealed/10 text-sealed",
+    active: "border-sealed bg-surface text-sealed",
+    label: "text-sealed",
+  },
+  escrow: {
+    node: "border-escrow/55 bg-escrow/10 text-escrow",
+    active: "border-escrow bg-surface text-escrow",
+    label: "text-escrow",
+  },
+  settled: {
+    node: "border-settled/55 bg-settled/10 text-settled",
+    active: "border-settled bg-surface text-settled",
+    label: "text-settled",
+  },
 } as const;
 
 /* ------------------------------------------------------------------ nodes */
@@ -28,6 +64,7 @@ function Node({
   state,
   icon,
   sealed,
+  tone = "neutral",
   size = "md",
 }: {
   n: number;
@@ -35,22 +72,20 @@ function Node({
   icon?: ReactNode;
   /** Inside the enclave: hatched, so the boundary is visible on the node too. */
   sealed?: boolean;
+  tone?: Tone;
   size?: "md" | "sm";
 }) {
   const done = state === "done";
   const active = state === "active";
   const px = size === "md" ? "h-11 w-11" : "h-9 w-9";
+  const paint = TONE[tone];
 
   return (
     <span
       className={`relative z-10 flex ${px} shrink-0 items-center justify-center rounded-xl border font-mono text-2xs transition-colors duration-500 ${
         sealed ? "sealed-hatch" : ""
       } ${
-        done
-          ? "border-sealed/55 bg-sealed/10 text-sealed"
-          : active
-            ? "border-sealed bg-surface text-sealed"
-            : "border-edge bg-surface text-dim"
+        done ? paint.node : active ? paint.active : "border-edge bg-surface text-dim"
       }`}
     >
       {/* A quiet ring on the step being answered. It pulses once on arrival
@@ -58,7 +93,13 @@ function Node({
       {active && (
         <motion.span
           aria-hidden
-          className="absolute inset-[-3px] rounded-[0.9rem] border border-sealed/45"
+          className={`absolute inset-[-3px] rounded-[0.9rem] border ${
+            tone === "escrow"
+              ? "border-escrow/45"
+              : tone === "settled"
+                ? "border-settled/45"
+                : "border-sealed/45"
+          }`}
           initial={{ opacity: 0.9, scale: 0.94 }}
           animate={{ opacity: 0, scale: 1.12 }}
           transition={{ duration: 1.1, ease: "easeOut" }}
@@ -147,7 +188,7 @@ export function FlowMap() {
           </>
         )}
 
-        <ol className="relative z-20 grid lg:grid-cols-5">
+        <ol className="relative z-20 grid lg:grid-cols-7">
           {FLOW.map((step, i) => {
             const Icon = ICONS[step.id];
             const copy = t.flow.steps[step.id];
@@ -157,7 +198,7 @@ export function FlowMap() {
             return (
               <li
                 key={step.id}
-                className={`relative flex gap-4 p-5 lg:block lg:p-6 lg:pt-9 ${
+                className={`relative flex gap-4 p-5 lg:block lg:p-4 lg:pt-9 ${
                   i > 0 ? "border-t border-edge lg:border-l lg:border-t-0" : ""
                 } ${inside ? "sealed-hatch bg-sealed/[0.05] lg:bg-transparent" : ""}`}
               >
@@ -177,6 +218,7 @@ export function FlowMap() {
                     n={i + 1}
                     state={state}
                     sealed={inside}
+                    tone={step.tone}
                     icon={<Icon className="h-4 w-4" aria-hidden />}
                   />
                 </div>
@@ -188,12 +230,16 @@ export function FlowMap() {
                     </span>
                     <h3 className="text-sm font-medium leading-snug">{copy.title}</h3>
                   </div>
-                  <p className="max-w-[34ch] text-xs leading-relaxed text-muted">
+                  <p className="max-w-[34ch] text-xs leading-relaxed text-muted lg:text-[11px]">
                     {copy.body}
                   </p>
                   <p
                     className={`font-mono text-[10px] uppercase tracking-[0.14em] ${
-                      inside ? "text-sealed" : "text-dim"
+                      inside
+                        ? "text-sealed"
+                        : step.tone === "neutral"
+                          ? "text-dim"
+                          : TONE[step.tone].label
                     }`}
                   >
                     {inside ? t.flow.where.enclave : t.flow.where.l1}

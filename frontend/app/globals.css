@@ -26,6 +26,18 @@
   --sealed-rgb: 34, 211, 238;
   --open-rgb: 244, 92, 240;
 
+  /* The third and fourth roles, and they exist because money arrived.
+     Cyan says sealed and magenta says public, which covered a page where
+     nothing was at stake. Funds locked against a round are neither: they are
+     public, and they are yours, and they are not spendable. Amber is the only
+     honest place to put that, and green is what it becomes once the payment
+     is irreversible. Two colours, two states, no ambiguity — and neither of
+     them borrowed from a role that already means something else. */
+  --escrow: #f0a828;
+  --escrow-rgb: 240, 168, 40;
+  --settled: #34d17a;
+  --settled-rgb: 52, 209, 122;
+
   /* Chart series. Deliberately NOT the brand cyan/magenta: those two are
      nearly the same colour to a deuteranope (validated ΔE 0.3-6.8). These
      steps clear all six checks of the palette validator in this mode. */
@@ -98,6 +110,18 @@
 
   --sealed-rgb: 10, 91, 115;
   --open-rgb: 140, 16, 147;
+
+  /* Darkened hard, not dimmed. Amber and green are the two hues that fail
+     worst on a light ground, so the light theme takes them almost to brown and
+     to forest, which is what clearing 4.5:1 costs. The first pair here was
+     picked by eye and the standing check refused them within the minute —
+     4.35 and 4.19 against --bg, passing against --surface, which is exactly
+     how a token looks fine in a panel and fails on the page behind it. These
+     were solved for instead. */
+  --escrow: #844f00;
+  --escrow-rgb: 132, 79, 0;
+  --settled: #0e673b;
+  --settled-rgb: 14, 103, 59;
 
   --chart-1: #00647f;
   --chart-2: #8a3d06;

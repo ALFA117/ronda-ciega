@@ -24,6 +24,8 @@ const config: Config = {
         sealed: "var(--sealed)",
         sealedDim: "var(--sealed-dim)",
         open: "var(--open)",
+        escrow: "var(--escrow)",
+        settled: "var(--settled)",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],

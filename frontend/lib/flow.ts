@@ -16,17 +16,40 @@
 /** Where a step's account is written. The boundary is the whole argument. */
 export type Where = "l1" | "enclave";
 
+/**
+ * What kind of step this is, for the eye.
+ *
+ * `where` answers which machine runs it; this answers what is at stake. They
+ * are not the same question and collapsing them was tempting: money moves on
+ * L1 and so does joining, but one of those is a profile and the other is
+ * somebody's funds, and a diagram that paints them identically is a diagram
+ * that buries its own point.
+ */
+export type Tone = "neutral" | "escrow" | "settled";
+
 export interface FlowStep {
-  id: "open" | "join" | "seal" | "match" | "result";
+  id: "open" | "join" | "fund" | "seal" | "match" | "result" | "settle";
   where: Where;
+  tone: Tone;
 }
 
+/**
+ * Money in, decision in the dark, money out.
+ *
+ * The middle three steps were the whole diagram once, and the thing anybody
+ * reading it asked next was "and then what". `fund` and `settle` are the
+ * answer, and they sit on L1 on purpose: the enclave decides who, and L1 keeps
+ * custody of what. Drawn end to end, the shape argues for itself — funds cross
+ * into the dark region only as a name, never as a balance.
+ */
 export const FLOW: readonly FlowStep[] = [
-  { id: "open", where: "l1" },
-  { id: "join", where: "l1" },
-  { id: "seal", where: "enclave" },
-  { id: "match", where: "enclave" },
-  { id: "result", where: "l1" },
+  { id: "open", where: "l1", tone: "neutral" },
+  { id: "join", where: "l1", tone: "neutral" },
+  { id: "fund", where: "l1", tone: "escrow" },
+  { id: "seal", where: "enclave", tone: "neutral" },
+  { id: "match", where: "enclave", tone: "neutral" },
+  { id: "result", where: "l1", tone: "neutral" },
+  { id: "settle", where: "l1", tone: "settled" },
 ] as const;
 
 /**
