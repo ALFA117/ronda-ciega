@@ -15,6 +15,15 @@ import { dirname, join } from "path";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CSS = join(HERE, "..", "frontend", "app", "globals.css");
 const BASE = process.env.BASE || "https://ronda-ciega.vercel.app";
+/**
+ * The endpoint the app itself falls back to, read out of its constants rather
+ * than restated. An override lives in the environment, which this cannot see,
+ * so the fallback is what gets checked — and it is the one a fresh clone uses.
+ */
+const DEVNET_RPC =
+  readFileSync(join(HERE, "..", "frontend", "lib", "constants.ts"), "utf8").match(
+    /NEXT_PUBLIC_DEVNET_RPC \|\| "([^"]+)"/,
+  )?.[1] ?? "https://api.devnet.solana.com";
 
 let pass = 0;
 let fail = 0;
@@ -378,6 +387,35 @@ head("Closing and ticking a round need no particular signer");
   }
 }
 
+// -------------------------------------------------- markdown that renders ---
+//
+// A paragraph landing in the middle of a table does not fail loudly: the rows
+// above it stay a table, and the rows below it become literal text full of
+// pipe characters. It happened in the "On chain" section, where the addresses
+// are — the part of the README somebody checks first — and it happened the
+// same way the VRF paragraph broke a day earlier: two edits landing inside
+// one another.
+//
+// The rule is the one the format actually has. A run of lines starting with a
+// pipe is a table, and its second line has to be the separator.
+head("Every markdown table has its separator");
+{
+  const SEPARATOR = /^\|[\s:|-]+\|\s*$/;
+  for (const doc of ["README.md", "docs/VIDEO.md", "docs/ROADMAP.md", "docs/SPEC.md"]) {
+    const lines = readFileSync(join(HERE, "..", doc), "utf8").split(/\r?\n/);
+    const isRow = (n) => (lines[n] ?? "").startsWith("|");
+    let broken = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (!isRow(i) || isRow(i - 1)) continue; // only the first row of a run
+      if (!SEPARATOR.test(lines[i + 1] ?? "")) {
+        bad(`${doc}:${i + 1} starts a table with no separator row`);
+        broken++;
+      }
+    }
+    if (!broken) ok(`${doc}: tables are whole`);
+  }
+}
+
 // ------------------------------------------------ the script's cue labels ---
 //
 // docs/VIDEO.md names the controls to click, in English, because that is the
@@ -419,6 +457,38 @@ if (process.env.OFFLINE === "1") {
       else bad(`${path} → ${res.status}, expected ${want}`);
     } catch (e) {
       bad(`${path} → ${e.message}`);
+    }
+  }
+
+  // The two demo rounds the README points at are the demo. If either one
+  // stops resolving — a redeploy that closed accounts, a devnet reset, an
+  // address that was edited by hand — the front page of the repository sends
+  // a judge to a page that says "round not found". Every address in that
+  // table is read out of the README rather than restated here, so the check
+  // cannot drift from the claim it is checking.
+  head("The demo rounds the README points at are still there");
+  {
+    const readme = readFileSync(join(HERE, "..", "README.md"), "utf8");
+    const rows = [...readme.matchAll(/\| Demo round, \*\*(\w+)\*\* \| \[`([1-9A-HJ-NP-Za-km-z]{32,44})`\]/g)];
+    if (rows.length === 0) bad("the README no longer lists any demo round");
+    for (const [, kind, address] of rows) {
+      try {
+        const res = await fetch(DEVNET_RPC, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "getAccountInfo",
+            params: [address, { encoding: "base64" }],
+          }),
+        });
+        const body = await res.json();
+        if (body?.result?.value) ok(`${kind} demo round is on devnet`);
+        else bad(`${kind} demo round ${address} is not on devnet any more`);
+      } catch (e) {
+        bad(`${kind} demo round: ${e.message}`);
+      }
     }
   }
 
