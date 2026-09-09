@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { en } from "@/lib/i18n/en";
 import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -18,8 +19,17 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-const DESCRIPTION =
-  "Matching estable ciego en Solana. Las listas de preferencias viven solo dentro de un Private Ephemeral Rollup y no se publican nunca.";
+/**
+ * What a link to this page says about itself, in a chat client, a search
+ * result or a card.
+ *
+ * English, and taken from the dictionary rather than written again here. It
+ * was a Spanish sentence of its own, which meant the two things a judge sees
+ * before clicking — this line and the share image — were in a language the
+ * page they land on does not open in. Reading `en` also keeps the promise on
+ * the card identical to the promise under the headline.
+ */
+const DESCRIPTION = `${en.hero.lede} ${en.hero.headline} ${en.hero.subline}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ronda-ciega.vercel.app"),

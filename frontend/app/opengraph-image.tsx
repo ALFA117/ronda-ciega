@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { en } from "@/lib/i18n/en";
 
 export const runtime = "edge";
 export const alt =
@@ -10,6 +11,13 @@ export const contentType = "image/png";
  * The share card carries the one sentence that explains the product, on the
  * same dark ground as the app. No screenshot: a shrunk UI reads as noise at
  * card size, and the claim is what makes someone click.
+ *
+ * In English, and read from the dictionary rather than retyped. The card had
+ * the Spanish headline on it while the page it links to opens in English and
+ * the submission is written in English — so the one thing a judge saw before
+ * clicking was in a different language from everything after. Reading `en`
+ * also means the sentence on the card cannot drift from the sentence on the
+ * page, which is the only reason to have the card at all.
  */
 export default function Image() {
   return new ImageResponse(
@@ -42,10 +50,10 @@ export default function Image() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ color: "#eaf2ff", fontSize: 76, lineHeight: 1.05 }}>
-            Dices a quién quieres
+            {en.hero.headline}
           </div>
           <div style={{ color: "#7f93b0", fontSize: 76, lineHeight: 1.05 }}>
-            sin que nadie sepa que lo dijiste.
+            {en.hero.subline}
           </div>
         </div>
 

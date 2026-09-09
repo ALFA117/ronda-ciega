@@ -124,7 +124,10 @@ antes de desplegarlo. Las negativas y el extremo a extremo se quedan fuera a
 propósito — cuestan SOL y dependen de devnet, y un CI que se pone rojo por la red
 enseña a ignorar el CI.
 
-1.11 **La suite de interfaz también a 768 px.**
+1.11 ~~**La suite de interfaz también a 768 px.**~~ **Hecho.** No hacía falta
+escribir nada: los casos miden la maquetación viva, así que el ancho es del
+navegador, no del caso. Lo que faltaba era ir. 19/19 a 768 sobre el sitio
+desplegado, en las tres rutas — portada, una ronda transparente y `/proof`.
 
 > **Se mide así:** una ronda de 32 personas se completa sin que el operador
 > toque la consola.
