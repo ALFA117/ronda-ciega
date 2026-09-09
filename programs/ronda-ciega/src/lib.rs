@@ -1077,7 +1077,6 @@ pub mod ronda_ciega {
     }
 }
 
-
 // ------------------------------------------------------------- helpers ---
 
 /// Is this payout legal?
@@ -1159,7 +1158,6 @@ fn check_refund(
     require!(unmatched, ErrorCode::NothingToRefund);
     Ok(())
 }
-
 
 fn permission_member(pubkey: Pubkey) -> Member {
     Member {
