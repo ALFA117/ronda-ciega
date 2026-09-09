@@ -266,6 +266,10 @@ export const en: Dictionary = {
     of: "of",
     connect: { name: "Connect", now: "Connect your wallet to take part in this round." },
     join: { name: "Join", now: "Pick your side and publish your profile. It is the only public part of this." },
+    fund: {
+      name: "Lock",
+      now: "Lock what you are offering before you write your list. The program will not take a deposit after sealing: that would be bidding against a matching whose inputs are already fixed.",
+    },
     wait: {
       name: "Wait",
       now: "You're in. The round isn't on the rollup yet, so your private list can't exist until it is.",
@@ -357,6 +361,23 @@ export const en: Dictionary = {
     memoryDestroyed: "Working memory destroyed",
     undelegated: "Round committed back to L1",
     wallClock: "ms wall clock",
+  },
+
+  deposit: {
+    title: "Lock what you are offering",
+    amount: "How much to lock, in SOL",
+    submit: "Lock it",
+    locked: "locked",
+    errors: {
+      notNumber: "That is not an amount.",
+      tooSmall: "Minimum 0.001 SOL. Below that it does not even cover the account's rent.",
+      tooBig: "Maximum 100 SOL. This is devnet; you do not need more to try it.",
+    },
+    promises: [
+      "The money stays on Solana L1, in an account only this program can touch. It never enters the enclave.",
+      "Whoever opened the round cannot move it. There is no instruction in the program that lets them.",
+      "If you go unmatched, or the round expires without settling, you take it back yourself. Nobody's permission needed.",
+    ],
   },
 
   create: {

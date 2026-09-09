@@ -35,3 +35,18 @@ export function matchStatePda(round: PublicKey): PublicKey {
     PROGRAM_ID,
   )[0];
 }
+
+/**
+ * Where a wallet's deposit for a round lives.
+ *
+ * On L1 and never delegated, which is the point: the enclave decides who, and
+ * this account holds what. Same shape as every other PDA here so the pattern
+ * stays boring — the seed is a constant, the two keys are the round and its
+ * owner, and the address is derivable by anyone who wants to check a balance.
+ */
+export function escrowPda(round: PublicKey, wallet: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("escrow"), round.toBuffer(), wallet.toBuffer()],
+    PROGRAM_ID,
+  )[0];
+}

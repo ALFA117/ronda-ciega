@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import { en } from "@/lib/i18n/en";
 import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
@@ -10,6 +10,27 @@ import "./globals.css";
 const sans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+/**
+ * The headline face, and the only place a serif appears.
+ *
+ * Inter set the headlines too, which is correct and says nothing: it is the
+ * face on every dashboard shipped this decade, so a page wearing it reads as
+ * competent and anonymous. A product that moves other people's money can
+ * afford one deliberate choice, and a serif at display size is the cheapest
+ * one there is — it costs nothing in legibility because it is never used
+ * below 26px, and it carries the whole difference between "a tool" and "a
+ * desk somebody runs".
+ *
+ * Body text stays Inter and numbers stay JetBrains Mono. A serif in a table
+ * of amounts would be a costume.
+ */
+const display = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -56,7 +77,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${display.variable} ${mono.variable}`}>
       <head>
         {/* Stamps the theme on <html> before first paint. Anything later and a
             light-mode user sees a dark flash. */}

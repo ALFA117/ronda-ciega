@@ -11,6 +11,10 @@ const open = {
   joined: true,
   delegated: true,
   oppositeCount: 4,
+  // Funded, so the cases below reach the step they were written to test.
+  // Leaving it out sent every one of them to "fund", which is the machine
+  // working: money comes before lists, and the chain refuses the other order.
+  funded: true,
 };
 
 describe("currentStep", () => {
@@ -58,6 +62,40 @@ describe("currentStep", () => {
         oppositeCount: 4,
       }),
       "result",
+    );
+  });
+});
+
+describe("currentStep, con dinero de por medio", () => {
+  test("entrar no basta: primero se bloquea lo que ofreces", () => {
+    assert.equal(currentStep({ ...open, funded: false }), "fund");
+  });
+
+  test("sin decir nada, se asume que no hay depósito", () => {
+    const { funded, ...sinDecir } = open;
+    void funded;
+    assert.equal(currentStep(sinDecir), "fund");
+  });
+
+  test("el depósito va antes que la lista, como en el programa", () => {
+    // El programa rechaza un depósito después del sellado, así que ofrecerlo
+    // en ese orden sería ofrecer una transacción que la cadena va a tumbar.
+    assert.equal(currentStep({ ...open, funded: false, delegated: true }), "fund");
+    assert.equal(currentStep({ ...open, funded: true, delegated: true }), "rank");
+  });
+
+  test("sin entrar a la ronda no se pide depósito, se pide entrar", () => {
+    assert.equal(currentStep({ ...open, joined: false, funded: false }), "join");
+  });
+
+  test("una ronda cerrada no pide dinero, muestra el resultado", () => {
+    assert.equal(currentStep({ ...open, open: false, funded: false }), "result");
+  });
+
+  test("sin monedero no se pide depósito", () => {
+    assert.equal(
+      currentStep({ ...open, connected: false, funded: false }),
+      "connect",
     );
   });
 });
@@ -147,7 +185,13 @@ describe("solo de un lado", () => {
   // builder, and the panel put them on "seal a list" with a form that said
   // there was nobody to rank and a button that could not be pressed. Every
   // sentence was true and none of them said what had gone wrong.
-  const joined = { open: true, connected: true, joined: true, delegated: true };
+  const joined = {
+    open: true,
+    connected: true,
+    joined: true,
+    delegated: true,
+    funded: true,
+  };
 
   test("joined and delegated with an empty opposite side is not ranking", () => {
     assert.equal(currentStep({ ...joined, oppositeCount: 0 }), "alone");
@@ -158,6 +202,17 @@ describe("solo de un lado", () => {
     // be written, and telling someone they are alone when they are not is its
     // own kind of wrong.
     assert.equal(currentStep({ ...joined, oppositeCount: 1 }), "rank");
+  });
+
+  test("y el depósito se pide antes de descubrir que estás solo", () => {
+    // Discutible, y sale de lo que la cadena acepta: se puede depositar en
+    // cuanto entras, y no se puede sellar lista hasta que haya alguien
+    // enfrente. Poner "estás solo" primero dejaría a alguien esperando a
+    // gente antes de hacer lo único que sí puede hacer ya.
+    assert.equal(
+      currentStep({ ...joined, funded: false, oppositeCount: 0 }),
+      "fund",
+    );
   });
 
   test("being alone does not outrank the reasons that come before it", () => {

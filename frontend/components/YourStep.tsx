@@ -7,6 +7,7 @@ import { Check, Copy, Heart, HeartOff, Users } from "lucide-react";
 import { ParticipantAccount, RoundAccount } from "@/lib/program";
 import { currentStep, isBystander, partnerIndex, type StepId } from "@/lib/steps";
 import { hasTeeSession } from "@/lib/tee";
+import { DepositPanel, EscrowBadge, useEscrow } from "./Deposit";
 import { sessionState } from "@/lib/session";
 import { useT } from "@/lib/i18n";
 import { JoinForm } from "./JoinForm";
@@ -68,6 +69,11 @@ export function YourStep({
   // question the round can answer — how many lists exist — is a different
   // one that used to be answered in this one's place.
   const [sealedByMe, setSealedByMe] = useState(false);
+  // Public, so it is simply read rather than remembered. What you pay is on
+  // L1; who you chose is not. The whole design in one asymmetry.
+  const [escrowNonce, setEscrowNonce] = useState(0);
+  const locked = useEscrow(round.address, wallet.publicKey ?? null);
+  void escrowNonce;
   useEffect(() => {
     let live = true;
     setEnclave(hasTeeSession(wallet.publicKey ?? null));
@@ -97,6 +103,7 @@ export function YourStep({
     joined: !!me,
     delegated,
     oppositeCount,
+    funded: (locked ?? 0) > 0,
     sealed: sealedByMe,
   };
   const current: StepId = currentStep(state);
@@ -125,6 +132,7 @@ export function YourStep({
   const rail: { id: StepId; name: string }[] = [
     { id: "connect", name: t.steps.connect.name },
     { id: "join", name: t.steps.join.name },
+    { id: "fund", name: t.steps.fund.name },
     {
       id: "rank",
       name: sealedByMe ? t.steps.sealed.name : t.steps.rank.name,
@@ -141,8 +149,11 @@ export function YourStep({
     <Panel className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-edge px-5 py-3.5">
         <Label>{t.steps.title}</Label>
-        <span className="tnum font-mono text-2xs text-muted">
-          {railIndex + 1} {t.steps.of} {rail.length}
+        <span className="flex items-center gap-3">
+          <EscrowBadge lamports={locked} />
+          <span className="tnum font-mono text-2xs text-muted">
+            {railIndex + 1} {t.steps.of} {rail.length}
+          </span>
         </span>
       </div>
 
@@ -216,6 +227,16 @@ export function YourStep({
 
         {current === "join" && (
           <JoinForm round={round} delegated={delegated} onJoined={onChanged} />
+        )}
+
+        {current === "fund" && (
+          <DepositPanel
+            round={round}
+            onFunded={() => {
+              setEscrowNonce((n) => n + 1);
+              onChanged();
+            }}
+          />
         )}
 
         {(current === "rank" || current === "sealed") && me && (

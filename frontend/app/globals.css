@@ -325,18 +325,26 @@
 
   /* Display type. One clamp instead of five breakpoints, with tracking that
      only makes sense at these sizes. */
+  /* The serif runs at display sizes and nowhere else. Instrument Serif is a
+     tight, high-contrast face: gorgeous at 60px, mush at 16, which is exactly
+     why it is scoped to two classes and never inherited. The tracking goes
+     back toward zero because a serif does not want the negative letter-spacing
+     a grotesque headline needs — it was set for Inter, and left alone it
+     collides the terminals. */
   .display {
-    font-size: clamp(2.5rem, 7.2vw, 5.25rem);
-    line-height: 0.98;
-    letter-spacing: -0.035em;
-    font-weight: 500;
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-size: clamp(2.6rem, 7.4vw, 5.5rem);
+    line-height: 0.96;
+    letter-spacing: -0.012em;
+    font-weight: 400;
   }
 
   .display-sm {
-    font-size: clamp(1.6rem, 3.4vw, 2.5rem);
-    line-height: 1.08;
-    letter-spacing: -0.025em;
-    font-weight: 500;
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-size: clamp(1.7rem, 3.6vw, 2.65rem);
+    line-height: 1.06;
+    letter-spacing: -0.008em;
+    font-weight: 400;
   }
 
   .lede {

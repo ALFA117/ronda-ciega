@@ -13,6 +13,7 @@ import { NONE } from "./constants";
 export type StepId =
   | "connect"
   | "join"
+  | "fund"
   | "wait"
   | "alone"
   | "rank"
@@ -30,6 +31,14 @@ export interface StepInput {
   delegated: boolean;
   /** How many people are on the side this participant did NOT join. */
   oppositeCount: number;
+  /**
+   * Has this visitor locked funds against the round.
+   *
+   * Read straight off L1 — the escrow account either exists or it does not,
+   * and unlike a sealed list there is nothing private about it. That is the
+   * design showing through: what you pay is public, who you chose is not.
+   */
+  funded?: boolean;
   /**
    * Has this visitor sealed a list, as far as this browser knows.
    *
@@ -54,11 +63,18 @@ export function currentStep({
   joined,
   delegated,
   oppositeCount,
+  funded = false,
   sealed = false,
 }: StepInput): StepId {
   if (!connected) return "connect";
   if (!open) return "result";
   if (!joined) return "join";
+  // Money before lists, and the order is not cosmetic. A deposit that arrives
+  // after the lists are sealed is a bid placed against a matching whose
+  // inputs are already fixed, and the program refuses it for the same reason.
+  // Asking for it here keeps the interface from offering a step the chain
+  // will turn down.
+  if (!funded) return "fund";
   if (!delegated) return "wait";
   // Joined, delegated, and nobody on the other side to rank.
   //

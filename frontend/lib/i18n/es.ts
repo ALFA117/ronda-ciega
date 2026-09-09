@@ -265,6 +265,10 @@ export const es = {
     of: "de",
     connect: { name: "Conectar", now: "Conecta tu monedero para entrar a esta ronda." },
     join: { name: "Entrar", now: "Elige tu lado y publica tu perfil. Es lo único público de todo esto." },
+    fund: {
+      name: "Bloquear",
+      now: "Bloquea lo que ofreces antes de escribir tu lista. El programa no acepta un depósito después del sellado: sería pujar contra un emparejamiento cuyas entradas ya están fijas.",
+    },
     wait: {
       name: "Esperar",
       now: "Estás dentro. La ronda todavía no está en el rollup, así que tu lista privada aún no puede existir.",
@@ -356,6 +360,23 @@ export const es = {
     memoryDestroyed: "Memoria de trabajo destruida",
     undelegated: "Ronda comiteada de vuelta a L1",
     wallClock: "ms de reloj de pared",
+  },
+
+  deposit: {
+    title: "Bloquea lo que ofreces",
+    amount: "Cuánto quieres bloquear, en SOL",
+    submit: "Bloquear",
+    locked: "bloqueados",
+    errors: {
+      notNumber: "Eso no es una cantidad.",
+      tooSmall: "Mínimo 0.001 SOL. Menos que eso no paga ni la renta de la cuenta.",
+      tooBig: "Máximo 100 SOL. Esto es devnet, no hace falta más para probar.",
+    },
+    promises: [
+      "El dinero se queda en Solana L1, en una cuenta que solo este programa puede tocar. No entra al enclave.",
+      "Quien abrió la ronda no puede moverlo. No hay instrucción en el programa que se lo permita.",
+      "Si no sales emparejado, o si la ronda vence sin resolverse, lo recuperas tú solo. Sin pedirle permiso a nadie.",
+    ],
   },
 
   create: {
