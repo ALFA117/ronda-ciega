@@ -24,3 +24,8 @@ frontend/build
 frontend/.vercel
 frontend/tsconfig.tsbuildinfo
 .claude/
+
+# The rollback binary and its IDL: 530 KB of build output, kept on disk
+# beside the notes that explain them, not in the history.
+ops/rollback/*.so
+ops/rollback/*.idl.json
