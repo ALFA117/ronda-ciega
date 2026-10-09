@@ -73,6 +73,9 @@
   --glass-inset: rgba(255, 255, 255, 0.3);
   --glass-shadow: 0 8px 26px -10px rgba(0, 0, 0, 0.7);
   --glass-sheen: rgba(255, 255, 255, 0.35);
+
+  /* Ambient tunnel: full strength on the dark ground. */
+  --amb-strength: 1;
 }
 
 /* Light theme on warm paper rather than blue-grey. A light mode that is only
@@ -157,6 +160,9 @@
   --glass-inset: rgba(255, 255, 255, 0.6);
   --glass-shadow: 0 8px 22px -12px rgba(20, 23, 28, 0.3);
   --glass-sheen: rgba(255, 255, 255, 0.55);
+
+  /* On paper the tunnel steps back so it never competes with type. */
+  --amb-strength: 0.55;
 }
 
 @layer base {
@@ -498,15 +504,9 @@
   transition: background 180ms ease, border-color 180ms ease !important;
 }
 
-@media (min-width: 640px) {
-  .wallet-adapter-button {
-    height: 40px !important;
-  }
-}
-
 @media (max-width: 420px) {
   .wallet-adapter-button {
-    font-size: 11px !important;
+    font-size: 12px !important;
     padding: 0 10px !important;
   }
 }
@@ -586,4 +586,65 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Ambient background (components/AmbientBackground.tsx) ──
+   One fixed layer under everything. body is isolated so this paints above
+   body's own background and below every piece of content. */
+body {
+  isolation: isolate;
+}
+.amb-root {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
+}
+.amb-layer {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.amb-calm .amb-mid,
+.amb-calm .amb-layer {
+  opacity: 0.45;
+}
+.amb-far {
+  inset: -10%;
+  background:
+    radial-gradient(40% 50% at 72% 38%, rgba(var(--sealed-rgb), calc(0.14 * var(--amb-strength))), transparent 70%),
+    radial-gradient(36% 44% at 12% 80%, rgba(var(--open-rgb), calc(0.08 * var(--amb-strength))), transparent 70%);
+}
+.amb-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 110% 80% at 50% 40%, transparent 35%, color-mix(in srgb, var(--bg) 88%, transparent)),
+    linear-gradient(90deg, color-mix(in srgb, var(--bg) 55%, transparent) 0%, transparent 60%);
+}
+.amb-seal {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.amb-seal-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.amb-seal-body i {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%);
+  opacity: calc(0.18 + 0.32 * var(--amb-strength));
+}
+.amb-seal-body i:first-child { transform: translateZ(5px); }
+.amb-seal-body i:last-child { transform: translateZ(-5px); opacity: calc(0.1 + 0.2 * var(--amb-strength)); }
+.amb-seal-sealed i {
+  background: linear-gradient(140deg, rgba(var(--sealed-rgb), 0.55), rgba(var(--sealed-rgb), 0.08));
+}
+.amb-seal-open i {
+  background: linear-gradient(140deg, rgba(var(--open-rgb), 0.5), rgba(var(--open-rgb), 0.06));
 }
