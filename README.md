@@ -379,3 +379,28 @@ Anchor `1.0.2` · `ephemeral-rollups-sdk` `0.16.2` · Solana Devnet · Next.js 1
 ## License
 
 MIT
+
+---
+
+## FIX_NOTES — design pass, 2026-10-09
+
+- **Desktop nav broke onto two lines.** Seven section links at 11px mono did not fit a 1152px bar, so each label wrapped ("Try / it"). Links are now `nowrap` and only show inline from 1560px, with a wider bar there; below that they live in the sheet, which already had them.
+- **11px and smaller text.** The `2xs` step was 11px, and charts, tags and the share chip used 9–10px. The floor is 12px now, everywhere, including chart ticks.
+- **Touch targets under 44px.** Desktop overrides dropped buttons, toggles and the wallet chip to 34–40px; the logo link, footer links, the faucet link and "See rounds" were 13–31px tall. All of them are 44px now.
+- **The hero's light box.** The old `.aurora` glow was clipped by the hero's `overflow-hidden` into a rectangle with visible edges. The atmosphere now lives in the fixed background instead.
+- **SEO.** Added `robots.txt`, `sitemap.xml`, a web manifest, `apple-icon`, a canonical URL per route (`/`, `/proof`, `/round/[address]`) and per-page titles for the two client pages.
+
+## DESIGN_NOTES
+
+- **Background — recipe 4 of the dice, the warp tunnel.** Hexagonal rings fly toward the reader, alternating the product's two semantic colours: cyan for sealed, magenta for public. Small cyan sparks travel the other way, into the tunnel, and never come back — the rankings going into the enclave. The vanishing point sits right of the headline on desktop so the tunnel frames the text rather than crossing it. Three layers move at different rates with the pointer and the scroll: a far wash of light, the canvas tunnel, and a few near hex seals turning in real CSS 3D. Full on `/`; quiet (fewer rings, slower, 45% opacity) on `/proof` and round pages. Half the rings on phones, DPR capped at 2, paused when the tab is hidden, one still frame under reduced motion, dimmed through `--amb-strength` on the light theme. `components/AmbientBackground.tsx`.
+- **Hero.** The headline and its word-by-word reveal stay; on wide screens a drawing of the mechanism sits beside it (`components/SealedRound.tsx`): founders and builders, every ranking travelling into a locked hexagon, and only the pairings coming out. The labels are placeholders (F1, B3), not data.
+- The existing system — tokens, Instrument Serif / Inter / JetBrains Mono, springs in `lib/motion.ts`, glass — is unchanged; this pass only completes it.
+
+## Two-minute phone check
+
+1. Open https://ronda-ciega.vercel.app — hex rings drift behind the headline; nothing scrolls sideways.
+2. Open the menu (top right): every section link is there and each row is easy to hit.
+3. Switch ES/EN and light/dark: the tunnel dims on light and the text stays readable.
+4. Scroll to the charts: axis numbers are legible without zooming.
+5. Open /proof and run the 400 markets: the background is quieter there.
+6. With "Reduce motion" on in the OS, the background holds still.
