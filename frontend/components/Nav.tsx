@@ -14,7 +14,7 @@ const WalletMultiButton = dynamic(
   async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
   {
     ssr: false,
-    loading: () => <div className="glass h-11 w-[132px] rounded-xl sm:h-10" />,
+    loading: () => <div className="glass h-11 w-[132px] rounded-xl" />,
   },
 );
 
@@ -107,10 +107,10 @@ export function Nav() {
         transition={easeEnter}
         className="sticky top-0 z-40 mb-6 px-3 pt-3 sm:px-5 sm:pt-4"
       >
-        <div className="glass glass-spill mx-auto flex w-full max-w-6xl items-center gap-3 rounded-2xl px-3 py-2 sm:px-4">
+        <div className="glass glass-spill mx-auto flex w-full max-w-6xl items-center min-[1560px]:max-w-[1480px] gap-3 rounded-2xl px-3 py-2 sm:px-4">
           <Link
             href="/"
-            className="flex shrink-0 items-center gap-2.5 rounded-lg"
+            className="flex min-h-[44px] shrink-0 items-center gap-2.5 rounded-lg"
             aria-label={t.nav.home}
           >
             <span className="whitespace-nowrap text-sm font-medium leading-none tracking-tight">
@@ -125,7 +125,7 @@ export function Nav() {
               Each carries a shared underline that slides to whichever section
               you are reading — no click needed to know where you are. */}
           <nav
-            className="mx-auto hidden items-center gap-1 xl:flex"
+            className="mx-auto hidden items-center gap-0.5 min-[1560px]:flex"
             aria-label={t.nav.sections}
           >
             {links.map((l) => (
@@ -133,7 +133,7 @@ export function Nav() {
                 key={l.id}
                 href={`#${l.id}`}
                 aria-current={active === l.id ? "true" : undefined}
-                className={`relative rounded-lg px-3 py-2 font-mono text-2xs leading-none transition-colors ${
+                className={`relative flex min-h-[44px] items-center whitespace-nowrap rounded-lg px-3 font-mono text-2xs leading-none transition-colors ${
                   active === l.id ? "text-chalk" : "text-muted hover:text-chalk"
                 }`}
               >
@@ -167,7 +167,7 @@ export function Nav() {
               aria-expanded={open}
               whileTap={reduce ? undefined : { scale: 0.93 }}
               transition={springSnappy}
-              className="glass flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:text-chalk sm:h-10 sm:w-10 xl:hidden"
+              className="glass flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:text-chalk min-[1560px]:hidden"
             >
               <Menu className="h-4 w-4" aria-hidden />
             </motion.button>
@@ -192,7 +192,7 @@ export function Nav() {
           closed, which is what a dismissal means. Collapse.tsx reached the
           same conclusion after two animated versions both failed. */}
       {open && (
-        <motion.div className="fixed inset-0 z-50 xl:hidden">
+        <motion.div className="fixed inset-0 z-50 min-[1560px]:hidden">
           <motion.div
             className="absolute inset-0 bg-bg/70 backdrop-blur-sm"
             initial={reduce ? undefined : { opacity: 0 }}

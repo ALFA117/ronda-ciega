@@ -33,7 +33,8 @@ const config: Config = {
       },
       fontSize: {
         // A fixed scale beats ad-hoc sizes: 12 13 14 16 18 24 32 44 60
-        "2xs": ["11px", { lineHeight: "1.4" }],
+        // 12px floor: 11px read as fine print on phones and failed the size audit.
+        "2xs": ["12px", { lineHeight: "1.45" }],
         xs: ["12px", { lineHeight: "1.5" }],
         sm: ["13px", { lineHeight: "1.6" }],
         base: ["15px", { lineHeight: "1.65" }],

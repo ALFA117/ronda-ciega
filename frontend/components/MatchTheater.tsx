@@ -169,7 +169,7 @@ export function MatchTheater({
         />
 
         {scrubbable && (
-          <p className="mt-4 text-center font-mono text-[10px] text-muted sm:hidden">
+          <p className="mt-4 text-center font-mono text-2xs text-muted sm:hidden">
             {t.round.swipeHint}
           </p>
         )}

@@ -76,7 +76,7 @@ export function Button({
   }[variant];
 
   const dims =
-    size === "sm" ? "h-10 px-3.5 text-2xs sm:h-9" : "h-11 px-5 text-sm sm:h-10";
+    size === "sm" ? "h-11 px-3.5 text-2xs" : "h-11 px-5 text-sm";
 
   return (
     <motion.button
@@ -119,7 +119,7 @@ export function IconButton({
       transition={springSnappy}
       className={`glass ${
         active ? "glass-sealed text-chalk" : "text-muted hover:text-chalk"
-      } flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl sm:h-10 sm:w-10`}
+      } flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl`}
     >
       {children}
     </motion.button>

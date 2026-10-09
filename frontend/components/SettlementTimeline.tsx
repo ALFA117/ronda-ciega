@@ -162,7 +162,7 @@ export function SettlementTimeline({
                 </span>
                 {/* Said on the row it applies to, not in a footnote. */}
                 {m.source !== "chain" && happened && (
-                  <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-dim">
+                  <span className="ml-2 font-mono text-2xs uppercase tracking-wider text-dim">
                     {t.timeline.source[m.source as "claimed" | "scheduled"]}
                   </span>
                 )}

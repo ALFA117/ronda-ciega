@@ -227,7 +227,7 @@ export function PrivacyPanel({
           {addresses.map((a, i) => (
             <li
               key={a.toBase58()}
-              className="whitespace-nowrap font-mono text-[11px] text-muted"
+              className="whitespace-nowrap font-mono text-2xs text-muted"
             >
               <span className="text-dim">{participants[i].handle}</span>{" "}
               {a.toBase58()}

@@ -205,7 +205,7 @@ export function CommandPalette() {
       >
         <Search className="h-3.5 w-3.5" aria-hidden />
         {t.palette.open}
-        <kbd className="rounded border border-edge px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+        <kbd className="rounded border border-edge px-1.5 py-0.5 text-2xs">⌘K</kbd>
       </button>
 
       {/* Not wrapped in AnimatePresence, and no exit animation.
