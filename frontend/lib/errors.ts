@@ -28,6 +28,10 @@ export type Reason =
   | "randomnessDone"
   | "badTickBudget"
   | "overflow"
+  | "notSettled"
+  | "wrongPair"
+  | "nothingToRefund"
+  | "nothingToEscrow"
   | "unknown";
 
 /**
@@ -60,6 +64,16 @@ const PROGRAM_ERRORS: Record<number, Reason> = {
   6016: "noRandomness", // RandomnessMissing
   6017: "badTickBudget", // InvalidTickBudget
   6018: "overflow", // MathOverflow
+  // The escrow's, added after the rest. A payment refused for a reason the
+  // page could not name would be the worst place in the app to say "unknown".
+  6019: "nothingToEscrow", // NothingToEscrow
+  6020: "notSettled", // NotSettledYet
+  6021: "wrongPair", // WrongSide
+  6022: "wrongPair", // NoSuchParticipant
+  6023: "wrongPair", // WentUnmatched
+  6024: "wrongPair", // NotYourPair
+  6025: "alreadyDone", // EscrowAlreadyDone
+  6026: "nothingToRefund", // NothingToRefund
 };
 
 /** Everything the error object knows, own and inherited, as one string. */
@@ -163,6 +177,17 @@ export function classifyError(e: unknown): Reason {
     randomnessalreadyfulfilled: "randomnessDone",
     invalidtickbudget: "badTickBudget",
     mathoverflow: "overflow",
+    nothingtoescrow: "nothingToEscrow",
+    notsettledyet: "notSettled",
+    wrongside: "wrongPair",
+    nosuchparticipant: "wrongPair",
+    wentunmatched: "wrongPair",
+    notyourpair: "wrongPair",
+    escrowalreadydone: "alreadyDone",
+    nothingtorefund: "nothingToRefund",
+    // An escrow that settle or refund already closed: Anchor refuses to read
+    // an account that is not there any more, before the program says a word.
+    accountnotinitialized: "alreadyDone",
   };
   for (const [name, reason] of Object.entries(byName)) {
     if (text.includes(name)) return reason;

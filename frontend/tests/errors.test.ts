@@ -165,11 +165,11 @@ describe("Los códigos del programa que faltaban", () => {
     assert.equal(classifyError({ message: "custom program error: 0x177c" }), "badSession");
   });
 
-  test("los diecinueve códigos están cubiertos", () => {
+  test("los veintisiete códigos están cubiertos", () => {
     // The point of this one is arithmetic, not any single mapping: every code
     // the program can raise now has something to say.
     const unmapped = [];
-    for (let code = 6000; code <= 6018; code++) {
+    for (let code = 6000; code <= 6026; code++) {
       const hex = "0x" + code.toString(16);
       if (classifyError({ message: "custom program error: " + hex }) === "unknown") {
         unmapped.push(code);

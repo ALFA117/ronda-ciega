@@ -7,6 +7,7 @@ import { ParticipantAccount, RoundAccount } from "@/lib/program";
 import { currentStep, isBystander, partnerIndex, type StepId } from "@/lib/steps";
 import { hasTeeSession } from "@/lib/tee";
 import { DepositPanel, EscrowBadge, useEscrow } from "./Deposit";
+import { Payout } from "./Payout";
 import { isExpired, isJoinable } from "@/lib/rounds";
 import { sessionState } from "@/lib/session";
 import { useT } from "@/lib/i18n";
@@ -69,8 +70,24 @@ export function YourStep({
   // Public, so it is simply read rather than remembered. What you pay is on
   // L1; who you chose is not. The whole design in one asymmetry.
   const [escrowNonce, setEscrowNonce] = useState(0);
-  const locked = useEscrow(round.address, wallet.publicKey ?? null);
-  void escrowNonce;
+  const locked = useEscrow(round.address, wallet.publicKey ?? null, escrowNonce);
+
+  // Who the matching gave this person, if anyone — and for a builder, the
+  // founder whose deposit pays them. Read before any early return, because the
+  // escrow behind it is a hook.
+  const partnerIdx =
+    me && round.status === "settled"
+      ? partnerIndex(round.pairs, me.side, me.index)
+      : null;
+  const partner =
+    me && partnerIdx !== null
+      ? participants.find((p) => p.side !== me.side && p.index === partnerIdx)
+      : undefined;
+  const partnerEscrow = useEscrow(
+    round.address,
+    me?.side === "builder" && partner ? partner.wallet : null,
+    escrowNonce,
+  );
   useEffect(() => {
     let live = true;
     setEnclave(hasTeeSession(wallet.publicKey ?? null));
@@ -281,6 +298,22 @@ export function YourStep({
 
         {current === "result" && (
           <Outcome round={round} participants={participants} me={me} />
+        )}
+
+        {/* The money, once there is something the program will let this
+            person do with it. Renders nothing otherwise. */}
+        {current === "result" && me && (
+          <Payout
+            round={round}
+            me={me}
+            partner={partner}
+            escrow={me.side === "founder" ? locked : partnerEscrow}
+            delegated={delegated}
+            onDone={() => {
+              setEscrowNonce((n) => n + 1);
+              onChanged();
+            }}
+          />
         )}
       </div>
     </Panel>

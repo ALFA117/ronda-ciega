@@ -196,7 +196,12 @@ export function DepositPanel({
  * public and cheap and the alternative is threading a number through four
  * components that do not otherwise care about money.
  */
-export function useEscrow(round: PublicKey | null, wallet: PublicKey | null) {
+export function useEscrow(
+  round: PublicKey | null,
+  wallet: PublicKey | null,
+  /** Bump it to read again after a deposit, a payment or a refund. */
+  nonce = 0,
+) {
   const { connection } = useConnection();
   const [lamports, setLamports] = useState<number | null>(null);
 
@@ -229,7 +234,7 @@ export function useEscrow(round: PublicKey | null, wallet: PublicKey | null) {
     return () => {
       live = false;
     };
-  }, [connection, round?.toBase58(), wallet?.toBase58()]);
+  }, [connection, round?.toBase58(), wallet?.toBase58(), nonce]);
 
   return lamports;
 }
