@@ -18,7 +18,7 @@ export const en: Dictionary = {
   hero: {
     headline: "Say who you want",
     subline: "without anyone knowing you said it.",
-    lede: "You lock what you are offering on L1. Your list is sealed inside an enclave nobody can read, not even whoever opened the round. The pairing comes out, and the payment settles itself. The lists are never published — not at the deadline, not afterwards, not to anyone.",
+    lede: "You lock what you are offering on L1. Your list is sealed inside an enclave nobody can read, not even whoever opened the round. The pairing comes out, and the deposit pays whoever it names — either side of the pair can send that payment, nobody's permission needed. The lists are never published — not at the deadline, not afterwards, not to anyone.",
     cta: "See rounds",
     sealed: "sealed lists",
     stable: "stable",
@@ -35,6 +35,7 @@ export const en: Dictionary = {
     vrf: "For verifiable randomness to land",
     oneTx: "Rollup transaction for the entire matching",
     leaked: "Preference lists published. Ever.",
+    when: "The four above were measured once on devnet, in September 2026, with scripts/spike.ts. The row below is measured in your browser, right now.",
   },
 
   flow: {
@@ -159,7 +160,7 @@ export const en: Dictionary = {
     latency: "Matching latency",
     latencyOneTx: "One transaction",
     latencyPerTick: "One per round",
-    latencyNote: "Same work, a single network trip.",
+    latencyNote: "Same work, a single network trip. Measured on devnet in September 2026.",
     empty: "No data from a settled round yet.",
     tick: "round",
     table: "View as table",
@@ -170,6 +171,7 @@ export const en: Dictionary = {
     sealing: "sealing",
     matching: "matching",
     settled: "closed",
+    expired: "deadline passed",
   },
 
   rounds: {
@@ -305,6 +307,9 @@ export const en: Dictionary = {
     connectClosed: "This round is closed. Connect your wallet to see whether you were matched.",
     notInRound: "You weren't in this round. What it published is below.",
     closedTitle: "Round closed",
+    expiredTitle: "Deadline passed",
+    expiredNote: "The deadline passed, so the program no longer lets anyone join or lock funds. The round stays open on chain until someone closes it and runs the matching — and that takes enough people on both sides.",
+    pendingNow: "The deadline passed and the round has not been matched yet. Once someone closes it and runs the matching, your pairing shows up here.",
     youAre: "You are",
     matchedWith: "Matched with",
     unmatched: "No pair in this round",
@@ -402,7 +407,7 @@ export const en: Dictionary = {
     submit: "Lock it",
     addMore: "Lock more",
     lockedNote:
-      "It is on L1 now, in an account only this program can touch. If you are paired, it pays your counterparty when the round closes. If not, you take it back.",
+      "It is on L1 now, in an account only this program can touch. Once the round settles, it pays your counterparty — either of you can send that payment from this page. If you go unmatched, you take it back from here too.",
     locked: "locked",
     errors: {
       notNumber: "That is not an amount.",
@@ -412,7 +417,7 @@ export const en: Dictionary = {
     promises: [
       "The money stays on Solana L1, in an account only this program can touch. It never enters the enclave.",
       "Whoever opened the round cannot move it. There is no instruction in the program that lets them.",
-      "If you go unmatched, or the round expires without settling, you take it back yourself. Nobody's permission needed.",
+      "If you go unmatched, you take it back yourself, nobody's permission needed. If the round expires without settling, the same holds while it is on L1; once it has moved to the rollup, it has to settle before anything comes back.",
     ],
   },
 
@@ -510,7 +515,52 @@ export const en: Dictionary = {
       "This round's randomness has already landed. It cannot be requested or overwritten again.",
     badTickBudget: "That budget of proposal rounds is not valid.",
     overflow: "A counter overflowed. That is a fault in the program, not in what you did.",
+    notSettled: "The round has not settled yet, so there is nothing to pay.",
+    wrongPair:
+      "The program refused: the matching did not pair these two, or this deposit is on the wrong side.",
+    nothingToRefund:
+      "Nothing to take back yet. A deposit comes back if you went unmatched, or once the deadline has passed without the round settling.",
+    nothingToEscrow: "There is nothing to lock: the amount has to be above zero.",
     unknown: "The operation could not be completed.",
+  },
+
+  payout: {
+    title: "Your deposit",
+    pay: "Pay {handle}",
+    payNote:
+      "The matching paired you with {handle}. Sending this moves your deposit to their wallet: settle_pair checks the pairing on chain and needs nobody's permission. Your wallet only signs to pay the network fee.",
+    collect: "Collect from {handle}",
+    collectNote:
+      "{handle}'s deposit is still locked against this round, and the matching paired you two. Anyone can trigger the payment: your wallet only signs to pay the network fee, and the money goes to the wallet you joined with.",
+    refund: "Take my deposit back",
+    refundUnmatched:
+      "You went unmatched, so the program lets you take your deposit back. Only your wallet can do it.",
+    refundExpired:
+      "The deadline passed and the round never settled, so the program lets you take your deposit back. Only your wallet can do it.",
+    waitSettled:
+      "The round settled on the rollup and has not come back to L1 yet. The payment can move as soon as it does, and this panel will offer it then.",
+    waitExpired:
+      "The deadline passed without a result, but the round is still on the rollup, and the program only brings a round back to L1 once it has settled. Until someone closes and settles it, this deposit cannot be refunded from here.",
+    paid: "Paid",
+    refunded: "Back in your wallet",
+    doneNote:
+      "Confirmed on L1. The escrow account is closed and its rent went back to whoever deposited.",
+    viewTx: "See the transaction",
+  },
+
+  notFound: {
+    title: "Page not found",
+    note: "There is nothing at this address. Rounds live at /round/ followed by their account.",
+  },
+
+  wallet: {
+    select: "Select wallet",
+    connect: "Connect",
+    connecting: "Connecting…",
+    copy: "Copy address",
+    copied: "Copied",
+    change: "Change wallet",
+    disconnect: "Disconnect",
   },
 
   play: {
@@ -638,6 +688,8 @@ export const en: Dictionary = {
     matchesChain: "The trace ends exactly where the chain says",
     passed: "It checks out.",
     failed: "It does not check out.",
+    notYet:
+      "This round has not been matched yet, so there is no trace to check. Come back once it settles.",
     limit:
       "What this cannot check: whether the hidden lists were respected. That would need the lists, and the lists were destroyed unpublished. That is the trade — a verifiable process and a verifiable outcome, not verifiable inputs.",
   },
@@ -656,7 +708,8 @@ export const en: Dictionary = {
   },
 
   ticker: {
-    label: "Latest pair",
+    label: "Latest pair · demo round",
+    short: "Demo",
   },
 
   common: {
@@ -664,5 +717,6 @@ export const en: Dictionary = {
     loading: "Loading…",
     close: "Close",
     error: "Something failed",
+    skip: "Skip to content",
   },
 };

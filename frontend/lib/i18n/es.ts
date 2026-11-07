@@ -17,7 +17,7 @@ export const es = {
   hero: {
     headline: "Dices a quién quieres",
     subline: "sin que nadie sepa que lo dijiste.",
-    lede: "Bloqueas en L1 lo que ofreces. Tu lista se sella dentro de un enclave que nadie puede leer, ni siquiera quien abrió la ronda. Sale el par, y el pago se ejecuta solo. Las listas no se publican nunca — ni al cerrar, ni después, ni para nadie.",
+    lede: "Bloqueas en L1 lo que ofreces. Tu lista se sella dentro de un enclave que nadie puede leer, ni siquiera quien abrió la ronda. Sale el par, y el depósito le paga a quien el par nombra — cualquiera de los dos puede mandar ese pago, sin pedirle permiso a nadie. Las listas no se publican nunca — ni al cerrar, ni después, ni para nadie.",
     cta: "Ver rondas",
     sealed: "listas selladas",
     stable: "estable",
@@ -34,6 +34,7 @@ export const es = {
     vrf: "En llegar la aleatoriedad verificable",
     oneTx: "Transacción del rollup para todo el matching",
     leaked: "Listas de preferencias publicadas. Nunca.",
+    when: "Las cuatro de arriba se midieron una vez en devnet, en septiembre de 2026, con scripts/spike.ts. La fila de abajo se mide en tu navegador, ahora mismo.",
   },
 
   flow: {
@@ -158,7 +159,7 @@ export const es = {
     latency: "Latencia del matching",
     latencyOneTx: "Una transacción",
     latencyPerTick: "Una por ronda",
-    latencyNote: "Mismo trabajo, un solo viaje de red.",
+    latencyNote: "Mismo trabajo, un solo viaje de red. Medido en devnet en septiembre de 2026.",
     empty: "Todavía no hay datos de una ronda liquidada.",
     tick: "ronda",
     table: "Ver como tabla",
@@ -169,6 +170,7 @@ export const es = {
     sealing: "sellando",
     matching: "emparejando",
     settled: "cerrada",
+    expired: "plazo vencido",
   },
 
   rounds: {
@@ -304,6 +306,9 @@ export const es = {
     connectClosed: "Esta ronda ya cerró. Conecta tu monedero para ver si te tocó par.",
     notInRound: "No participaste en esta ronda. Abajo está lo que publicó.",
     closedTitle: "Ronda cerrada",
+    expiredTitle: "Plazo vencido",
+    expiredNote: "El plazo venció, así que el programa ya no deja entrar ni bloquear fondos. La ronda sigue abierta en cadena hasta que alguien la cierre y corra el matching — y para eso hacen falta suficientes personas de cada lado.",
+    pendingNow: "El plazo venció y la ronda todavía no se empareja. Cuando alguien la cierre y corra el matching, tu par aparece aquí.",
     youAre: "Eres",
     matchedWith: "Emparejado con",
     unmatched: "Sin par en esta ronda",
@@ -401,7 +406,7 @@ export const es = {
     submit: "Bloquear",
     addMore: "Bloquear más",
     lockedNote:
-      "Ya está en L1, en una cuenta que solo este programa puede tocar. Si sales emparejado, paga a tu contraparte al cerrar la ronda. Si no, lo recuperas tú.",
+      "Ya está en L1, en una cuenta que solo este programa puede tocar. Cuando la ronda se resuelva, le paga a tu contraparte — cualquiera de los dos puede mandar ese pago desde esta página. Si no sales emparejado, lo recuperas desde aquí también.",
     locked: "bloqueados",
     errors: {
       notNumber: "Eso no es una cantidad.",
@@ -411,7 +416,7 @@ export const es = {
     promises: [
       "El dinero se queda en Solana L1, en una cuenta que solo este programa puede tocar. No entra al enclave.",
       "Quien abrió la ronda no puede moverlo. No hay instrucción en el programa que se lo permita.",
-      "Si no sales emparejado, o si la ronda vence sin resolverse, lo recuperas tú solo. Sin pedirle permiso a nadie.",
+      "Si no sales emparejado, lo recuperas tú, sin pedirle permiso a nadie. Si la ronda vence sin resolverse, vale lo mismo mientras siga en L1; si ya pasó al rollup, tiene que resolverse antes de que algo regrese.",
     ],
   },
 
@@ -509,7 +514,52 @@ export const es = {
       "La aleatoriedad de esta ronda ya llegó. No se puede pedir ni sobrescribir otra vez.",
     badTickBudget: "Ese presupuesto de rondas de propuesta no es válido.",
     overflow: "Un contador se desbordó. Esto es un fallo del programa, no tuyo.",
+    notSettled: "La ronda todavía no se resuelve, así que no hay nada que pagar.",
+    wrongPair:
+      "El programa lo rechazó: el matching no emparejó a estos dos, o el depósito está del lado equivocado.",
+    nothingToRefund:
+      "Todavía no hay nada que recuperar. Un depósito regresa si no te tocó par, o cuando el plazo vence sin que la ronda se resuelva.",
+    nothingToEscrow: "No hay nada que bloquear: la cantidad tiene que ser mayor que cero.",
     unknown: "No se pudo completar la operación.",
+  },
+
+  payout: {
+    title: "Tu depósito",
+    pay: "Pagarle a {handle}",
+    payNote:
+      "El matching te emparejó con {handle}. Al mandarlo, tu depósito pasa a su wallet: settle_pair revisa el par en cadena y no necesita permiso de nadie. Tu wallet solo firma para pagar la comisión de la red.",
+    collect: "Cobrarle a {handle}",
+    collectNote:
+      "El depósito de {handle} sigue bloqueado en esta ronda y el matching los emparejó. Cualquiera puede disparar el pago: tu wallet solo firma para pagar la comisión de la red, y el dinero llega a la wallet con la que entraste.",
+    refund: "Recuperar mi depósito",
+    refundUnmatched:
+      "No te tocó par, así que el programa te deja recuperar tu depósito. Solo tu wallet puede hacerlo.",
+    refundExpired:
+      "El plazo venció y la ronda nunca se resolvió, así que el programa te deja recuperar tu depósito. Solo tu wallet puede hacerlo.",
+    waitSettled:
+      "La ronda se resolvió en el rollup y todavía no regresa a L1. El pago se puede mover en cuanto regrese, y este panel lo ofrecerá entonces.",
+    waitExpired:
+      "El plazo venció sin resultado, pero la ronda sigue en el rollup, y el programa solo regresa una ronda a L1 cuando ya se resolvió. Mientras nadie la cierre y la resuelva, este depósito no se puede recuperar desde aquí.",
+    paid: "Pagado",
+    refunded: "De vuelta en tu wallet",
+    doneNote:
+      "Confirmado en L1. La cuenta de escrow se cerró y su renta regresó a quien depositó.",
+    viewTx: "Ver la transacción",
+  },
+
+  notFound: {
+    title: "Página no encontrada",
+    note: "No hay nada en esta dirección. Las rondas viven en /round/ seguido de su cuenta.",
+  },
+
+  wallet: {
+    select: "Elegir wallet",
+    connect: "Conectar",
+    connecting: "Conectando…",
+    copy: "Copiar dirección",
+    copied: "Copiada",
+    change: "Cambiar wallet",
+    disconnect: "Desconectar",
   },
 
   play: {
@@ -565,6 +615,8 @@ export const es = {
     matchesChain: "La traza termina exactamente en el resultado en cadena",
     passed: "Cuadra.",
     failed: "No cuadra.",
+    notYet:
+      "Esta ronda todavía no se empareja, así que no hay traza que revisar. Vuelve cuando se resuelva.",
     limit:
       "Lo que esto no comprueba, y no puede: si las listas ocultas se respetaron. Eso exigiría las listas, y las listas se destruyeron sin publicarse. Ese es el trato — proceso y resultado verificables, entradas no.",
   },
@@ -656,7 +708,8 @@ export const es = {
   },
 
   ticker: {
-    label: "Último par",
+    label: "Último par · ronda demo",
+    short: "Demo",
   },
 
   common: {
@@ -664,6 +717,7 @@ export const es = {
     loading: "Cargando…",
     close: "Cerrar",
     error: "Algo falló",
+    skip: "Ir al contenido",
   },
 };
 
