@@ -7,7 +7,7 @@ import { Connection } from "@solana/web3.js";
 import { CornerDownLeft, Hash, Search, Sparkles } from "lucide-react";
 import { DEVNET_RPC } from "@/lib/constants";
 import { getReadProgram, RoundAccount } from "@/lib/program";
-import { fetchRounds } from "@/lib/rounds";
+import { fetchRounds, shownStatus } from "@/lib/rounds";
 import { publicTeeConnection } from "@/lib/tee";
 import { matches } from "@/lib/search";
 import { useT } from "@/lib/i18n";
@@ -144,9 +144,9 @@ export function CommandPalette() {
     };
 
     const sections: Item[] = [
+      { id: "como-funciona", label: t.flow.label, kind: "section", go: jump("como-funciona") },
       { id: "probar", label: t.play.label, kind: "section", go: jump("probar") },
       { id: "problema", label: t.problem.label, kind: "section", go: jump("problema") },
-      { id: "como-funciona", label: t.flow.label, kind: "section", go: jump("como-funciona") },
       { id: "commit-reveal", label: t.compare.label, kind: "section", go: jump("commit-reveal") },
       { id: "medido", label: t.stats.label, kind: "section", go: jump("medido") },
       { id: "limites", label: t.limits.label, kind: "section", go: jump("limites") },
@@ -166,7 +166,7 @@ export function CommandPalette() {
     const roundItems: Item[] = (rounds ?? []).map((r) => ({
       id: r.address.toBase58(),
       label: `#${r.roundId.toString().slice(-6)}`,
-      hint: `${r.founderCount}×${r.builderCount} · ${t.status[r.status] ?? r.status}`,
+      hint: `${r.founderCount}×${r.builderCount} · ${t.status[shownStatus(r)] ?? r.status}`,
       kind: "round" as const,
       go: () => {
         close();

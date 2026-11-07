@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { NONE } from "@/lib/constants";
 import { RoundAccount } from "@/lib/program";
+import { shownStatus } from "@/lib/rounds";
 import { useT } from "@/lib/i18n";
 import { useParticipants } from "@/hooks/useParticipants";
 import { springPanel } from "@/lib/motion";
@@ -141,7 +142,7 @@ export function RoundRow({ round }: { round: RoundAccount }) {
               <span className="tnum font-mono text-sm transition-colors group-hover:text-sealed">
                 #{round.roundId.toString().slice(-6)}
               </span>
-              <StatusPill status={round.status} />
+              <StatusPill status={shownStatus(round)} />
               {round.transparent && <Tag tone="open">{t.round.transparent}</Tag>}
             </div>
             <div className="tnum font-mono text-2xs text-muted">

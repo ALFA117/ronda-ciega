@@ -99,15 +99,55 @@ export function pickTickerRound(rounds: RoundAccount[] | null): RoundAccount | u
   return rounds?.find((r) => r.status === "settled" && r.pairs.some((b) => b !== NONE));
 }
 
+/** Seconds since the epoch, the unit every timestamp on the round uses. */
+export function nowSeconds(): number {
+  return Math.floor(Date.now() / 1000);
+}
+
 /**
- * How much there is to look at, 2 down to 0.
+ * Open on chain, and past its deadline.
+ *
+ * `status` only moves when somebody calls `close_round`, and nobody has to. So
+ * a round that was opened, delegated and then abandoned stays "open" forever,
+ * while `join_round` and `deposit_escrow` both refuse it the moment the clock
+ * passes `deadline_ts`. Read off `status` alone, six of those led the front
+ * page as the rounds to join, each inviting a visitor into a transaction the
+ * program is guaranteed to turn down.
+ */
+export function isExpired(
+  r: Pick<RoundAccount, "status" | "deadlineTs">,
+  now: number = nowSeconds(),
+): boolean {
+  return r.status === "open" && now >= r.deadlineTs;
+}
+
+/** Open and before its deadline: the only state in which anyone can join. */
+export function isJoinable(
+  r: Pick<RoundAccount, "status" | "deadlineTs">,
+  now: number = nowSeconds(),
+): boolean {
+  return r.status === "open" && now < r.deadlineTs;
+}
+
+/** What a round should be called on screen: its status, or "expired". */
+export type ShownStatus = RoundAccount["status"] | "expired";
+
+export function shownStatus(
+  r: Pick<RoundAccount, "status" | "deadlineTs">,
+  now: number = nowSeconds(),
+): ShownStatus {
+  return isExpired(r, now) ? "expired" : r.status;
+}
+
+/**
+ * How much there is to look at, 3 down to 0.
  *
  * Devnet keeps every round ever opened, and test runs leave behind stubs with
  * one participant and no lists. Sorted purely by recency those land on top and
  * bury the rounds that actually finished. Nothing is hidden — a round with
  * nothing in it is simply not the first thing a visitor should meet.
  */
-export function interest(r: RoundAccount): number {
+export function interest(r: RoundAccount, now: number = nowSeconds()): number {
   // "Under way" means it could actually close: lists are in, or both sides
   // have reached the minimum. Counting participants across both sides called a
   // round with one founder and sixteen builders busy, when it can never settle.
@@ -132,9 +172,14 @@ export function interest(r: RoundAccount): number {
   // already over. A settled round is the better demonstration; an open one is
   // the better invitation, and a visitor who wants the demonstration is one
   // click away either way.
+  //
+  // "Open" here means joinable, not the on-chain status: a round past its
+  // deadline still says open until somebody closes it, and the program
+  // refuses every join from that second on. It drops to "under way" — it may
+  // still close and settle — instead of leading as an invitation.
   const bothSidesReady =
     r.founderCount >= r.minPerSide && r.builderCount >= r.minPerSide;
-  if (r.status === "open" && bothSidesReady) return 3;
+  if (isJoinable(r, now) && bothSidesReady) return 3;
   if (r.status === "settled" && r.pairs.some((b) => b !== NONE)) return 2;
   if (goingSomewhere) return 1;
   return 0;

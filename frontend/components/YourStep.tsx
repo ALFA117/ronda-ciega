@@ -7,6 +7,7 @@ import { ParticipantAccount, RoundAccount } from "@/lib/program";
 import { currentStep, isBystander, partnerIndex, type StepId } from "@/lib/steps";
 import { hasTeeSession } from "@/lib/tee";
 import { DepositPanel, EscrowBadge, useEscrow } from "./Deposit";
+import { isExpired, isJoinable } from "@/lib/rounds";
 import { sessionState } from "@/lib/session";
 import { useT } from "@/lib/i18n";
 import { JoinForm } from "./JoinForm";
@@ -93,8 +94,13 @@ export function YourStep({
     ? participants.filter((p) => p.side !== me.side).length
     : 0;
 
+  // Joinable, not merely "open": the status stays open on an abandoned round
+  // until somebody closes it, and the program refuses every join and deposit
+  // from its deadline on. Reading the status alone put the five-step rail, and
+  // "connect your wallet to take part", on rounds nobody can take part in.
+  const expired = isExpired(round);
   const state = {
-    open: round.status === "open",
+    open: isJoinable(round),
     connected: !!wallet.publicKey,
     joined: !!me,
     delegated,
@@ -112,11 +118,15 @@ export function YourStep({
   if (isBystander(state)) {
     return (
       <Panel className="space-y-4 p-5">
-        <Label>{t.steps.closedTitle}</Label>
+        <Label>{expired ? t.steps.expiredTitle : t.steps.closedTitle}</Label>
         <p className="text-sm leading-relaxed text-muted">
-          {wallet.publicKey ? t.steps.notInRound : t.steps.connectClosed}
+          {expired
+            ? t.steps.expiredNote
+            : wallet.publicKey
+              ? t.steps.notInRound
+              : t.steps.connectClosed}
         </p>
-        {!wallet.publicKey && <WalletButton />}
+        {!wallet.publicKey && !expired && <WalletButton />}
       </Panel>
     );
   }
@@ -201,7 +211,14 @@ export function YourStep({
 
       <div className="space-y-4 border-t border-edge px-5 py-5">
         <div className="space-y-1.5">
-          <p className="text-sm leading-relaxed">{t.steps[current].now}</p>
+          <p className="text-sm leading-relaxed">
+            {/* "Result" is also where a participant lands once the deadline
+                passes, before anyone has run the matching. Saying "the round
+                settled" there was the one false sentence on the rail. */}
+            {current === "result" && round.status !== "settled"
+              ? t.steps.pendingNow
+              : t.steps[current].now}
+          </p>
           {current === "rank" && (
             <SignatureCost prompts={prompts} session={session} />
           )}
@@ -371,7 +388,9 @@ function Outcome({
   me?: ParticipantAccount;
 }) {
   const t = useT();
-  if (!me) return null;
+  // Before the matching has run there is no outcome to state, and "no pair
+  // in this round" would be a verdict nobody has reached yet.
+  if (!me || round.status !== "settled") return null;
 
   // pairs is indexed by founder, so a builder has to be looked up the other
   // way round. Getting this backwards silently tells half the round they were

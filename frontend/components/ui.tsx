@@ -133,6 +133,9 @@ export function StatusPill({ status }: { status: string }) {
     sealing: "border-sealed/40 text-sealed bg-sealed/5",
     matching: "border-sealed/40 text-sealed bg-sealed/5",
     settled: "border-edge text-muted",
+    // Past its deadline and never closed: nobody can join it, and saying
+    // "open" in the open colour was an invitation the program refuses.
+    expired: "border-edge text-muted",
   };
   const label: Record<string, string> = t.status;
   return (

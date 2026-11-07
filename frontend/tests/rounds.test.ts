@@ -2,15 +2,28 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { PublicKey } from "@solana/web3.js";
 import { NONE } from "../lib/constants.ts";
-import { byInterest, interest, mergeRounds, pickTickerRound } from "../lib/rounds.ts";
+import {
+  byInterest,
+  interest,
+  isExpired,
+  isJoinable,
+  mergeRounds,
+  pickTickerRound,
+  shownStatus,
+} from "../lib/rounds.ts";
 import type { RoundAccount } from "../lib/program.ts";
+
+/** 2096. Any "open" round with this deadline is still taking people. */
+const FUTURE = 4_000_000_000;
 
 function round(over: Partial<RoundAccount> = {}): RoundAccount {
   return {
     address: PublicKey.default,
     authority: PublicKey.default,
     roundId: 1n,
-    deadlineTs: 0,
+    // Far in the future, so an "open" fixture is joinable unless a case says
+    // otherwise: the deadline is its own subject, tested below.
+    deadlineTs: FUTURE,
     minPerSide: 2,
     founderCount: 2,
     builderCount: 2,
@@ -293,5 +306,46 @@ describe("mergeRounds", () => {
 
   test("two empty listings are an empty listing, not a crash", () => {
     assert.deepEqual(mergeRounds([], []), []);
+  });
+});
+
+describe("Una ronda abierta con el plazo vencido", () => {
+  // The bug: `status` only changes when somebody calls close_round, so an
+  // abandoned round says "open" forever while join_round and deposit_escrow
+  // refuse it from the deadline on. Six of those led the front page as the
+  // rounds to join.
+  const now = 1_800_000_000;
+
+  test("vencida es vencida desde el segundo del plazo", () => {
+    assert.equal(isExpired(round({ status: "open", deadlineTs: now }), now), true);
+    assert.equal(isExpired(round({ status: "open", deadlineTs: now + 1 }), now), false);
+    assert.equal(isJoinable(round({ status: "open", deadlineTs: now }), now), false);
+    assert.equal(isJoinable(round({ status: "open", deadlineTs: now + 1 }), now), true);
+  });
+
+  test("solo una ronda abierta puede estar vencida", () => {
+    // A settled round is past its deadline too, and calling it expired would
+    // bury the one fact about it worth reading.
+    assert.equal(isExpired(round({ status: "settled", deadlineTs: 1 }), now), false);
+    assert.equal(shownStatus(round({ status: "settled", deadlineTs: 1 }), now), "settled");
+    assert.equal(shownStatus(round({ status: "open", deadlineTs: 1 }), now), "expired");
+    assert.equal(shownStatus(round({ status: "open", deadlineTs: now + 60 }), now), "open");
+  });
+
+  test("con ambos lados completos ya no encabeza: nadie puede entrar", () => {
+    const vencida = round({
+      status: "open", founderCount: 4, builderCount: 4, rankingCount: 8, deadlineTs: now - 60,
+    });
+    // Still under way — it can close and settle — but not an invitation.
+    assert.equal(interest(vencida, now), 1);
+  });
+
+  test("una ronda con resultado va antes que una vencida", () => {
+    const paired = [0, 1, ...new Array(14).fill(NONE)];
+    const vencida = round({
+      roundId: 99n, status: "open", founderCount: 4, builderCount: 4, deadlineTs: 1,
+    });
+    const conResultado = round({ roundId: 1n, status: "settled", pairs: paired });
+    assert.equal([vencida, conResultado].sort(byInterest)[0].roundId, 1n);
   });
 });

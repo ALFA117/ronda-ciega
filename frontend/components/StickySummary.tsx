@@ -4,6 +4,7 @@ import { RefObject, useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { NONE } from "@/lib/constants";
 import { ParticipantAccount, RoundAccount } from "@/lib/program";
+import { shownStatus } from "@/lib/rounds";
 import { useT } from "@/lib/i18n";
 import { springPanel } from "@/lib/motion";
 import { StatusPill } from "./ui";
@@ -70,7 +71,7 @@ export function StickySummary({
             <span className="tnum shrink-0 font-mono text-2xs">
               #{round.roundId.toString().slice(-6)}
             </span>
-            <StatusPill status={round.status} />
+            <StatusPill status={shownStatus(round)} />
 
             {/* The pairing as a strip: one tick per founder, lit when paired. */}
             <div className="ml-auto flex items-center gap-2">

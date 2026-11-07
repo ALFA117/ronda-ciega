@@ -18,6 +18,7 @@ import { StickySummary } from "@/components/StickySummary";
 import { PreflightBanner } from "@/components/Preflight";
 import { springLayout } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
+import { shownStatus } from "@/lib/rounds";
 import {
   ErrorText,
   Explorer,
@@ -90,7 +91,7 @@ export default function RoundPage({ params }: { params: { address: string } }) {
             <h1 className="tnum font-mono text-base">
               {t.round.title} #{round.roundId.toString().slice(-6)}
             </h1>
-            <StatusPill status={round.status} />
+            <StatusPill status={shownStatus(round)} />
             {round.transparent && <Tag tone="open">{t.round.transparent}</Tag>}
             {delegated && <Tag tone="sealed">{t.round.onRollup}</Tag>}
           </div>
