@@ -11,8 +11,10 @@ export default function NotFound() {
   return (
     <Panel className="mx-auto max-w-lg space-y-5 p-8 text-center">
       <Label>404</Label>
-      <h1 className="text-xl font-medium tracking-tight">{t.round.notFound}</h1>
-      <Note>{t.round.notFoundNote}</Note>
+      {/* Every unknown path lands here, not only rounds: it said "Round not
+          found" under /anything-at-all. */}
+      <h1 className="text-xl font-medium tracking-tight">{t.notFound.title}</h1>
+      <Note>{t.notFound.note}</Note>
       <Link
         href="/"
         className="inline-flex items-center gap-2 font-mono text-sm text-sealed transition-colors hover:text-chalk"
