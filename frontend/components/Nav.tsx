@@ -12,11 +12,17 @@ import { WalletButton } from "./WalletButton";
 
 
 /** Must stay in step with `links` below: a tracked section with no link
- * leaves the highlight nowhere to go while the reader is inside it. */
+ * leaves the highlight nowhere to go while the reader is inside it.
+ *
+ * And in document order, which useActiveSection relies on: the last section
+ * whose top has passed the reading line wins. `como-funciona` moved up into
+ * the hero but kept its third place here, so it was always "the last one
+ * passed" while the reader was in 01 or 02, and the highlight sat on How it
+ * works through both of them. */
 const SECTION_IDS = [
+  "como-funciona",
   "probar",
   "problema",
-  "como-funciona",
   "commit-reveal",
   "medido",
   "limites",
@@ -30,14 +36,18 @@ export function Nav() {
   const sheetRef = useRef<HTMLDivElement>(null);
   const active = useActiveSection(SECTION_IDS);
 
-  const links = [
-    { id: "probar", text: t.play.label },
-    { id: "problema", text: t.problem.label },
+  // `num` is the number the section wears on the page, not a position in
+  // this list. Counting the links 01 to 07 put "Rounds" at 07 beside a heading
+  // that says 05. How it works sits in the hero and commit-reveal inside 02,
+  // so neither has a number of its own.
+  const links: { id: string; text: string; num?: string }[] = [
     { id: "como-funciona", text: t.flow.label },
+    { id: "probar", text: t.play.label, num: "01" },
+    { id: "problema", text: t.problem.label, num: "02" },
     { id: "commit-reveal", text: t.compare.label },
-    { id: "medido", text: t.stats.label },
-    { id: "limites", text: t.limits.label },
-    { id: "rondas", text: t.rounds.label },
+    { id: "medido", text: t.stats.label, num: "03" },
+    { id: "limites", text: t.limits.label, num: "04" },
+    { id: "rondas", text: t.rounds.label, num: "05" },
   ];
 
   // A drawer that survives a back gesture or an Escape is the difference
@@ -265,9 +275,9 @@ export function Nav() {
                     }`}
                   >
                     {l.text}
-                    <span className="tnum text-2xs text-muted">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                    {l.num && (
+                      <span className="tnum text-2xs text-muted">{l.num}</span>
+                    )}
                   </Link>
                 </motion.li>
               ))}
