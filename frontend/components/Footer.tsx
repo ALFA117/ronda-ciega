@@ -29,14 +29,14 @@ export function Footer() {
           </p>
         </div>
 
-        <nav className="grid grid-cols-2 gap-x-10 gap-y-3 sm:flex sm:gap-8">
+        <nav className="grid grid-cols-2 gap-x-10 gap-y-2 sm:flex sm:gap-6">
           {LINKS.map((l) => (
             <Link
               key={l.label}
               href={l.href}
               target="_blank"
               rel="noreferrer"
-              className="group inline-flex items-center gap-1 font-mono text-2xs text-muted transition-colors hover:text-chalk"
+              className="group inline-flex min-h-[44px] items-center gap-1 font-mono text-2xs text-muted transition-colors hover:text-chalk"
             >
               {l.label}
               <ArrowUpRight
@@ -48,7 +48,7 @@ export function Footer() {
         </nav>
       </div>
 
-      <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.18em] text-muted/70">
+      <p className="mt-10 font-mono text-2xs uppercase tracking-[0.18em] text-muted/70">
         Devnet · MIT
       </p>
     </footer>

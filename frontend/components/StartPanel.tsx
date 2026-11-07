@@ -79,7 +79,7 @@ export function StartPanel() {
           href={FAUCET}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto inline-flex items-center gap-1.5 font-mono text-2xs text-sealed underline-offset-4 hover:underline"
+          className="ml-auto inline-flex min-h-[44px] items-center gap-1.5 font-mono text-2xs text-sealed underline-offset-4 hover:underline"
         >
           <Droplets className="h-3.5 w-3.5" aria-hidden />
           {t.start.faucet}
@@ -105,7 +105,7 @@ export function StartPanel() {
               top now draws once. This points at that drawing instead. */}
           <a
             href="#como-funciona"
-            className="inline-flex items-center gap-1.5 font-mono text-2xs text-muted transition-colors hover:text-chalk"
+            className="inline-flex min-h-[44px] items-center gap-1.5 font-mono text-2xs text-muted transition-colors hover:text-chalk"
           >
             {t.create.rail.next}
           </a>

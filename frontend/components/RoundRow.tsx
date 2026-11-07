@@ -164,7 +164,7 @@ export function RoundRow({ round }: { round: RoundAccount }) {
           onClick={() => setPeek((v) => !v)}
           aria-expanded={peek}
           aria-label={t.rounds.peek}
-          className="glass flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:text-sealed sm:h-10 sm:w-10"
+          className="glass flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:text-sealed"
         >
           <motion.span
             animate={reduce ? undefined : { rotate: peek ? 90 : 0 }}

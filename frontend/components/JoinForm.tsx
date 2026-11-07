@@ -151,7 +151,7 @@ export function JoinForm({
               setHandle(truncateToBytes(e.target.value, MAX_HANDLE_BYTES))
             }
             placeholder="@tu_handle"
-            className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
+            className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:text-sm"
           />
         </div>
         <div className="space-y-2">
@@ -163,7 +163,7 @@ export function JoinForm({
             value={link}
             onChange={(e) => setLink(truncateToBytes(e.target.value, MAX_LINK_BYTES))}
             placeholder="github.com/…"
-            className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:h-10 sm:text-sm"
+            className="glass h-11 w-full rounded-xl px-3.5 font-mono text-[16px] text-chalk outline-none placeholder:text-dim sm:text-sm"
           />
         </div>
       </div>

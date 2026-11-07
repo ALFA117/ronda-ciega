@@ -292,7 +292,7 @@ export function Playground() {
               key={k}
               className="rounded-xl border border-edge bg-surface/60 px-3 py-2"
             >
-              <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-dim">
+              <dt className="font-mono text-2xs uppercase tracking-[0.12em] text-dim">
                 {k}
               </dt>
               <dd className="tnum font-mono text-base text-chalk">{v}</dd>

@@ -99,7 +99,7 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
               y={y(v) + 3.5}
               textAnchor="end"
               className="fill-[var(--text-dim)] font-mono"
-              style={{ fontSize: 9 }}
+              style={{ fontSize: 12 }}
             >
               {v}
             </text>
@@ -145,7 +145,7 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
                 y={H - PAD_B + 14}
                 textAnchor="middle"
                 className="fill-[var(--text-dim)] font-mono"
-                style={{ fontSize: 9 }}
+                style={{ fontSize: 12 }}
               >
                 {d.tick}
               </text>
@@ -157,7 +157,7 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
                 y={y(d.matched) - 5}
                 textAnchor="middle"
                 className="fill-[var(--text)] font-mono"
-                style={{ fontSize: 9.5, fontWeight: 500 }}
+                style={{ fontSize: 12, fontWeight: 500 }}
               >
                 {d.matched}
               </text>

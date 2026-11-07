@@ -47,7 +47,7 @@ export function ChartFrame({
           <button
             onClick={() => setAsTable((v) => !v)}
             aria-pressed={asTable}
-            className="glass inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-xl px-3 font-mono text-2xs text-muted transition-colors hover:text-chalk sm:h-9"
+            className="glass inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-xl px-3 font-mono text-2xs text-muted transition-colors hover:text-chalk"
           >
             <Table2 className="h-3 w-3" aria-hidden />
             {t.stats.table}

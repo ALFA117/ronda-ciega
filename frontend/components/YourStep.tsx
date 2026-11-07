@@ -167,7 +167,7 @@ export function YourStep({
             <li key={s.id} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
               <span
                 aria-current={here ? "step" : undefined}
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[10px] transition-colors ${
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-2xs transition-colors ${
                   done
                     ? "border-sealed/50 bg-sealed/15 text-sealed"
                     : here

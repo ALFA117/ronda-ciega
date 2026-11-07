@@ -93,7 +93,7 @@ function ChosenRow({
           onClick={() => onMove(-1)}
           disabled={pos === 1}
           aria-label={`${t.ranking.moveUp}: ${p.handle}`}
-          className="flex h-11 w-9 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-25 sm:h-10"
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-25"
         >
           <ChevronUp className="h-4 w-4" aria-hidden />
         </button>
@@ -101,7 +101,7 @@ function ChosenRow({
           onClick={() => onMove(1)}
           disabled={pos === total}
           aria-label={`${t.ranking.moveDown}: ${p.handle}`}
-          className="flex h-11 w-9 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-25 sm:h-10"
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-25"
         >
           <ChevronDown className="h-4 w-4" aria-hidden />
         </button>
@@ -109,7 +109,7 @@ function ChosenRow({
           onClick={onRemove}
           aria-label={`${t.ranking.remove}: ${p.handle}`}
           whileTap={reduce ? undefined : { scale: 0.9 }}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-open sm:h-10 sm:w-10"
+          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:text-open"
         >
           <X className="h-3.5 w-3.5" aria-hidden />
         </motion.button>
@@ -279,7 +279,7 @@ export function RankingBuilder({
 
       {chosen.length > 0 && (
         <div className="space-y-2.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+          <p className="font-mono text-2xs uppercase tracking-[0.16em] text-muted">
             {t.ranking.dragHint}
           </p>
           <Reorder.Group
@@ -314,7 +314,7 @@ export function RankingBuilder({
 
       {available.length > 0 && (
         <div className="space-y-2.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
+          <p className="font-mono text-2xs uppercase tracking-[0.16em] text-muted">
             {t.ranking.tapToAdd}
           </p>
           <div className="flex flex-wrap gap-2">
@@ -332,7 +332,7 @@ export function RankingBuilder({
                   whileTap={reduce ? undefined : { scale: 0.94 }}
                   transition={springSnappy}
                   onClick={() => setChosen((c) => [...c, p])}
-                  className="glass flex h-11 cursor-pointer items-center gap-2 rounded-xl px-3.5 font-mono text-sm text-chalk sm:h-10"
+                  className="glass flex h-11 cursor-pointer items-center gap-2 rounded-xl px-3.5 font-mono text-sm text-chalk"
                 >
                   <Plus className="h-3.5 w-3.5 text-sealed" aria-hidden />
                   {p.handle}

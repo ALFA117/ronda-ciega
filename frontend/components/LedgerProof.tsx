@@ -135,7 +135,7 @@ export function LedgerProof() {
           <Terminal className="h-3.5 w-3.5" aria-hidden />
           {t.ledger.showCommand}
         </summary>
-        <pre className="mt-3 overflow-x-auto rounded-xl border border-edge bg-surface2/60 p-3 font-mono text-[11px] leading-relaxed text-muted">
+        <pre className="mt-3 overflow-x-auto rounded-xl border border-edge bg-surface2/60 p-3 font-mono text-2xs leading-relaxed text-muted">
           {curlFor(DEVNET_RPC, ACCOUNT_SIZE.preferences)}
         </pre>
       </details>
