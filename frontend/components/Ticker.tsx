@@ -11,9 +11,14 @@ import { useT } from "@/lib/i18n";
 /**
  * The most recent settled round, one pairing at a time.
  *
- * Real names from a real round make the claim concrete in a way a diagram
- * cannot: these two people were matched, and neither list was ever published.
+ * A real pairing off the chain makes the claim concrete in a way a diagram
+ * cannot: these two were matched, and neither list was ever published.
  * It cycles on its own, so the evidence arrives without being asked for.
+ *
+ * The round is real; the people in it are not. The demo rounds were filled
+ * by `scripts/seed.ts`, so the strip says "demo round" — and says it on a
+ * phone too, where the label used to be hidden and two bare handles read as
+ * somebody's live activity.
  */
 export function Ticker({ round }: { round: RoundAccount }) {
   const t = useT();
@@ -51,8 +56,9 @@ export function Ticker({ round }: { round: RoundAccount }) {
     >
       <Lock className="h-3.5 w-3.5 shrink-0 text-sealed" aria-hidden />
 
-      <span className="hidden shrink-0 font-mono text-2xs uppercase tracking-[0.16em] text-muted sm:inline">
-        {t.ticker.label}
+      <span className="shrink-0 font-mono text-2xs uppercase tracking-[0.16em] text-muted">
+        <span className="sm:hidden">{t.ticker.short}</span>
+        <span className="hidden sm:inline">{t.ticker.label}</span>
       </span>
 
       {/* Fixed height so the swap never nudges the layout. */}
