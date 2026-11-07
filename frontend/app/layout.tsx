@@ -4,6 +4,7 @@ import { en } from "@/lib/i18n/en";
 import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
 import { CommandPalette } from "@/components/CommandPalette";
+import { AmbientBackground } from "@/components/AmbientBackground";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -56,6 +57,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://ronda-ciega.vercel.app"),
   title: { default: "Ronda Ciega", template: "%s · Ronda Ciega" },
   description: DESCRIPTION,
+  alternates: { canonical: "/" },
   openGraph: {
     title: "Ronda Ciega",
     description: DESCRIPTION,
@@ -69,6 +71,11 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#05070d" },
+    { media: "(prefers-color-scheme: light)", color: "#d3d5d9" },
+  ],
 };
 
 export default function RootLayout({
@@ -85,6 +92,7 @@ export default function RootLayout({
       </head>
       <body className="grain min-h-dvh font-sans">
         <Providers>
+          <AmbientBackground />
           <a href="#main" className="skip-link">
             Ir al contenido
           </a>
