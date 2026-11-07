@@ -134,6 +134,13 @@ export function StatBand() {
       ))}
       </div>
 
+      {/* When the four were taken. Written into the page as constants, they
+          read as if they were as live as the row beneath them; a figure from
+          one run in September should say so, the same way the README does. */}
+      <p className="border-t border-edge px-5 py-3 font-mono text-2xs leading-relaxed text-muted sm:px-7">
+        {t.band.when}
+      </p>
+
       {/* Measured now rather than measured once. Same frame, because it is the
           same claim: the four above are mine, these two are the reader's. */}
       <div className="border-t border-edge">

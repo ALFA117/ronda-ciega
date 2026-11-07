@@ -51,8 +51,11 @@ export function ConvergenceChart({ round }: { round: RoundAccount }) {
   // Room above the tallest bar for its value label, which sits outside it.
   const PAD_T = 24;
   const PAD_B = 22;
-  const W = 320;
-  const H = 178;
+  // 300 wide, not 320: on a 390px phone the chart is drawn about 305px
+  // across, and at 320 units the 12-unit labels came out at 11.8px — under
+  // the floor the rest of the page keeps.
+  const W = 300;
+  const H = 167;
   const plotW = W - PAD_L - PAD_R;
   const plotH = H - PAD_T - PAD_B;
   const band = empty ? 0 : plotW / data.length;
