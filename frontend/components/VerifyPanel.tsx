@@ -26,6 +26,12 @@ export function VerifyPanel({ round }: { round: RoundAccount }) {
   // deliberately has nothing here, and says so.
   if (!round.transparent) return null;
 
+  // Before the matching runs there is nothing to recompute: one empty frame
+  // checks out trivially, and the verdict under it said the lists had been
+  // destroyed while they were still sealed in the enclave, waiting for the
+  // round to close. A green tick over an empty trace is a claim, not a check.
+  const settled = round.status === "settled";
+
   async function run() {
     setRunning(true);
     setResult(null);
@@ -60,10 +66,11 @@ export function VerifyPanel({ round }: { round: RoundAccount }) {
             {t.verify.title}
           </h2>
           <p className="max-w-prose text-xs leading-relaxed text-muted">
-            {t.verify.lede}
+            {settled ? t.verify.lede : t.verify.notYet}
           </p>
         </div>
 
+        {settled && (
         <button
           onClick={run}
           disabled={running}
@@ -71,13 +78,14 @@ export function VerifyPanel({ round }: { round: RoundAccount }) {
         >
           {running ? t.verify.running : t.verify.run}
         </button>
+        )}
       </div>
 
       {/* No entrance animation on the evidence itself. Animating height from
           zero leaves the result clipped to nothing if the animation never runs
           — a throttled tab, a recording overlay, reduced motion handled badly
           — and a proof that is invisible is worse than no proof. */}
-      {result && (
+      {settled && result && (
         <div>
             <ul className="mt-5 divide-y divide-edge border-y border-edge">
               {result.checks.map((c, i) => (
