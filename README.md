@@ -146,8 +146,9 @@ internet does not.
 
 Those two rows were measured once, by me. The landing page also carries a **live** version: both
 endpoints are asked for their slot height about once a second from the reader's own browser, and
-the rate is derived from what they answer rather than typed into the page. Around 3.3× as fast,
-and if the TEE endpoint is down that lane says so in front of everyone instead of the page
+the rate is derived from what they answer rather than typed into the page. On 7 November 2026 it
+read about 24× (4.1 slots/s on L1 against 100 on the TEE); it moves with both endpoints' load,
+which is the reason it is measured rather than written down. If the TEE endpoint is down that lane says so in front of everyone instead of the page
 carrying on claiming 671 ms.
 
 Storing the **inverse** of each receiver's ranking (`builder_rank[b][f]` = founder *f*'s position in
@@ -233,7 +234,7 @@ reads the *public* round account fine, so the empty result is the permission wor
 |---|---|
 | Program | [`5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R`](https://explorer.solana.com/address/5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R?cluster=devnet) |
 | Demo round, **transparent** | [`7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4`](https://ronda-ciega.vercel.app/round/7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4) — 6×6, VRF fulfilled, settled in 3 proposal rounds, committed back to L1. Records its frames, so the algorithm can be watched resolving. |
-| Demo round, **paid out** | [`8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR`](https://ronda-ciega.vercel.app/round/8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR) — 3×2 with real funds locked against it. Two buyers were paired and their escrows paid the sellers the matching chose; the third went unmatched and took his deposit back. Nobody signed to receive money. |
+| Demo round, **paid out** | [`8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR`](https://ronda-ciega.vercel.app/round/8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR) — 3×2 with real funds locked against it. Two buyers were paired. `npm run escrow` paid the first one's seller, then used the second escrow to try paying a seller the matching did not choose (refused, `NotYourPair`) and left it locked; the third went unmatched and took his deposit back. Nobody signed to receive money. The second payment can be sent from the round page by either side of that pair. |
 | Demo round, **private** | [`3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3`](https://ronda-ciega.vercel.app/round/3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3) — 6×6, the same twelve people, the same rankings, the **same pairing**, and zero recorded frames. Read these two side by side: identical answer, no visibility into how. |
 | Rollup | MagicBlock TEE ER — `https://devnet-tee.magicblock.app` |
 | VRF queue | `5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc` |
