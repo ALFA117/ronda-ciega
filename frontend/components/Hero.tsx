@@ -7,6 +7,7 @@ import { ArrowDown } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { FlowMap } from "./Flow";
 import { PulseRatio } from "./PulseRatio";
+import { SealedRound } from "./SealedRound";
 
 /**
  * Full-bleed hero.
@@ -35,7 +36,13 @@ export function Hero() {
   const subline = t.hero.subline.split(" ");
 
   return (
-    <section ref={ref} className="aurora relative overflow-hidden pb-4 pt-6 sm:pt-12">
+    <section ref={ref} className="relative overflow-hidden pb-4 pt-6 sm:pt-12">
+      {/* The mechanism, drawn beside the sentence. Only where there is room
+          for both at full size; on narrower screens the flow map below
+          carries the same story. */}
+      <div className="absolute right-0 top-6 hidden w-[360px] xl:block sm:top-10">
+        <SealedRound />
+      </div>
       <motion.div style={reduce ? undefined : { y, opacity: fade }}>
         {/* The reveal is CSS and moves only the transform. The Framer version
             faded each word up from opacity 0, which meant the headline — the
@@ -98,7 +105,7 @@ export function Hero() {
 
           <Link
             href="#rondas"
-            className="group inline-flex shrink-0 items-center gap-2 font-mono text-sm text-chalk transition-colors hover:text-sealed"
+            className="group inline-flex min-h-[44px] shrink-0 items-center gap-2 font-mono text-sm text-chalk transition-colors hover:text-sealed"
           >
             {t.hero.cta}
             <ArrowDown className="h-3.5 w-3.5 transition-transform group-hover:translate-y-0.5" />
