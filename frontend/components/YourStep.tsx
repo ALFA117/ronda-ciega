@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Check, Copy, Heart, HeartOff, Users } from "lucide-react";
@@ -13,11 +12,8 @@ import { useT } from "@/lib/i18n";
 import { JoinForm } from "./JoinForm";
 import { RankingBuilder } from "./RankingBuilder";
 import { Button, Label, Note, Panel } from "./ui";
+import { WalletButton } from "./WalletButton";
 
-const WalletMultiButton = dynamic(
-  async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  { ssr: false },
-);
 
 /**
  * The one panel a participant actually needs, at the top of the round.
@@ -120,7 +116,7 @@ export function YourStep({
         <p className="text-sm leading-relaxed text-muted">
           {wallet.publicKey ? t.steps.notInRound : t.steps.connectClosed}
         </p>
-        {!wallet.publicKey && <WalletMultiButton />}
+        {!wallet.publicKey && <WalletButton />}
       </Panel>
     );
   }
@@ -223,7 +219,7 @@ export function YourStep({
           )}
         </div>
 
-        {current === "connect" && <WalletMultiButton />}
+        {current === "connect" && <WalletButton />}
 
         {current === "join" && (
           <JoinForm round={round} delegated={delegated} onJoined={onChanged} />

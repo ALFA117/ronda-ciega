@@ -2,21 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
 import { Menu, Search, X } from "lucide-react";
 import { easeEnter, springPanel, springSnappy } from "@/lib/motion";
 import { useT } from "@/lib/i18n";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import { LocaleToggle, ThemeToggle } from "./Toggles";
+import { WalletButton } from "./WalletButton";
 
-const WalletMultiButton = dynamic(
-  async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  {
-    ssr: false,
-    loading: () => <div className="glass h-11 w-[132px] rounded-xl" />,
-  },
-);
 
 /** Must stay in step with `links` below: a tracked section with no link
  * leaves the highlight nowhere to go while the reader is inside it. */
@@ -158,7 +151,7 @@ export function Nav() {
             </div>
             <ThemeToggle />
             <div className="hidden sm:block">
-              <WalletMultiButton />
+              <WalletButton />
             </div>
 
             <motion.button
@@ -250,7 +243,7 @@ export function Nav() {
             <div className="mb-2 flex items-center gap-2 sm:hidden">
               <LocaleToggle />
               <div className="wallet-block min-w-0 flex-1">
-                <WalletMultiButton />
+                <WalletButton />
               </div>
             </div>
 

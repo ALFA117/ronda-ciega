@@ -42,6 +42,18 @@ export function CommandPalette() {
   const panelRef = useRef<HTMLDivElement>(null);
   /** Whatever had focus before the palette took it. */
   const returnTo = useRef<HTMLElement | null>(null);
+  // The handler below answers to Ctrl as well as Cmd; the hint said Cmd to
+  // everyone, which on Windows and Linux names a key that does nothing. Read
+  // after mount, so the server's render and the first client one agree.
+  const [shortcut, setShortcut] = useState("⌘K");
+  useEffect(() => {
+    const platform =
+      (navigator as Navigator & { userAgentData?: { platform?: string } })
+        .userAgentData?.platform ||
+      navigator.platform ||
+      navigator.userAgent;
+    if (!/mac|iphone|ipad/i.test(platform)) setShortcut("Ctrl K");
+  }, []);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -205,7 +217,7 @@ export function CommandPalette() {
       >
         <Search className="h-3.5 w-3.5" aria-hidden />
         {t.palette.open}
-        <kbd className="rounded border border-edge px-1.5 py-0.5 text-2xs">⌘K</kbd>
+        <kbd className="rounded border border-edge px-1.5 py-0.5 text-2xs">{shortcut}</kbd>
       </button>
 
       {/* Not wrapped in AnimatePresence, and no exit animation.

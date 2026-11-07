@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
 import { CommandPalette } from "@/components/CommandPalette";
 import { AmbientBackground } from "@/components/AmbientBackground";
+import { SkipLink } from "@/components/SkipLink";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -93,9 +94,7 @@ export default function RootLayout({
       <body className="grain min-h-dvh font-sans">
         <Providers>
           <AmbientBackground />
-          <a href="#main" className="skip-link">
-            Ir al contenido
-          </a>
+          <SkipLink />
           <Nav />
           <main
             id="main"

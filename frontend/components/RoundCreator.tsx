@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { SystemProgram } from "@solana/web3.js";
-import dynamic from "next/dynamic";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import BN from "bn.js";
 import { getProgram } from "@/lib/program";
@@ -20,11 +19,8 @@ import {
 import { firstUnanswered, stepState } from "@/lib/flow";
 import { Rail } from "./Flow";
 import { Button, ErrorText } from "./ui";
+import { WalletButton } from "./WalletButton";
 
-const WalletMultiButton = dynamic(
-  async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  { ssr: false, loading: () => <div className="glass h-11 w-[150px] rounded-xl" /> },
-);
 
 /** What the signature is doing. Each of these is something we actually know. */
 type Phase = "idle" | "signing" | "confirming" | "done";
@@ -246,7 +242,7 @@ export function RoundCreator({ onCancel }: { onCancel?: () => void }) {
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center gap-3">
-                    <WalletMultiButton />
+                    <WalletButton />
                     <span className="font-mono text-2xs text-muted">{r.connect}</span>
                   </div>
                 )}
