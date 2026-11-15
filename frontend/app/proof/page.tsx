@@ -59,13 +59,13 @@ export default function ProofPage() {
           Ronda Ciega
         </Link>
         <div className="space-y-3">
-          <p className="font-mono text-2xs uppercase tracking-[0.16em] text-dim">
+          <p className="font-mono text-2xs uppercase tracking-[0.08em] text-dim">
             {t.proof.label}
           </p>
-          <h1 className="display max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="display max-w-3xl [text-wrap:balance]">
             {t.proof.title}
           </h1>
-          <p className="max-w-prose text-sm leading-relaxed text-muted">
+          <p className="lede max-w-prose text-muted">
             {t.proof.lede}
           </p>
         </div>
@@ -128,7 +128,7 @@ export default function ProofPage() {
         <ul className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
           {t.proof.limits.items.map((l) => (
             <li key={l.title} className="space-y-1.5">
-              <h3 className="font-mono text-2xs uppercase tracking-[0.14em] text-open">
+              <h3 className="text-base font-medium text-chalk">
                 {l.title}
               </h3>
               <p className="text-xs leading-relaxed text-muted">{l.body}</p>

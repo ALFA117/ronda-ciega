@@ -64,10 +64,10 @@ export function SealedRound() {
       transition={{ type: "spring", stiffness: 160, damping: 22, delay: 0.25 }}
     >
       <svg viewBox="0 0 360 330" className="h-auto w-full overflow-visible">
-        <text x="17" y="26" textAnchor="start" className="fill-open font-mono text-[12px] uppercase tracking-[0.14em]">
+        <text x="17" y="26" textAnchor="start" className="fill-open font-mono text-[12px] uppercase tracking-[0.08em]">
           {t.hero.proposers.split(" ")[0]}
         </text>
-        <text x="343" y="26" textAnchor="end" className="fill-open font-mono text-[12px] uppercase tracking-[0.14em]">
+        <text x="343" y="26" textAnchor="end" className="fill-open font-mono text-[12px] uppercase tracking-[0.08em]">
           {t.hero.receivers.split(" ")[0]}
         </text>
 
@@ -98,7 +98,7 @@ export function SealedRound() {
           <rect x="167" y="142" width="26" height="20" rx="4" />
           <path d="M172 142v-6a8 8 0 0 1 16 0v6" />
         </g>
-        <text x="180" y="222" textAnchor="middle" className="fill-sealed font-mono text-[12px] uppercase tracking-[0.18em]">
+        <text x="180" y="222" textAnchor="middle" className="fill-sealed font-mono text-[12px] uppercase tracking-[0.08em]">
           {t.hero.sealed}
         </text>
 

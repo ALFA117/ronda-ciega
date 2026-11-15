@@ -89,7 +89,7 @@ export function LedgerProof() {
           >
             {rows.map((r) => (
               <div key={r.key} className="bg-surface px-4 py-3.5">
-                <dt className="font-mono text-2xs uppercase tracking-[0.12em] text-dim">
+                <dt className="font-mono text-2xs uppercase tracking-[0.08em] text-dim">
                   {r.key === "preferences" ? t.ledger.lists : t.ledger.profiles}
                 </dt>
                 <dd

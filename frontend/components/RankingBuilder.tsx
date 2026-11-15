@@ -279,7 +279,7 @@ export function RankingBuilder({
 
       {chosen.length > 0 && (
         <div className="space-y-2.5">
-          <p className="font-mono text-2xs uppercase tracking-[0.16em] text-muted">
+          <p className="font-mono text-2xs uppercase tracking-[0.08em] text-muted">
             {t.ranking.dragHint}
           </p>
           <Reorder.Group
@@ -314,7 +314,7 @@ export function RankingBuilder({
 
       {available.length > 0 && (
         <div className="space-y-2.5">
-          <p className="font-mono text-2xs uppercase tracking-[0.16em] text-muted">
+          <p className="font-mono text-2xs uppercase tracking-[0.08em] text-muted">
             {t.ranking.tapToAdd}
           </p>
           <div className="flex flex-wrap gap-2">

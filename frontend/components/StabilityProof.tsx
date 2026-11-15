@@ -179,7 +179,7 @@ export function StabilityProof() {
                 [t.proof.stability.time, `${report.ms} ms`],
               ].map(([k, v], i) => (
                 <div key={k} className="bg-surface px-4 py-3">
-                  <dt className="font-mono text-2xs uppercase tracking-[0.12em] text-dim">
+                  <dt className="font-mono text-2xs uppercase tracking-[0.08em] text-dim">
                     {k}
                   </dt>
                   <dd

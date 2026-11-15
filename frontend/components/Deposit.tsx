@@ -105,7 +105,7 @@ export function DepositPanel({
           >
             <Lock className="h-4 w-4" aria-hidden />
           </motion.span>
-          <span className="font-mono text-2xs uppercase tracking-[0.16em] text-escrow">
+          <span className="font-mono text-2xs uppercase tracking-[0.08em] text-escrow">
             <span className="tnum">{locked}</span> SOL {t.deposit.locked}
           </span>
         </div>
@@ -127,7 +127,7 @@ export function DepositPanel({
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       className="space-y-4 rounded-xl border border-escrow/40 bg-escrow/[0.05] p-4"
     >
-      <div className="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.16em] text-escrow">
+      <div className="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.08em] text-escrow">
         <Lock className="h-3.5 w-3.5" aria-hidden />
         {t.deposit.title}
       </div>

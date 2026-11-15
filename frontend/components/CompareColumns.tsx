@@ -39,7 +39,7 @@ export function CompareColumns() {
           }`}
         >
           <h3
-            className={`font-mono text-xs uppercase tracking-[0.16em] ${
+            className={`font-mono text-xs uppercase tracking-[0.08em] ${
               c.ok ? "text-sealed" : "text-muted"
             }`}
           >

@@ -299,7 +299,7 @@ function Visibility({
             }`}
           >
             <span
-              className={`flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.14em] ${
+              className={`flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.08em] ${
                 picked ? (on ? "text-open" : "text-sealed") : "text-muted"
               }`}
             >

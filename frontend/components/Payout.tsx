@@ -65,7 +65,7 @@ export function Payout({
   if (done) {
     return (
       <div className="space-y-2 rounded-xl border border-escrow/45 bg-escrow/[0.07] p-4">
-        <div className="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.16em] text-escrow">
+        <div className="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.08em] text-escrow">
           <Wallet className="h-3.5 w-3.5" aria-hidden />
           {done.kind === "paid" ? t.payout.paid : t.payout.refunded}
         </div>
@@ -162,7 +162,7 @@ export function Payout({
   return (
     <div className="space-y-3 rounded-xl border border-escrow/40 bg-escrow/[0.05] p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.16em] text-escrow">
+        <span className="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.08em] text-escrow">
           <Wallet className="h-3.5 w-3.5" aria-hidden />
           {t.payout.title}
         </span>

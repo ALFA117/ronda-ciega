@@ -84,18 +84,21 @@ export default function RoundPage({ params }: { params: { address: string } }) {
       <PreflightBanner />
       <header
         ref={headerRef}
-        className="flex flex-wrap items-start justify-between gap-4"
+        className="flex flex-wrap items-end justify-between gap-4 border-b border-edge pb-6 pt-4"
       >
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="tnum font-mono text-base">
-              {t.round.title} #{round.roundId.toString().slice(-6)}
+            <h1 className="display-sm">
+              {t.round.title}{" "}
+              <span className="tnum font-mono text-[0.7em] font-normal text-muted">
+                #{round.roundId.toString().slice(-6)}
+              </span>
             </h1>
             <StatusPill status={shownStatus(round)} />
             {round.transparent && <Tag tone="open">{t.round.transparent}</Tag>}
             {delegated && <Tag tone="sealed">{t.round.onRollup}</Tag>}
           </div>
-          <div className="tnum font-mono text-2xs text-muted">
+          <div className="tnum font-mono text-sm text-muted">
             {participants.filter((p) => p.side === "founder").length} {t.rounds.founders} ·{" "}
             {participants.filter((p) => p.side === "builder").length} {t.rounds.builders} ·{" "}
             <span className="text-sealed">
@@ -186,9 +189,9 @@ export default function RoundPage({ params }: { params: { address: string } }) {
         onDone={refresh}
       />
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         {(["founder", "builder"] as const).map((side) => (
-          <div key={side} className="space-y-3">
+          <div key={side} className="space-y-3 rounded-2xl border border-edge bg-surface p-5">
             <Label>{side === "founder" ? t.rounds.founders : t.rounds.builders}</Label>
             <div className="space-y-1.5">
               {participants
@@ -196,7 +199,7 @@ export default function RoundPage({ params }: { params: { address: string } }) {
                 .map((p) => (
                   <div
                     key={p.address.toBase58()}
-                    className="flex items-center gap-2.5 font-mono text-xs"
+                    className="flex items-center gap-2.5 border-b border-edge/60 py-1.5 font-mono text-sm last:border-0"
                   >
                     <span className="tnum w-4 text-muted">{p.index}</span>
                     <span>{p.handle}</span>

@@ -56,7 +56,7 @@ export function Ticker({ round }: { round: RoundAccount }) {
     >
       <Lock className="h-3.5 w-3.5 shrink-0 text-sealed" aria-hidden />
 
-      <span className="shrink-0 font-mono text-2xs uppercase tracking-[0.16em] text-muted">
+      <span className="shrink-0 font-mono text-2xs uppercase tracking-[0.08em] text-muted">
         <span className="sm:hidden">{t.ticker.short}</span>
         <span className="hidden sm:inline">{t.ticker.label}</span>
       </span>

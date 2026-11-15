@@ -124,11 +124,11 @@ export default function Home() {
         <ol className="divide-y divide-edge border-y border-edge">
           {t.problem.cards.map((c, i) => (
             <li key={c.title} className="grid gap-3 py-5 sm:grid-cols-[3rem_1fr]">
-              <span className="tnum font-mono text-2xs text-muted">
+              <span className="tnum font-mono text-sm text-sealed">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div className="space-y-2">
-                <h3 className="text-base font-medium">{c.title}</h3>
+                <h3 className="font-display text-xl font-medium">{c.title}</h3>
                 <p className="max-w-prose text-sm leading-relaxed text-muted">
                   {c.body}
                 </p>
@@ -159,7 +159,7 @@ export default function Home() {
           </ErrorBoundary>
           <Link
             href="/proof"
-            className="glass inline-flex h-11 items-center gap-2 rounded-xl px-4 font-mono text-2xs text-chalk transition-colors hover:text-sealed"
+            className="btn-outline inline-flex h-11 items-center gap-2 rounded-lg px-4 text-sm font-medium"
           >
             {t.proof.title}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -191,7 +191,7 @@ export default function Home() {
         <ul className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
           {t.limits.items.map((l) => (
             <li key={l.title} className="space-y-1.5 border-t border-edge pt-4">
-              <h3 className="font-mono text-2xs uppercase tracking-[0.14em] text-open">
+              <h3 className="text-base font-medium text-chalk">
                 {l.title}
               </h3>
               <p className="text-sm leading-relaxed text-muted">{l.body}</p>

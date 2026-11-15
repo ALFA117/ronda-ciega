@@ -154,7 +154,7 @@ export function FlowMap() {
   return (
     <div ref={ref} className="relative">
       <div className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="font-mono text-2xs uppercase tracking-[0.18em] text-sealed">
+        <h2 className="font-mono text-2xs uppercase tracking-[0.08em] text-sealed">
           {t.flow.label}
         </h2>
         <p className="text-xs text-muted">{t.flow.lede}</p>
@@ -180,7 +180,7 @@ export function FlowMap() {
             >
               <span
                 aria-hidden
-                className="absolute inset-x-0 top-3 text-center font-mono text-2xs uppercase tracking-[0.16em] text-sealed"
+                className="absolute inset-x-0 top-3 text-center font-mono text-2xs uppercase tracking-[0.08em] text-sealed"
               >
                 {t.flow.where.enclave}
               </span>
@@ -234,7 +234,7 @@ export function FlowMap() {
                     {copy.body}
                   </p>
                   <p
-                    className={`font-mono text-2xs uppercase tracking-[0.14em] ${
+                    className={`font-mono text-2xs uppercase tracking-[0.08em] ${
                       inside
                         ? "text-sealed"
                         : step.tone === "neutral"

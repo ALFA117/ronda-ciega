@@ -292,7 +292,7 @@ export function Playground() {
               key={k}
               className="rounded-xl border border-edge bg-surface/60 px-3 py-2"
             >
-              <dt className="font-mono text-2xs uppercase tracking-[0.12em] text-dim">
+              <dt className="font-mono text-2xs uppercase tracking-[0.08em] text-dim">
                 {k}
               </dt>
               <dd className="tnum font-mono text-base text-chalk">{v}</dd>
@@ -303,7 +303,7 @@ export function Playground() {
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
           <button
             onClick={run}
-            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl font-mono text-2xs text-chalk transition-colors hover:text-sealed"
+            className="btn-solid col-span-2 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-medium lg:col-span-1"
           >
             <Play className="h-3.5 w-3.5" aria-hidden />
             {t.play.run}
@@ -311,28 +311,28 @@ export function Playground() {
           <button
             onClick={step}
             disabled={done && steps.length > 0}
-            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl font-mono text-2xs text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-40"
+            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm text-muted transition-colors hover:text-chalk disabled:cursor-not-allowed disabled:opacity-40"
           >
             <SkipForward className="h-3.5 w-3.5" aria-hidden />
             {t.play.step}
           </button>
           <button
             onClick={() => reset(Math.floor(Math.random() * 100000))}
-            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl font-mono text-2xs text-muted transition-colors hover:text-open"
+            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm text-muted transition-colors hover:text-open"
           >
             <Shuffle className="h-3.5 w-3.5" aria-hidden />
             {t.play.shuffle}
           </button>
           <button
             onClick={rerollTieBreak}
-            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl font-mono text-2xs text-muted transition-colors hover:text-sealed"
+            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm text-muted transition-colors hover:text-sealed"
           >
             <Dices className="h-3.5 w-3.5" aria-hidden />
             {t.play.reroll}
           </button>
           <button
             onClick={() => reset()}
-            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl font-mono text-2xs text-muted transition-colors hover:text-chalk"
+            className="glass flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg text-sm text-muted transition-colors hover:text-chalk"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden />
             {t.play.reset}
