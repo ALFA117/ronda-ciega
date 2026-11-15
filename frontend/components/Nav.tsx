@@ -108,18 +108,19 @@ export function Nav() {
         initial={reduce ? undefined : { y: -10 }}
         animate={reduce ? undefined : { y: 0 }}
         transition={easeEnter}
-        className="sticky top-0 z-40 mb-6 px-3 pt-3 sm:px-5 sm:pt-4"
+        className="sticky top-0 z-40 mb-6 border-b border-edge bg-bg/95 supports-[backdrop-filter]:bg-bg/85 supports-[backdrop-filter]:backdrop-blur-md"
       >
-        <div className="glass glass-spill mx-auto flex w-full max-w-6xl items-center min-[1560px]:max-w-[1480px] gap-3 rounded-2xl px-3 py-2 sm:px-4">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-8 min-[1560px]:max-w-[1480px]">
           <Link
             href="/"
             className="flex min-h-[44px] shrink-0 items-center gap-2.5 rounded-lg"
             aria-label={t.nav.home}
           >
-            <span className="whitespace-nowrap text-sm font-medium leading-none tracking-tight">
+            <BrandMark />
+            <span className="whitespace-nowrap font-display text-[19px] font-medium leading-none tracking-[-0.01em]">
               Ronda Ciega
             </span>
-            <span className="hidden font-mono text-2xs leading-none text-muted lg:inline">
+            <span className="hidden border-l border-edge pl-2.5 font-mono text-2xs leading-none text-muted lg:inline">
               {t.nav.tagline}
             </span>
           </Link>
@@ -143,7 +144,7 @@ export function Nav() {
                 {active === l.id && (
                   <motion.span
                     layoutId="nav-active"
-                    className="absolute inset-0 -z-10 rounded-lg bg-sealed/12"
+                    className="absolute inset-x-3 bottom-1.5 h-px bg-chalk"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
@@ -197,7 +198,7 @@ export function Nav() {
       {open && (
         <motion.div className="fixed inset-0 z-50 min-[1560px]:hidden">
           <motion.div
-            className="absolute inset-0 bg-bg/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-bg/80"
             initial={reduce ? undefined : { opacity: 0 }}
             animate={reduce ? undefined : { opacity: 1 }}
             transition={{ duration: 0.18 }}
@@ -210,7 +211,7 @@ export function Nav() {
             role="dialog"
             aria-modal="true"
             aria-label={t.nav.menu}
-            className="glass absolute inset-x-3 top-3 rounded-2xl p-3 sm:inset-x-5 sm:top-4"
+            className="absolute inset-x-3 top-3 rounded-2xl border border-edge bg-surface p-3 shadow-[var(--shadow-pop)] sm:inset-x-5 sm:top-4"
             initial={reduce ? undefined : { y: -14, scale: 0.98 }}
             animate={reduce ? undefined : { y: 0, scale: 1 }}
             transition={springPanel}
@@ -223,7 +224,7 @@ export function Nav() {
             }}
           >
             <div className="mb-2 flex items-center justify-between px-2">
-              <span className="font-mono text-2xs uppercase tracking-[0.18em] text-muted">
+              <span className="font-mono text-2xs uppercase tracking-[0.08em] text-muted">
                 {t.nav.menu}
               </span>
               <motion.button
@@ -270,7 +271,7 @@ export function Nav() {
                     onClick={() => setOpen(false)}
                     className={`flex h-12 items-center justify-between rounded-xl px-3 font-mono text-sm transition-colors ${
                       active === l.id
-                        ? "bg-sealed/12 text-chalk"
+                        ? "bg-sealed/10 text-chalk"
                         : "text-muted hover:bg-surface2 hover:text-chalk"
                     }`}
                   >
@@ -286,5 +287,20 @@ export function Nav() {
         </motion.div>
       )}
     </>
+  );
+}
+
+/** The mark from app/icon.svg — two columns and the wire between them —
+ * drawn with the theme's ink so it holds in both modes. */
+function BrandMark() {
+  return (
+    <svg aria-hidden viewBox="0 0 32 32" className="h-7 w-7 shrink-0">
+      <rect width="32" height="32" rx="7" fill="rgb(var(--c-text))" />
+      <circle cx="9" cy="10" r="2.4" fill="rgb(var(--c-bg))" />
+      <circle cx="23" cy="22" r="2.4" fill="rgb(var(--c-bg))" />
+      <path d="M9 10 L23 22" stroke="rgb(var(--c-bg))" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="9" cy="22" r="2.4" fill="rgb(var(--c-bg) / 0.38)" />
+      <circle cx="23" cy="10" r="2.4" fill="rgb(var(--c-bg) / 0.38)" />
+    </svg>
   );
 }

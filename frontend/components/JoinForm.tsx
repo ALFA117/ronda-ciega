@@ -117,7 +117,7 @@ export function JoinForm({
                   {s === "founder" ? t.join.founder : t.join.builder}
                 </span>
                 <span
-                  className={`font-mono text-2xs uppercase tracking-[0.14em] ${
+                  className={`font-mono text-2xs uppercase tracking-[0.08em] ${
                     s === "founder" ? "text-escrow" : "text-settled"
                   }`}
                 >
@@ -178,7 +178,7 @@ export function JoinForm({
       </Note>
 
       {error && (
-        <p className="font-mono text-2xs leading-relaxed text-red-400">
+        <p className="font-mono text-2xs leading-relaxed text-danger">
           {error}
         </p>
       )}

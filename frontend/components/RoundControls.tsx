@@ -532,7 +532,7 @@ export function RoundControls({
                       : "bg-edgeStrong"
                   }`}
                 />
-                <span className="font-mono text-2xs uppercase tracking-[0.14em] text-chalk">
+                <span className="font-mono text-2xs uppercase tracking-[0.08em] text-chalk">
                   {t.autopilot.label}
                 </span>
                 {auto && (
@@ -649,7 +649,7 @@ export function RoundControls({
       )}
 
       {error && (
-        <p className="font-mono text-2xs leading-relaxed text-red-400">
+        <p className="font-mono text-2xs leading-relaxed text-danger">
           {error}
         </p>
       )}

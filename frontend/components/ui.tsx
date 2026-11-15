@@ -20,8 +20,8 @@ export function Panel({
   return (
     <div
       className={`surface-raised rounded-2xl border ${
-        sealed ? "border-sealed/25 sealed-hatch" : "border-edge"
-      } bg-surface/70 ${className}`}
+        sealed ? "border-sealed/35 sealed-hatch" : "border-edge"
+      } bg-surface ${className}`}
     >
       {children}
     </div>
@@ -30,7 +30,7 @@ export function Panel({
 
 export function Label({ children }: { children: React.ReactNode }) {
   return (
-    <div className="font-mono text-2xs uppercase tracking-[0.18em] text-muted">
+    <div className="eyebrow">
       {children}
     </div>
   );
@@ -69,24 +69,23 @@ export function Button({
   const reduce = useReducedMotion();
 
   const tint = {
-    primary: "glass-sealed text-chalk",
-    sealed: "glass-sealed text-chalk",
-    open: "glass-open text-chalk",
-    ghost: "text-chalk",
+    primary: "btn-solid",
+    sealed: "btn-sealed",
+    open: "glass glass-open text-chalk",
+    ghost: "glass text-chalk",
   }[variant];
 
   const dims =
-    size === "sm" ? "h-11 px-3.5 text-2xs" : "h-11 px-5 text-sm";
+    size === "sm" ? "h-11 px-3.5 text-sm" : "h-11 px-5 text-[15px]";
 
   return (
     <motion.button
       type={type}
       onClick={onClick}
       disabled={disabled || busy}
-      whileHover={reduce || disabled ? undefined : { scale: 1.02 }}
-      whileTap={reduce || disabled ? undefined : { scale: 0.96 }}
+      whileTap={reduce || disabled ? undefined : { scale: 0.98 }}
       transition={springSnappy}
-      className={`glass ${tint} ${dims} inline-flex min-w-[44px] cursor-pointer items-center justify-center gap-2 rounded-xl font-mono transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`${tint} ${dims} inline-flex min-w-[44px] cursor-pointer items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         full ? "w-full" : ""
       }`}
     >
@@ -114,8 +113,7 @@ export function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      whileHover={reduce ? undefined : { scale: 1.05 }}
-      whileTap={reduce ? undefined : { scale: 0.93 }}
+      whileTap={reduce ? undefined : { scale: 0.95 }}
       transition={springSnappy}
       className={`glass ${
         active ? "glass-sealed text-chalk" : "text-muted hover:text-chalk"
@@ -140,7 +138,7 @@ export function StatusPill({ status }: { status: string }) {
   const label: Record<string, string> = t.status;
   return (
     <span
-      className={`rounded-md border px-2 py-0.5 font-mono text-2xs ${
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-2xs ${
         tone[status] || "border-edge text-muted"
       }`}
     >
@@ -162,7 +160,7 @@ export function Tag({
     open: "border-open/40 text-open bg-open/5",
   };
   return (
-    <span className={`rounded-md border px-2 py-0.5 font-mono text-2xs ${tones[tone]}`}>
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-2xs ${tones[tone]}`}>
       {children}
     </span>
   );
@@ -194,7 +192,7 @@ export function Note({ children }: { children: React.ReactNode }) {
 
 export function ErrorText({ children }: { children: React.ReactNode }) {
   return (
-    <p role="alert" className="font-mono text-2xs leading-relaxed text-red-400">
+    <p role="alert" className="font-mono text-2xs leading-relaxed text-danger">
       {children}
     </p>
   );

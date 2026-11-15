@@ -78,13 +78,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 if (Math.abs(info.offset.x) > 90) dismiss(t.id);
               }}
               className={`glass pointer-events-auto flex w-full max-w-sm cursor-grab touch-pan-y items-start gap-3 rounded-2xl px-4 py-3 active:cursor-grabbing ${
-                t.tone === "ok" ? "glass-sealed" : "border-red-500/40"
+                t.tone === "ok" ? "glass-sealed" : "border-danger/40"
               }`}
             >
               {t.tone === "ok" ? (
                 <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sealed" aria-hidden />
               ) : (
-                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" aria-hidden />
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger" aria-hidden />
               )}
               <span className="flex-1 break-words font-mono text-2xs leading-relaxed">
                 {t.text}
