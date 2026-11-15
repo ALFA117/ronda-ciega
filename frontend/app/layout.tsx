@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { en } from "@/lib/i18n/en";
 import { Providers } from "./providers";
 import { Nav } from "@/components/Nav";
@@ -9,35 +9,33 @@ import { SkipLink } from "@/components/SkipLink";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-const sans = Inter({
+/**
+ * Three faces, three jobs.
+ *
+ * Newsreader sets the headlines: a text serif with optical sizes, so it stays
+ * sober at display size instead of turning into a fashion cover. It is the
+ * voice of a registry, which is what a sealed round is.
+ * IBM Plex Sans carries the reading, and Plex Mono every address, amount,
+ * slot and code — same family, so the two sit on one baseline.
+ */
+const sans = IBM_Plex_Sans({
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   variable: "--font-sans",
   display: "swap",
 });
 
-/**
- * The headline face, and the only place a serif appears.
- *
- * Inter set the headlines too, which is correct and says nothing: it is the
- * face on every dashboard shipped this decade, so a page wearing it reads as
- * competent and anonymous. A product that moves other people's money can
- * afford one deliberate choice, and a serif at display size is the cheapest
- * one there is — it costs nothing in legibility because it is never used
- * below 26px, and it carries the whole difference between "a tool" and "a
- * desk somebody runs".
- *
- * Body text stays Inter and numbers stay JetBrains Mono. A serif in a table
- * of amounts would be a costume.
- */
-const display = Instrument_Serif({
+const display = Newsreader({
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
   variable: "--font-display",
   display: "swap",
 });
 
-const mono = JetBrains_Mono({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
+  weight: ["400", "500"],
   variable: "--font-mono",
   display: "swap",
 });
@@ -74,8 +72,8 @@ export const viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#05070d" },
-    { media: "(prefers-color-scheme: light)", color: "#d3d5d9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0c0e12" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f5f1" },
   ],
 };
 
@@ -91,7 +89,7 @@ export default function RootLayout({
             light-mode user sees a dark flash. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
-      <body className="grain min-h-dvh font-sans">
+      <body className="min-h-dvh font-sans">
         <Providers>
           <AmbientBackground />
           <SkipLink />

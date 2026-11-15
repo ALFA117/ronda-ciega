@@ -12,32 +12,42 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "var(--bg)",
-        surface: "var(--surface)",
-        surface2: "var(--surface-2)",
-        edge: "var(--edge)",
-        edgeStrong: "var(--edge-strong)",
-        chalk: "var(--text)",
-        muted: "var(--text-muted)",
-        dim: "var(--text-dim)",
-        onSealed: "var(--on-sealed)",
-        sealed: "var(--sealed)",
-        sealedDim: "var(--sealed-dim)",
-        open: "var(--open)",
-        escrow: "var(--escrow)",
-        settled: "var(--settled)",
+        // Channels, not hex, so opacity modifiers (bg-sealed/10) compile.
+        bg: "rgb(var(--c-bg) / <alpha-value>)",
+        surface: "rgb(var(--c-surface) / <alpha-value>)",
+        surface2: "rgb(var(--c-surface-2) / <alpha-value>)",
+        edge: "rgb(var(--c-edge) / <alpha-value>)",
+        edgeStrong: "rgb(var(--c-edge-strong) / <alpha-value>)",
+        chalk: "rgb(var(--c-text) / <alpha-value>)",
+        muted: "rgb(var(--c-text-muted) / <alpha-value>)",
+        dim: "rgb(var(--c-text-dim) / <alpha-value>)",
+        onSealed: "rgb(var(--c-on-sealed) / <alpha-value>)",
+        sealed: "rgb(var(--c-sealed) / <alpha-value>)",
+        sealedDim: "rgb(var(--c-sealed-dim) / <alpha-value>)",
+        open: "rgb(var(--c-open) / <alpha-value>)",
+        escrow: "rgb(var(--c-escrow) / <alpha-value>)",
+        settled: "rgb(var(--c-settled) / <alpha-value>)",
+        danger: "rgb(var(--c-danger) / <alpha-value>)",
+      },
+      borderRadius: {
+        // Formal corners: nothing rounder than 12px on a sheet.
+        md: "6px",
+        lg: "8px",
+        xl: "10px",
+        "2xl": "12px",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        display: ["var(--font-display)", "Georgia", "serif"],
       },
       fontSize: {
         // A fixed scale beats ad-hoc sizes: 12 13 14 16 18 24 32 44 60
         // 12px floor: 11px read as fine print on phones and failed the size audit.
         "2xs": ["12px", { lineHeight: "1.45" }],
         xs: ["12px", { lineHeight: "1.5" }],
-        sm: ["13px", { lineHeight: "1.6" }],
-        base: ["15px", { lineHeight: "1.65" }],
+        sm: ["14px", { lineHeight: "1.6" }],
+        base: ["16px", { lineHeight: "1.65" }],
         lg: ["18px", { lineHeight: "1.55" }],
         xl: ["24px", { lineHeight: "1.3" }],
         "2xl": ["32px", { lineHeight: "1.2" }],

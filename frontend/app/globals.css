@@ -2,172 +2,126 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Ronda Ciega — "sealed registry".
+ *
+ * The page is a ledger desk, not a light show: ink on paper (or paper on ink),
+ * hairline rules, one accent for the thing the product is about — sealed —
+ * and the other three roles (public, escrow, settled) kept for exactly the
+ * states they name. No glass, no glow, no neon.
+ *
+ * Every colour exists twice: as a hex for direct use, and as space-separated
+ * RGB channels (`--c-*`) so Tailwind opacity modifiers (`bg-sealed/10`,
+ * `border-edge/60`) actually compile. Before this, every `/NN` modifier on a
+ * token colour was silently dropped from the stylesheet.
+ */
 :root {
   color-scheme: dark;
 
-  /* Semantic tokens. Components never reach for a raw hex, which is why
-     repainting the whole app is this one block. */
-  --bg: #05070d;
-  --bg-deep: #03050a;
-  --surface: #0b1120;
-  --surface-2: #111a2c;
-  --edge: #1a2740;
-  --edge-strong: #2c3f60;
-  --text: #eaf2ff;
-  --text-muted: #8095b3;
+  --c-bg: 12 14 18;
+  --c-bg-deep: 8 9 12;
+  --c-surface: 19 22 28;
+  --c-surface-2: 26 30 38;
+  --c-edge: 40 45 55;
+  --c-edge-strong: 62 69 82;
+  --c-text: 236 238 241;
+  --c-text-muted: 163 170 181;
+  --c-text-dim: 138 146 158;
+  --c-on-sealed: 6 20 24;
+  --c-sealed: 103 197 212;
+  --c-sealed-dim: 58 153 169;
+  --c-open: 215 155 208;
+  --c-escrow: 227 163 59;
+  --c-settled: 76 196 135;
+  --c-danger: 249 112 102;
 
-  /* The one distinction the product is about, carried by colour.
-     Cyan is sealed, magenta is public. Both are pushed off their pure values
-     so they clear 4.5:1 — pure #0ff and #f0f vibrate and fail on thin type. */
-  --sealed: #22d3ee;
-  --sealed-dim: #0e93ab;
-  --open: #f45cf0;
+  --bg: rgb(var(--c-bg));
+  --bg-deep: rgb(var(--c-bg-deep));
+  --surface: rgb(var(--c-surface));
+  --surface-2: rgb(var(--c-surface-2));
+  --edge: rgb(var(--c-edge));
+  --edge-strong: rgb(var(--c-edge-strong));
+  --text: rgb(var(--c-text));
+  --text-muted: rgb(var(--c-text-muted));
+  --text-dim: rgb(var(--c-text-dim));
+  --on-sealed: rgb(var(--c-on-sealed));
+  --sealed: rgb(var(--c-sealed));
+  --sealed-dim: rgb(var(--c-sealed-dim));
+  --open: rgb(var(--c-open));
+  --escrow: rgb(var(--c-escrow));
+  --settled: rgb(var(--c-settled));
+  --danger: rgb(var(--c-danger));
 
-  --sealed-rgb: 34, 211, 238;
-  --open-rgb: 244, 92, 240;
+  /* Comma-separated twins, still read by rgba() in charts and canvases. */
+  --sealed-rgb: 103, 197, 212;
+  --open-rgb: 215, 155, 208;
+  --escrow-rgb: 227, 163, 59;
+  --settled-rgb: 76, 196, 135;
 
-  /* The third and fourth roles, and they exist because money arrived.
-     Cyan says sealed and magenta says public, which covered a page where
-     nothing was at stake. Funds locked against a round are neither: they are
-     public, and they are yours, and they are not spendable. Amber is the only
-     honest place to put that, and green is what it becomes once the payment
-     is irreversible. Two colours, two states, no ambiguity — and neither of
-     them borrowed from a role that already means something else. */
-  --escrow: #f0a828;
-  --escrow-rgb: 240, 168, 40;
-  --settled: #34d17a;
-  --settled-rgb: 52, 209, 122;
-
-  /* Chart series. Deliberately NOT the brand cyan/magenta: those two are
-     nearly the same colour to a deuteranope (validated ΔE 0.3-6.8). These
-     steps clear all six checks of the palette validator in this mode. */
+  /* Chart series: validated for colour-vision deficiency, unchanged. */
   --chart-1: #1d9bb2;
   --chart-2: #c07a1d;
 
-  --on-sealed: #06121a;
-  --text-dim: #708298;
+  /* Hard, short shadows. Depth from an edge, not from fog. */
+  --shadow-xs: 0 1px 0 0 rgb(0 0 0 / 0.5);
+  --shadow-card: 0 1px 0 0 rgb(0 0 0 / 0.45);
+  --shadow-hard: 3px 3px 0 0 rgb(0 0 0 / 0.55);
+  --shadow-pop: 0 12px 32px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(var(--c-edge));
 
-  --card-top: rgba(255, 255, 255, 0.07);
-  --card-wash: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0) 45%
-  );
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px -14px rgba(0, 0, 0, 0.7);
-  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.5), 0 24px 50px -20px rgba(0, 0, 0, 0.85);
-  --grain-opacity: 0.04;
+  --ghost: rgb(var(--c-text) / 0.16);
+  --rule-grid: rgb(var(--c-text) / 0.035);
 
-  /* Ghost numerals in the section spine. Barely there on purpose: they are
-     rhythm, not information. */
-  --ghost: rgba(234, 242, 255, 0.05);
-
-  /* Liquid glass. The sheen is what sells it: a bright top edge plus a
-     moving specular band, over a blurred and saturated backdrop. */
-  --glass-bg: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.13) 0%,
-    rgba(255, 255, 255, 0.04) 55%,
-    rgba(255, 255, 255, 0.07) 100%
-  );
-  --glass-border: rgba(255, 255, 255, 0.16);
-  --glass-inset: rgba(255, 255, 255, 0.3);
-  --glass-shadow: 0 8px 26px -10px rgba(0, 0, 0, 0.7);
-  --glass-sheen: rgba(255, 255, 255, 0.35);
-
-  /* Ambient tunnel: full strength on the dark ground. */
+  /* Kept for older call sites; now plain surfaces. */
+  --glass-bg: none;
+  --glass-border: var(--edge);
+  --glass-inset: transparent;
+  --glass-shadow: var(--shadow-pop);
+  --glass-sheen: transparent;
   --amb-strength: 1;
 }
 
-/* Light theme on warm paper rather than blue-grey. A light mode that is only
-   the dark one inverted always reads as an afterthought. Every value is
-   measured against these surfaces, never inherited from the dark set. */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  /* Measured, not chosen by eye — and rebuilt because the first one was flat.
-     The page and a card on it sat 3.5 points of L* apart, all of it warm
-     beige, so nothing read as raised and the eye had no structure to rest on.
-     Reported as "hurts to look at", which is what a single band of low-chroma
-     mud does: it is not glare, it is having nothing to focus on.
+  /* Warm paper, white sheets, graphite ink. Every text token clears 4.5:1
+     on both --bg and --surface. */
+  --c-bg: 246 245 241;
+  --c-bg-deep: 236 234 228;
+  --c-surface: 255 255 255;
+  --c-surface-2: 241 239 234;
+  --c-edge: 222 219 211;
+  --c-edge-strong: 176 172 162;
+  --c-text: 21 23 26;
+  --c-text-muted: 80 85 93;
+  --c-text-dim: 92 97 105;
+  --c-on-sealed: 255 255 255;
+  --c-sealed: 11 85 102;
+  --c-sealed-dim: 8 63 76;
+  --c-open: 134 44 108;
+  --c-escrow: 132 79 0;
+  --c-settled: 14 103 59;
+  --c-danger: 180 35 24;
 
-     The glare ceiling caps the top of the scale, so the separation had to come
-     from pushing the ground down rather than the card up — which is the same
-     direction that reduces the lit area. Eight points now, and the ground is
-     further from the ceiling than it was.
-
-     Cool rather than warm: the dark theme is blue-black, and a light theme
-     carrying the same faint cast belongs with it. Every value below clears
-     4.5:1 against both the ground and the surface. */
-  --bg: #d3d5d9;
-  --bg-deep: #c8cace;
-  --surface: #eaecf0;
-  --surface-2: #dfe1e5;
-  --edge: #b7bac0;
-  --edge-strong: #91949a;
-  --text: #14171c;
-  --text-muted: #454b55;
-
-  --sealed: #0a5b73;
-  --sealed-dim: #084457;
-  --open: #8c1093;
-
-  --sealed-rgb: 10, 91, 115;
-  --open-rgb: 140, 16, 147;
-
-  /* Darkened hard, not dimmed. Amber and green are the two hues that fail
-     worst on a light ground, so the light theme takes them almost to brown and
-     to forest, which is what clearing 4.5:1 costs. The first pair here was
-     picked by eye and the standing check refused them within the minute —
-     4.35 and 4.19 against --bg, passing against --surface, which is exactly
-     how a token looks fine in a panel and fails on the page behind it. These
-     were solved for instead. */
-  --escrow: #844f00;
+  --sealed-rgb: 11, 85, 102;
+  --open-rgb: 134, 44, 108;
   --escrow-rgb: 132, 79, 0;
-  --settled: #0e673b;
   --settled-rgb: 14, 103, 59;
 
   --chart-1: #00647f;
   --chart-2: #8a3d06;
 
-  --on-sealed: #ffffff;
-  --text-dim: #4d525c;
+  --shadow-xs: 0 1px 0 0 rgb(21 23 26 / 0.06);
+  --shadow-card: 0 1px 0 0 rgb(21 23 26 / 0.05);
+  --shadow-hard: 3px 3px 0 0 rgb(21 23 26 / 0.9);
+  --shadow-pop: 0 16px 40px -16px rgb(21 23 26 / 0.28), 0 0 0 1px rgb(var(--c-edge));
 
-  --card-top: rgba(255, 255, 255, 0.7);
-  --card-wash: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(20, 23, 28, 0.02) 100%
-  );
-  /* A shade deeper than before. On a ground eight points below the card the
-     shadow is doing real work now, and the old one was tuned for surfaces
-     that barely differed. */
-  --shadow-card: 0 1px 2px rgba(20, 23, 28, 0.06), 0 10px 24px -14px rgba(20, 23, 28, 0.22);
-  --shadow-lift: 0 2px 8px rgba(20, 23, 28, 0.08), 0 24px 50px -22px rgba(20, 23, 28, 0.3);
-  --grain-opacity: 0.02;
-
-  --ghost: rgba(20, 23, 28, 0.055);
-
-  /* Tinted rather than pure white. Glass built out of white on a light page
-     is a lamp, and it was undoing the darker ground underneath it — the same
-     reason the ground is where it is. Cool now, to match. */
-  --glass-bg: linear-gradient(
-    160deg,
-    rgba(252, 253, 255, 0.62) 0%,
-    rgba(223, 227, 234, 0.34) 55%,
-    rgba(240, 243, 247, 0.48) 100%
-  );
-  --glass-border: rgba(20, 23, 28, 0.16);
-  --glass-inset: rgba(255, 255, 255, 0.6);
-  --glass-shadow: 0 8px 22px -12px rgba(20, 23, 28, 0.3);
-  --glass-sheen: rgba(255, 255, 255, 0.55);
-
-  /* On paper the tunnel steps back so it never competes with type. */
+  --ghost: rgb(var(--c-text) / 0.18);
+  --rule-grid: rgb(var(--c-text) / 0.045);
   --amb-strength: 0.55;
 }
 
 @layer base {
-  /* Nothing should ever scroll the page sideways. `clip` rather than `hidden`
-     because `hidden` on an ancestor silently kills `position: sticky`. */
+  /* `clip`, not `hidden`: `hidden` on an ancestor kills `position: sticky`. */
   html,
   body {
     overflow-x: clip;
@@ -178,8 +132,34 @@
     scroll-behavior: smooth;
   }
 
-  /* Starts at the visible end, so a run that never happens costs nothing.
-   Used by Collapse, where the content must be readable either way. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--sealed);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgb(var(--c-sealed) / 0.25);
+    color: var(--text);
+  }
+}
+
+/* Starts at the visible end, so a run that never happens costs nothing. */
 @keyframes rc-fade-in {
   from { opacity: 0.35; }
   to { opacity: 1; }
@@ -189,273 +169,168 @@
   animation: rc-fade-in 220ms ease-out;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-
-  /* Never remove the focus ring — only make it match the design. */
-  :focus-visible {
-    outline: 2px solid var(--sealed);
-    outline-offset: 3px;
-    border-radius: 4px;
-  }
-
-  ::selection {
-    background: rgba(var(--sealed-rgb), 0.3);
-    color: var(--text);
-  }
-}
-
 @layer utilities {
-  /* Liquid glass.
-     `backdrop-filter` is the whole effect — without it this is just a
-     translucent rectangle — so it is paired with the -webkit- prefix for
-     Safari, and the saturate() is what keeps colour alive behind the blur
-     instead of going milky. */
+  /*
+   * `.glass` used to be blurred, saturated, sheened translucency. It is now a
+   * plain sheet: opaque surface, one hairline, a one-pixel ground shadow. The
+   * class name stays so the fifty call sites keep working.
+   */
   .glass {
-    background-image: var(--glass-bg);
-    /* The gradient above lives in background-image, so anything with a
-       user-agent background-color composites the glass on top of that instead
-       of on the page. A form control does: with color-scheme light an input
-       is pure white, which made the one field on the front page the brightest
-       thing on it — a lamp inside a panel, on a theme whose ground is kept
-       below a glare ceiling on purpose. */
-    background-color: transparent;
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 0 var(--glass-inset), var(--glass-shadow);
+    background-color: var(--surface);
+    border: 1px solid var(--edge);
+    box-shadow: var(--shadow-xs);
     overflow: hidden;
     isolation: isolate;
+    transition: border-color 160ms ease, background-color 160ms ease;
   }
 
-  /* The sheen below is absolutely positioned, so glass needs a positioning
-     context — but only where the element does not already establish one.
-     Plain `position: relative` here sits in the same layer as Tailwind's
-     `absolute`/`fixed`/`sticky` and, being declared later, silently beat
-     them: the nav sheet stopped honouring inset-x-3, the palette's floating
-     button stopped floating, and the locale pill fell out of its track. */
   .glass:not(.absolute):not(.fixed):not(.sticky) {
     position: relative;
   }
 
-  /* The specular band. Sits above the fill, below the label, and sweeps on
-     hover — the cue that the surface is glass and not paint. */
-  .glass::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    /* Clip to the parent shape directly. With this, a glass container that
-       has to let a dropdown escape can turn off overflow without the sheen
-       spilling past its rounded corners. */
-    border-radius: inherit;
-    z-index: -1;
-    background: linear-gradient(
-      105deg,
-      transparent 30%,
-      var(--glass-sheen) 48%,
-      transparent 62%
-    );
-    opacity: 0;
-    transform: translateX(-120%);
-    transition: opacity 260ms ease, transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
+  .glass:hover {
+    border-color: var(--edge-strong);
   }
 
-  .glass:hover::after {
-    opacity: 0.5;
-    transform: translateX(120%);
-  }
-
-  /* For a glass container that holds an absolutely-positioned child which
-     must hang outside it — the wallet menu under the nav bar. Without this the
-     menu is clipped to the bar and cannot be clicked at all. */
   .glass-spill {
     overflow: visible;
   }
 
-  /* Tinted variants. The accent goes through the glass rather than sitting
-     on it, so the colour reads as lit rather than painted. */
+  /* Accent-tinted sheet: the sealed state, never decoration. */
   .glass-sealed {
-    background-image:
-      linear-gradient(
-        160deg,
-        rgba(var(--sealed-rgb), 0.32) 0%,
-        rgba(var(--sealed-rgb), 0.14) 60%,
-        rgba(var(--sealed-rgb), 0.24) 100%
-      ),
-      var(--glass-bg);
-    border-color: rgba(var(--sealed-rgb), 0.5);
-    box-shadow:
-      inset 0 1px 0 0 var(--glass-inset),
-      0 6px 22px -10px rgba(var(--sealed-rgb), 0.55),
-      var(--glass-shadow);
+    background-color: rgb(var(--c-sealed) / 0.08);
+    border-color: rgb(var(--c-sealed) / 0.45);
   }
 
   .glass-open {
-    background-image:
-      linear-gradient(
-        160deg,
-        rgba(var(--open-rgb), 0.3) 0%,
-        rgba(var(--open-rgb), 0.12) 60%,
-        rgba(var(--open-rgb), 0.22) 100%
-      ),
-      var(--glass-bg);
-    border-color: rgba(var(--open-rgb), 0.5);
-    box-shadow:
-      inset 0 1px 0 0 var(--glass-inset),
-      0 6px 22px -10px rgba(var(--open-rgb), 0.5),
-      var(--glass-shadow);
+    background-color: rgb(var(--c-open) / 0.08);
+    border-color: rgb(var(--c-open) / 0.45);
   }
 
-  /* Where backdrop-filter is unavailable the glass would read as a
-     near-invisible rectangle, so fall back to an opaque surface. */
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .glass {
-      background-color: var(--surface);
-    }
+  /* The one filled control on any screen. */
+  .btn-solid {
+    background-color: var(--text);
+    color: var(--bg);
+    border: 1px solid var(--text);
+    box-shadow: var(--shadow-xs);
+    transition: background-color 160ms ease, transform 160ms ease;
+  }
+  .btn-solid:hover:not(:disabled) {
+    background-color: rgb(var(--c-text) / 0.86);
+  }
+
+  .btn-sealed {
+    background-color: var(--sealed);
+    color: var(--on-sealed);
+    border: 1px solid var(--sealed);
+    box-shadow: var(--shadow-xs);
+    transition: background-color 160ms ease;
+  }
+  .btn-sealed:hover:not(:disabled) {
+    background-color: var(--sealed-dim);
+    border-color: var(--sealed-dim);
+  }
+
+  .btn-outline {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--edge-strong);
+    box-shadow: var(--shadow-xs);
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+  .btn-outline:hover:not(:disabled) {
+    border-color: var(--text);
+  }
+
+  /* Work surfaces in the app get a crisp offset edge: structure you can feel
+     without a blur. Discreet in dark, ink-sharp in light. */
+  .sheet-hard {
+    background-color: var(--surface);
+    border: 1px solid var(--edge-strong);
+    box-shadow: var(--shadow-hard);
   }
 
   .tnum {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Display type. One clamp instead of five breakpoints, with tracking that
-     only makes sense at these sizes. */
-  /* The serif runs at display sizes and nowhere else. Instrument Serif is a
-     tight, high-contrast face: gorgeous at 60px, mush at 16, which is exactly
-     why it is scoped to two classes and never inherited. The tracking goes
-     back toward zero because a serif does not want the negative letter-spacing
-     a grotesque headline needs — it was set for Inter, and left alone it
-     collides the terminals. */
   .display {
     font-family: var(--font-display), Georgia, "Times New Roman", serif;
-    font-size: clamp(2.6rem, 7.4vw, 5.5rem);
-    line-height: 0.96;
-    letter-spacing: -0.012em;
-    font-weight: 400;
+    font-size: clamp(2.5rem, 6.2vw, 4.75rem);
+    line-height: 1.02;
+    letter-spacing: -0.022em;
+    font-weight: 500;
+    font-optical-sizing: auto;
   }
 
   .display-sm {
     font-family: var(--font-display), Georgia, "Times New Roman", serif;
-    font-size: clamp(1.7rem, 3.6vw, 2.65rem);
-    line-height: 1.06;
-    letter-spacing: -0.008em;
-    font-weight: 400;
+    font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.018em;
+    font-weight: 500;
+    font-optical-sizing: auto;
   }
 
   .lede {
-    font-size: clamp(1rem, 1.5vw, 1.175rem);
+    font-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
     line-height: 1.6;
   }
 
-  /* The numeral that anchors each section: large, nearly invisible, behind
-     the content. Rhythm rather than information. */
-  /* Sits in the flow beside or above the label, never behind it. Smaller
-     than when it was a background element, because in the flow it has to
-     earn its space rather than hide in the margin. */
+  .eyebrow {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* Section numeral: a quiet index in the margin, like a clause number. */
   .ghost-num {
-    font-size: clamp(2.25rem, 5vw, 4rem);
-    line-height: 0.85;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1;
     font-weight: 500;
-    letter-spacing: -0.045em;
-    color: var(--ghost);
+    letter-spacing: 0.04em;
+    color: var(--sealed);
     user-select: none;
   }
 
-  .grain::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
   .surface-raised {
-    background-image: var(--card-wash);
-    box-shadow: inset 0 1px 0 0 var(--card-top), var(--shadow-card);
+    box-shadow: var(--shadow-card);
   }
 
   .surface-lift {
-    box-shadow: inset 0 1px 0 0 var(--card-top), var(--shadow-lift);
+    box-shadow: var(--shadow-pop);
   }
 
+  /* What lives inside the enclave: a fine diagonal rule, the one pattern the
+     page allows itself, because it carries meaning. */
   .sealed-hatch {
     background-image: repeating-linear-gradient(
-      45deg,
-      rgba(var(--sealed-rgb), 0.07) 0px,
-      rgba(var(--sealed-rgb), 0.07) 1px,
+      135deg,
+      rgb(var(--c-sealed) / 0.07) 0px,
+      rgb(var(--c-sealed) / 0.07) 1px,
       transparent 1px,
-      transparent 8px
-    );
-  }
-
-  :root[data-theme="light"] .sealed-hatch {
-    background-image: repeating-linear-gradient(
-      45deg,
-      rgba(var(--sealed-rgb), 0.05) 0px,
-      rgba(var(--sealed-rgb), 0.05) 1px,
-      transparent 1px,
-      transparent 8px
+      transparent 7px
     );
   }
 
   .grid-field {
     background-image:
-      linear-gradient(to right, rgba(var(--sealed-rgb), 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(var(--sealed-rgb), 0.05) 1px, transparent 1px);
-    background-size: 44px 44px;
+      linear-gradient(to right, var(--rule-grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--rule-grid) 1px, transparent 1px);
+    background-size: 48px 48px;
   }
 
-  :root[data-theme="light"] .grid-field {
-    background-image:
-      linear-gradient(to right, rgba(var(--sealed-rgb), 0.07) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(var(--sealed-rgb), 0.07) 1px, transparent 1px);
-  }
-
-  .glow-sealed {
-    text-shadow: 0 0 24px rgba(var(--sealed-rgb), 0.45);
-  }
-
-  :root[data-theme="light"] .glow-sealed {
-    text-shadow: none;
-  }
-
+  /* Former glows, retired: kept as no-ops so call sites compile. */
+  .glow-sealed,
   .wire-glow {
-    filter: drop-shadow(0 0 5px rgba(var(--sealed-rgb), 0.5));
-  }
-
-  :root[data-theme="light"] .wire-glow {
+    text-shadow: none;
     filter: none;
   }
 
-  /* Atmosphere behind the hero. One light source rather than decoration
-     sprinkled around: cyan low-left, magenta high-right, both very dilute. */
-  .aurora::before {
-    content: "";
-    position: absolute;
-    inset: -30% 0 auto 0;
-    height: 620px;
-    background:
-      radial-gradient(46% 58% at 18% 45%, rgba(var(--sealed-rgb), 0.13), transparent 72%),
-      radial-gradient(42% 52% at 82% 22%, rgba(var(--open-rgb), 0.09), transparent 72%);
-    filter: blur(48px);
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  /* Full-bleed hairline: separates bands without boxing them. */
+  /* Full-bleed hairline between bands. */
   .bleed-rule {
     position: relative;
   }
@@ -468,10 +343,8 @@
     max-width: 100%;
     transform: translateX(-50%);
     border-top: 1px solid var(--edge);
-    opacity: 0.65;
   }
 
-  /* Off-screen until focused. */
   .skip-link {
     position: absolute;
     left: -9999px;
@@ -493,14 +366,15 @@
 .wallet-adapter-button {
   background: var(--surface) !important;
   border: 1px solid var(--edge) !important;
-  border-radius: 12px !important;
-  font-size: 13px !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
   /* Touch minimum on phones; a cursor does not need it. */
   height: 44px !important;
   padding: 0 14px !important;
   color: var(--text) !important;
   white-space: nowrap !important;
-  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-family: var(--font-sans), system-ui, sans-serif !important;
   transition: background 180ms ease, border-color 180ms ease !important;
 }
 
@@ -530,7 +404,7 @@
 .wallet-adapter-dropdown-list {
   background: var(--surface) !important;
   border: 1px solid var(--edge) !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   box-shadow: var(--glass-shadow) !important;
   font-family: var(--font-mono), ui-monospace, monospace !important;
   padding: 6px !important;
@@ -559,23 +433,16 @@
   border: 1px solid var(--edge) !important;
 }
 
-/* The headline reveal.
- *
- * It animates TRANSFORM and never opacity, on purpose. A word that fades in
- * from nothing is a word that is missing if the animation does not run — a
- * throttled tab, a screen recorder, a browser that decided the page is not
- * visible. This element is the first thing anyone reads, so its resting state
- * has to be "legible", and the motion has to be something it can lose without
- * losing the text.
- */
+
+/* Headline reveal: transform only, so the text is legible if it never runs. */
 @keyframes rc-word-in {
-  from { transform: translateY(0.42em); }
+  from { transform: translateY(0.3em); }
   to { transform: none; }
 }
 
 .rc-word {
   display: inline-block;
-  animation: rc-word-in 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: rc-word-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -588,9 +455,9 @@
   }
 }
 
-/* ── Ambient background (components/AmbientBackground.tsx) ──
-   One fixed layer under everything. body is isolated so this paints above
-   body's own background and below every piece of content. */
+/* ── Backdrop (components/AmbientBackground.tsx) ──
+   Static: the page colour plus a faint ruled grid that fades out below the
+   first screen. No canvas, no loop. */
 body {
   isolation: isolate;
 }
@@ -598,53 +465,22 @@ body {
   position: fixed;
   inset: 0;
   z-index: -10;
-  overflow: hidden;
   pointer-events: none;
   background: var(--bg);
 }
-.amb-layer {
+.amb-grid {
   position: absolute;
-  inset: 0;
-  will-change: transform;
+  inset: 0 0 auto 0;
+  height: 760px;
+  background-image:
+    linear-gradient(to right, var(--rule-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--rule-grid) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: center top;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
 }
-.amb-calm .amb-mid,
-.amb-calm .amb-layer {
-  opacity: 0.45;
-}
-.amb-far {
-  inset: -10%;
-  background:
-    radial-gradient(40% 50% at 72% 38%, rgba(var(--sealed-rgb), calc(0.14 * var(--amb-strength))), transparent 70%),
-    radial-gradient(36% 44% at 12% 80%, rgba(var(--open-rgb), calc(0.08 * var(--amb-strength))), transparent 70%);
-}
-.amb-vignette {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 110% 80% at 50% 40%, transparent 35%, color-mix(in srgb, var(--bg) 88%, transparent)),
-    linear-gradient(90deg, color-mix(in srgb, var(--bg) 55%, transparent) 0%, transparent 60%);
-}
-.amb-seal {
-  position: absolute;
-  transform-style: preserve-3d;
-}
-.amb-seal-body {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-}
-.amb-seal-body i {
-  position: absolute;
-  inset: 0;
-  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%);
-  opacity: calc(0.18 + 0.32 * var(--amb-strength));
-}
-.amb-seal-body i:first-child { transform: translateZ(5px); }
-.amb-seal-body i:last-child { transform: translateZ(-5px); opacity: calc(0.1 + 0.2 * var(--amb-strength)); }
-.amb-seal-sealed i {
-  background: linear-gradient(140deg, rgba(var(--sealed-rgb), 0.55), rgba(var(--sealed-rgb), 0.08));
-}
-.amb-seal-open i {
-  background: linear-gradient(140deg, rgba(var(--open-rgb), 0.5), rgba(var(--open-rgb), 0.06));
+.amb-calm .amb-grid {
+  height: 320px;
+  opacity: 0.6;
 }
