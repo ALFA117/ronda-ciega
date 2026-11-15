@@ -16,6 +16,8 @@ export const en: Dictionary = {
   },
 
   hero: {
+    eyebrow: "Solana devnet · MagicBlock Private Ephemeral Rollup",
+    tryIt: "Run the algorithm",
     headline: "Say who you want",
     subline: "without anyone knowing you said it.",
     lede: "You lock what you are offering on L1. Your list is sealed inside an enclave nobody can read, not even whoever opened the round. The pairing comes out, and the deposit pays whoever it names — either side of the pair can send that payment, nobody's permission needed. The lists are never published — not at the deadline, not afterwards, not to anyone.",

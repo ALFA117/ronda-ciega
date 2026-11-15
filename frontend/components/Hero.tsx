@@ -2,133 +2,109 @@
 
 import { Fragment, useRef } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { FlowMap } from "./Flow";
 import { PulseRatio } from "./PulseRatio";
 import { SealedRound } from "./SealedRound";
 
 /**
- * Full-bleed hero.
+ * First screen.
  *
- * The old one was text-left / box-right in a fixed grid — the most generic
- * layout on the web. This one lets the headline run to display size and puts
- * the diagram underneath at full width, because the diagram *is* the product
- * and shrinking it into a sidebar was the single biggest thing making the page
- * look like a template.
+ * Sentence on the left, the mechanism on the right, the seven-step flow under
+ * both. The headline words are in the document at full opacity and only
+ * their position animates, so the first thing the page says is never blank.
  */
 export function Hero() {
   const t = useT();
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
 
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"],
-  });
-  // Gentle parallax. Gated on reduced motion, since drifting backgrounds are
-  // the motion type most likely to cause discomfort.
-  const y = useTransform(scrollYProgress, [0, 1], [0, 70]);
-  const fade = useTransform(scrollYProgress, [0, 0.8], [1, 0.25]);
-
   const headline = t.hero.headline.split(" ");
   const subline = t.hero.subline.split(" ");
 
+  const word = (w: string, i: number, offset: number) => (
+    <Fragment key={i}>
+      {i > 0 && " "}
+      <span
+        className="rc-word"
+        style={reduce ? undefined : { animationDelay: `${(offset + i) * 45}ms` }}
+      >
+        {w}
+      </span>
+    </Fragment>
+  );
+
   return (
-    <section ref={ref} className="relative overflow-hidden pb-4 pt-6 sm:pt-12">
-      {/* The mechanism, drawn beside the sentence. Only where there is room
-          for both at full size; on narrower screens the flow map below
-          carries the same story. */}
-      <div className="absolute right-0 top-6 hidden w-[360px] xl:block sm:top-10">
-        <SealedRound />
-      </div>
-      <motion.div style={reduce ? undefined : { y, opacity: fade }}>
-        {/* The reveal is CSS and moves only the transform. The Framer version
-            faded each word up from opacity 0, which meant the headline — the
-            first thing on the page — was blank until an animation ran, and
-            stayed blank when one did not. Now the words are in the document at
-            full opacity and the motion is something the page can lose. */}
-        {/* The space between the words is a text node, not a margin. A
-            margin looks the same and reads as one long word: it is what the
-            clipboard copies, what find-in-page searches, and what a screen
-            reader announces — and this sentence is the first thing the page
-            says. Inline-block words separated by real whitespace lay out the
-            same way and survive being read by something that is not an eye. */}
-        <h1 key={t.hero.headline} className="display max-w-[16ch]">
-          <span className="block">
-            {headline.map((w, i) => (
-              <Fragment key={i}>
-                {i > 0 && " "}
-                <span
-                  className="rc-word"
-                  style={reduce ? undefined : { animationDelay: `${i * 55}ms` }}
-                >
-                  {w}
-                </span>
-              </Fragment>
-            ))}
-          </span>
-          <span className="block text-muted">
-            {subline.map((w, i) => (
-              <Fragment key={i}>
-                {i > 0 && " "}
-                <span
-                  className="rc-word"
-                  style={
-                    reduce
-                      ? undefined
-                      : { animationDelay: `${(headline.length + i) * 55}ms` }
-                  }
-                >
-                  {w}
-                </span>
-              </Fragment>
-            ))}
-          </span>
-        </h1>
+    <section ref={ref} className="relative pb-4 pt-8 sm:pt-14 lg:pt-16">
+      <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-16">
+        <div>
+          <p className="inline-flex items-center gap-2 rounded-md border border-edge bg-surface px-3 py-1.5 font-mono text-2xs text-muted">
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-settled" />
+            {t.hero.eyebrow}
+          </p>
 
-        <motion.div
-          className="mt-9 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between"
-          initial={reduce ? undefined : { y: 14 }}
-          animate={reduce ? undefined : { y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <div className="max-w-prose space-y-3">
-            <p className="lede text-chalk/85">{t.hero.lede}</p>
-            {/* The speed claim, as the reader's own measurement, in the first
-                thing anybody sees. Renders nothing until the band below has
-                actually measured it — a hero that reserves space for a number
-                it does not have is a hero with a hole in it. */}
-            <PulseRatio />
-          </div>
+          <h1 key={t.hero.headline} className="display mt-6 max-w-[17ch] [text-wrap:balance]">
+            <span className="block">{headline.map((w, i) => word(w, i, 0))}</span>
+            <span className="block italic text-muted">
+              {subline.map((w, i) => word(w, i, headline.length))}
+            </span>
+          </h1>
 
-          <Link
-            href="#rondas"
-            className="group inline-flex min-h-[44px] shrink-0 items-center gap-2 font-mono text-sm text-chalk transition-colors hover:text-sealed"
+          <motion.div
+            initial={reduce ? undefined : { y: 12 }}
+            animate={reduce ? undefined : { y: 0 }}
+            transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            {t.hero.cta}
-            <ArrowDown className="h-3.5 w-3.5 transition-transform group-hover:translate-y-0.5" />
-          </Link>
-        </motion.div>
-      </motion.div>
+            <p className="lede mt-7 max-w-[60ch] text-muted">{t.hero.lede}</p>
 
-      {/* The whole sequence, under the sentence that claims it.
-          What sat here was a Gale-Shapley run replayed on invented people:
-          pretty, and an answer to a question nobody had asked yet. Somebody
-          three seconds into the page wants to know what the thing does, and
-          the shape of that answer is a flow, not a demo. The demo is section
-          01 and it is playable, which is a better version of the same idea.
+            <div className="mt-9 flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center">
+              <Link
+                href="#probar"
+                className="btn-solid group inline-flex h-12 items-center justify-center gap-2 rounded-lg px-5 text-[15px] font-medium"
+              >
+                {t.hero.tryIt}
+                <ArrowRight
+                  className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden
+                />
+              </Link>
+              <Link
+                href="#rondas"
+                className="btn-outline group inline-flex h-12 items-center justify-center gap-2 rounded-lg px-5 text-[15px] font-medium"
+              >
+                {t.hero.cta}
+                <ArrowDown
+                  className="h-4 w-4 transition-transform group-hover:translate-y-0.5"
+                  aria-hidden
+                />
+              </Link>
+            </div>
 
-          `como-funciona` moves here with it. It was a section three screens
-          down that drew this same sequence a second time; every link to it
-          now lands on the drawing itself. */}
+            {/* The reader's own measurement; renders nothing until it exists. */}
+            <div className="mt-5 min-h-[20px]">
+              <PulseRatio />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* The mechanism, framed like a figure in a paper. */}
+        <figure className="hidden rounded-2xl border border-edge bg-surface p-5 shadow-[var(--shadow-card)] lg:block">
+          <div className="mb-4 flex items-center justify-between border-b border-edge pb-3">
+            <span className="eyebrow">{t.hero.sealed}</span>
+            <span className="font-mono text-2xs text-dim">Gale–Shapley</span>
+          </div>
+          <SealedRound />
+        </figure>
+      </div>
+
       <motion.div
         id="como-funciona"
-        className="mt-12 scroll-mt-28"
-        initial={reduce ? undefined : { y: 22 }}
+        className="mt-14 scroll-mt-28 sm:mt-16"
+        initial={reduce ? undefined : { y: 18 }}
         animate={reduce ? undefined : { y: 0 }}
-        transition={{ delay: 0.35, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <FlowMap />
       </motion.div>

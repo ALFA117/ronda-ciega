@@ -15,6 +15,8 @@ export const es = {
   },
 
   hero: {
+    eyebrow: "Solana devnet · Private Ephemeral Rollup de MagicBlock",
+    tryIt: "Corre el algoritmo",
     headline: "Dices a quién quieres",
     subline: "sin que nadie sepa que lo dijiste.",
     lede: "Bloqueas en L1 lo que ofreces. Tu lista se sella dentro de un enclave que nadie puede leer, ni siquiera quien abrió la ronda. Sale el par, y el depósito le paga a quien el par nombra — cualquiera de los dos puede mandar ese pago, sin pedirle permiso a nadie. Las listas no se publican nunca — ni al cerrar, ni después, ni para nadie.",

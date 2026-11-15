@@ -6,12 +6,9 @@ import { useOnScreen } from "@/hooks/useOnScreen";
 import { easeEnter } from "@/lib/motion";
 
 /**
- * A band of the page.
- *
- * The numeral used to be absolutely positioned behind the head, which put it
- * straight on top of the section label at every width — six overlaps, one per
- * section. It now sits in the flow above the label, so it cannot collide with
- * anything no matter how the text wraps. Rhythm without a stacking bug.
+ * A band of the page: a clause number and label in the margin, the heading
+ * and lede beside them, content below. On phones the margin folds above the
+ * heading as one line.
  */
 export function Section({
   index,
@@ -35,30 +32,28 @@ export function Section({
   const shown = useOnScreen(ref, 90);
 
   return (
-    <section id={id} className="bleed-rule scroll-mt-28 pt-12 sm:pt-16 lg:pt-20">
+    <section id={id} className="bleed-rule mt-16 scroll-mt-24 pt-12 sm:mt-20 sm:pt-16">
       <motion.div
         ref={ref}
-        className="grid gap-x-8 gap-y-5 lg:grid-cols-[12rem_1fr]"
-        initial={reduce ? undefined : { y: 18 }}
+        className="grid gap-x-10 gap-y-4 lg:grid-cols-[12rem_1fr]"
+        initial={reduce ? undefined : { y: 14 }}
         animate={reduce || shown ? { y: 0 } : undefined}
         transition={easeEnter}
       >
-        <div className="flex items-baseline gap-3 lg:block">
-          <span aria-hidden className="ghost-num block leading-none">
-            {index}
+        <div className="flex items-center gap-3 lg:block lg:pt-2">
+          <span aria-hidden className="ghost-num tnum">
+            §{index}
           </span>
-          <span className="font-mono text-2xs uppercase tracking-[0.2em] text-muted lg:mt-3 lg:block">
-            {label}
-          </span>
+          <span className="eyebrow lg:mt-2 lg:block">{label}</span>
         </div>
 
         <div className={wide ? "" : "max-w-3xl"}>
-          <h2 className="display-sm [text-wrap:balance]">{title}</h2>
-          {lede && <p className="lede mt-5 max-w-prose text-muted">{lede}</p>}
+          <h2 className="display-sm max-w-[28ch] [text-wrap:balance]">{title}</h2>
+          {lede && <p className="lede mt-4 max-w-prose text-muted">{lede}</p>}
         </div>
       </motion.div>
 
-      <div className={`mt-10 sm:mt-12 ${wide ? "" : "lg:pl-[15rem]"}`}>
+      <div className={`mt-10 sm:mt-12 ${wide ? "" : "lg:pl-[14.5rem]"}`}>
         {children}
       </div>
     </section>
