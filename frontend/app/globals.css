@@ -83,13 +83,14 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  /* Warm paper, white sheets, graphite ink. Every text token clears 4.5:1
-     on both --bg and --surface. */
-  --c-bg: 246 245 241;
-  --c-bg-deep: 236 234 228;
-  --c-surface: 255 255 255;
-  --c-surface-2: 241 239 234;
-  --c-edge: 222 219 211;
+  /* Warm paper, lighter sheets, graphite ink. Every text token clears 4.5:1
+     on both --bg and --surface, and both stay under the glare ceiling that
+     scripts/verify.mjs holds (ground <= 0.82, surface <= 0.85, no pure white). */
+  --c-bg: 232 230 224;
+  --c-bg-deep: 222 220 213;
+  --c-surface: 238 236 231;
+  --c-surface-2: 235 233 227;
+  --c-edge: 210 207 198;
   --c-edge-strong: 176 172 162;
   --c-text: 21 23 26;
   --c-text-muted: 80 85 93;

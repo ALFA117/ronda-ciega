@@ -65,6 +65,12 @@ function tokens(css, selector) {
   for (const m of block.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)) {
     out[m[1]] = m[2];
   }
+  // Theme colours are declared as RGB channels (`--c-text: 236 238 241;`) so
+  // Tailwind opacity modifiers compile; `--text` is only `rgb(var(--c-text))`.
+  // Read the channels as the source of truth for the named token.
+  for (const m of block.matchAll(/--c-([\w-]+):\s*(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})\s*;/g)) {
+    out[m[1]] = "#" + [m[2], m[3], m[4]].map((n) => Number(n).toString(16).padStart(2, "0")).join("");
+  }
   return out;
 }
 
@@ -122,7 +128,7 @@ head("Light mode glare");
   else bad(`ground luminance ${L.toFixed(3)} exceeds 0.82`);
   if (S <= 0.85) ok(`surface luminance ${S.toFixed(3)} (ceiling 0.85)`);
   else bad(`surface luminance ${S.toFixed(3)} exceeds 0.85`);
-  if (!/--surface:\s*#ffffff/i.test(css.slice(css.indexOf(':root[data-theme="light"]'))))
+  if (!/#ffffff/i.test(light.surface ?? ""))
     ok("no pure-white surface token in the light theme");
   else bad("light theme still has a pure-white surface");
 }
@@ -301,7 +307,11 @@ head("Account sizes match the program");
 // not derivable were taken out of the README instead of guessed at here.
 head("The README counts what is actually there");
 {
-  const readme = readFileSync(join(HERE, "..", "README.md"), "utf8");
+  // The test and error-code figures moved from the README into
+  // docs/DESIGN.md (the README links there), so both are read as one.
+  const readme = ["README.md", join("docs", "DESIGN.md")]
+    .map((f) => readFileSync(join(HERE, "..", f), "utf8"))
+    .join("\n");
   const hits = (file, re) => (readFileSync(file, "utf8").match(re) || []).length;
 
   const testDir = join(HERE, "..", "frontend", "tests");
