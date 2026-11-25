@@ -1,407 +1,173 @@
+<div align="center">
+
+<img src="frontend/app/icon.svg" alt="Ronda Ciega logo: two columns joined by a single wire" width="110" />
+
 # Ronda Ciega
 
-**Blind stable matching on Solana.** You say who you want. Nobody ever learns that you said it.
+### Blind stable matching on Solana. Say who you want — nobody ever learns that you said it.
 
-Built for [MagicBlock Solana Blitz v8](https://build.magicblock.app/?stage=blitz) — theme
-*Global Startup Village*.
-
-**Live:** [ronda-ciega.vercel.app](https://ronda-ciega.vercel.app) · Solana **Devnet**
+[![Live demo](https://img.shields.io/badge/Live_demo-ronda--ciega.vercel.app-0e7490?style=for-the-badge&logo=vercel&logoColor=white)](https://ronda-ciega.vercel.app)
+[![Check it yourself](https://img.shields.io/badge/Check_it_yourself-%2Fproof-c026d3?style=for-the-badge)](https://ronda-ciega.vercel.app/proof)
+[![MagicBlock Solana Blitz v8](https://img.shields.io/badge/MagicBlock_Solana_Blitz-v8-111827?style=for-the-badge)](https://build.magicblock.app/?stage=blitz)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f?style=for-the-badge)](LICENSE)
 
 [![CI](https://github.com/ALFA117/ronda-ciega/actions/workflows/ci.yml/badge.svg)](https://github.com/ALFA117/ronda-ciega/actions/workflows/ci.yml)
+![Solana Devnet](https://img.shields.io/badge/Solana-Devnet-9945FF?logo=solana&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)
+![Anchor](https://img.shields.io/badge/Anchor-1.0.2-512BD4)
+![MagicBlock](https://img.shields.io/badge/MagicBlock-Private_ER_·_VRF-1a1a1a)
+![Next.js](https://img.shields.io/badge/Next.js_14-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)
+
+<br/>
+
+<img src="docs/img/hero.jpg" alt="Ronda Ciega on a laptop (landing page with the sealed-lists diagram) and on a phone (a settled transparent demo round)" width="100%" />
+
+**[▶ Open the app](https://ronda-ciega.vercel.app)** · **[Run the proof](https://ronda-ciega.vercel.app/proof)** · **[How it works](#-how-it-works)** · **[Full design argument](docs/DESIGN.md)**
+
+</div>
+
+> [!NOTE]
+> Runs on **Solana Devnet** with the MagicBlock TEE rollup — no real money moves. Built in one week for MagicBlock Solana Blitz v8 (theme *Global Startup Village*).
 
 ---
 
-## Why this can't be a commit-reveal
+## 🎯 The problem
 
-This is the argument the whole project rests on, so it goes first.
+Gale–Shapley has solved **stable matching** on paper since 1962 — it's how medical residencies and school admissions are assigned. It isn't used much outside institutions because it needs a **trusted third party** that receives every preference list, runs the algorithm, and never leaks or sells those lists. That party rarely exists.
 
-A commit-reveal buys secrecy **until a deadline**. You publish a hash, and at the deadline you
-publish the preimage so anyone can check you didn't change your answer. Verification *requires*
-revelation — the secret has an expiry date by construction.
+And a blockchain doesn't fix it by itself: a **commit-reveal** only buys secrecy *until a deadline*, because verifying it requires publishing the secret. A preference list has to stay secret **forever** — if it comes out later that I ranked you seventh, the social cost has just arrived late.
 
-A preference list cannot work that way. It has to stay secret **permanently**. If it comes out at
-settlement that I ranked you seventh, the social cost the mechanism was designed to remove has
-simply arrived late. And if it never comes out, nobody can verify the result.
+## 💡 The solution
 
-So the requirement is real computation over state that no external observer can read, ever. That
-is what a **MagicBlock Private Ephemeral Rollup** provides, and it is the load-bearing reason this
-project exists rather than a nicer way to do something you could already do.
+Ronda Ciega replaces the trusted party with an **enclave**: a MagicBlock **Private Ephemeral Rollup** (TEE).
 
-## What it does
+1. **Join a round** as a `founder` or a `builder`. Your profile is public — a handle and a link.
+2. **Seal a ranking** of the other side. It's created *inside* the rollup, behind a permission whose only wallet member is you, and never committed to L1.
+3. **The round closes** at its deadline; rankings move into private working memory.
+4. **Gale–Shapley runs inside the TEE**, in a single rollup transaction, with ties broken by **MagicBlock VRF**.
+5. **Only the pairings are published.** Rankings are destroyed inside the enclave, and an optional deposit pays whichever counterparty the matching chose.
 
-Gale–Shapley has solved stable matching on paper since 1962. The reason it isn't used outside
-institutions — medical residency matching, school admissions — is that it needs a **trusted third
-party** to receive every preference list, run the algorithm, and never leak or sell those lists.
-That party rarely exists.
+> Four founders and four builders each seal a ranking. What comes out is only `F1 · B3`, `F2 · B1`, `F3 · B4`, `F4 · B2` — nobody, not even whoever opened the round, can read any list. *(Illustration from the landing page; labels are placeholders.)*
 
-Ronda Ciega replaces it with an enclave:
+<div align="center">
+<img src="docs/img/how.jpg" alt="How it works: seven steps, with 'you seal your list' and 'the algorithm runs' happening inside the enclave" width="100%" />
+</div>
 
-1. **You join a round** on one side of the market — `founder` (product, go-to-market) or `builder`
-   (technical). Your profile is public. It's the same information you'd already publish in a
-   builder directory.
-2. **You seal a ranking** of the other side. The account is created *inside* the rollup, behind a
-   permission whose only wallet member is you, and it is closed there without ever being committed
-   to L1.
-3. **The round closes** at its deadline and the rankings are ingested into private working memory.
-4. **The algorithm runs** inside the TEE, in a single rollup transaction.
-5. **Only the pairings are published.**
+## ✨ Check it rather than believe it
 
-## Check it rather than believe it
+<div align="center">
+<img src="docs/img/tres.jpg" alt="Three phones: the landing page, the proof page after running 400 markets with 0 blocking pairs, and a transparent demo round" width="100%" />
+<br/><sub>Mobile: landing · the proof page after a run · a settled transparent round.</sub>
+</div>
 
-Three things run in your browser, against public data, with no wallet:
+<br/>
 
-- **[/proof](https://ronda-ciega.vercel.app/proof)** generates four hundred markets, runs the same
-  matching implementation the chain runs, and searches every result for a blocking pair — two people
-  who would both rather leave their match for each other. One is enough to make the whole promise
-  false. Half the markets carry complete lists and half are cut short, and that split is the point:
-  Gale–Shapley consults the tie-break only when a receiver has ranked *neither* of two proposers, so
-  an all-complete sweep executes `break_tie` exactly zero times. It used to be all-complete, which
-  left the branch the VRF exists to protect outside the guarantee this page presents.
-  *400 markets, 0 blocking pairs, 172 of them able to reach the tie-break, ~30 ms.*
-- **Any settled transparent round** publishes its full trace, and the round page recomputes it
-  against what the chain says: no builder held twice, every index real, the pair count never
-  falling, no pairing evaporating between frames, and the trace ending exactly where Solana says it
-  ended.
-- **Every round** derives the deterministic address of each preference list and goes looking for
-  them on both chains, from your browser — **with the two controls that make an absence mean
-  anything**. The panel asks L1 for the round's public account and gets it; asks the rollup for the
-  same account over a connection carrying *no auth token* and gets it; then asks both for the
-  lists and gets nothing. Without those first two rows a zero is indistinguishable from a query
-  pointed at the wrong cluster, and the verdict refuses to read "shielded" unless they passed.
-  *4 probes, 0 of 12 lists readable.*
+<table>
+<tr>
+<td width="50%"><img src="docs/img/proof-run.jpg" alt="Proof page: 400 markets, 0 blocking pairs, 172 where ties are possible" /><p align="center"><sub><b>/proof</b> — generates 400 markets in your browser, runs the same matching the chain runs and searches every result for a blocking pair. No wallet.</sub></p></td>
+<td width="50%"><img src="docs/img/round-t.jpg" alt="Transparent demo round with 6 founders, 6 builders, 12 sealed lists and the pairings drawn round by round" /><p align="center"><sub><b>Round page</b> — a transparent round replays the algorithm round by round and recomputes the trace against what Solana says.</sub></p></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/img/stats.jpg" alt="Measured figures: 671 ms whole matching, 214 ms for verifiable randomness, 1 rollup transaction, 0 preference lists published" /><p align="center"><sub>Measured once on Devnet with <code>scripts/spike.ts</code>; the live slot rate of both chains is measured in your browser.</sub></p></td>
+<td width="50%"><img src="docs/img/home-light.jpg" alt="Landing page in light mode" /><p align="center"><sub>Spanish / English, light and dark.</sub></p></td>
+</tr>
+</table>
 
-The landing page's "0 preference lists published" is counted rather than asserted, by a
-`getProgramAccounts` call whose exact `curl` is printed beside it, with the public profiles as the
-control: a lone zero is indistinguishable from a broken query.
+Every round page also derives the address of each preference list and looks for it on **both** chains from your browser — with controls proving the query works, so a zero means "shielded", not "wrong cluster".
 
-Section 01 is a playground: the algorithm running on lists you can reshuffle, stepping round by
-round, ending with a live blocking-pair check. Same implementation, no wallet, no transaction. It
-sits first because it used to sit fifth, behind three hundred words nobody scrolled past.
+## 🧠 How it works
 
-## Signing, and what a wallet cannot simulate
-
-A wallet simulates every transaction against L1. Once a round is delegated its account no longer
-lives there, so the simulation fails and the wallet warns or refuses — on its own dApp, for a
-transaction that would have succeeded. This is inherent to ephemeral rollups, not a bug in the page.
-
-None of the rollup instructions the operator sends check *who* signed: `close_round`,
-`seal_preferences` and `tick` take no signer at all, and the rest take a `payer` never compared
-against `round.authority`. So a round is driven by a local key kept in the browser, topped up once
-by a plain L1 transfer, and the whole lifecycle runs without a prompt. `scripts/operator-key.ts`
-proves the claim using a key the round has never heard of.
-
-Identity deliberately does not move: `submit_ranking` stays bound to the participant's wallet.
-
-The operator does not have to be there either. Running a round is three actions separated by two
-waits — set it up, settle it once the deadline has passed and the oracle has answered, then destroy
-the private accounts and hand the round back to L1 — and nobody is at the keyboard when a deadline
-passes at three in the morning. Every one of those steps is already sent by the local key, so the
-only thing that ever required a person was the click. **Autopilot** does the clicking: it reads the
-round, runs whatever is possible, waits out what is not, re-sends a randomness request that never
-landed (rate-limited, so a stuck oracle cannot drain the key), and disarms itself after three
-refusals rather than retrying a permanent one forever. It runs in a browser tab and the UI says so,
-because a round left half-settled by a closed laptop is recoverable only if nobody was told
-otherwise. `lib/autopilot.ts` decides the sequence and is tested on its own — settling a moment
-early wastes a transaction, and finishing a moment early destroys the working memory of a round
-that has not produced its pairings yet.
-
-A participant signs twice, once, or not at all, and the page says which before it asks.
-
-Sealing a list used to cost a wallet prompt every time, and it was the prompt a wallet is most
-likely to refuse: once a round is delegated, a transaction against it cannot be simulated on L1.
-`submit_ranking` takes a **session token** now. `wallet` stops being a signer and becomes the
-account every PDA is seeded from, `signer` is whoever pays, and the token proves that signer is
-entitled to act for that wallet. Without a token the signer must BE the owner, exactly as before.
-
-What a session key cannot do is read. Every account is seeded from the owner's wallet, and the
-permission on a `Preferences` account lists the owner and the round — derived from the seeding key,
-never from the signer. **A session key can write a list. It can never read one back**, and that
-asymmetry is what makes handing it a browser key safe at all.
-
-So a cold browser costs two prompts: one ordinary L1 transaction authorising the session key, which
-a wallet simulates perfectly well, and one signed *message* proving to the enclave who you are —
-a message has nothing to simulate and nothing to refuse. Both are cached, the session on chain and
-the enclave token in the browser, so the second seal costs nothing. A session that has expired is
-refused by name and replaced rather than reported.
-
-Identity deliberately does not move: the enclave's idea of who you are stays tied to your wallet
-signature, never to the browser key.
-
-## How it runs
-
-Gale–Shapley proceeds in proposal rounds, so the program executes them as a loop inside **one
-rollup transaction**, recording a frame per round. A remote client cannot make N sequential
-transactions quickly — each depends on the last — but it can make one transaction that does N
-rounds.
-
-Measured against devnet from Mexico:
-
-| | |
-|---|---|
-| One transaction, whole matching | **671 ms** wall clock (one round-trip) |
-| One transaction per proposal round | 0.9–1.6 s **each** |
-
-That gap is network latency, not rollup execution. The rollup produces blocks every ~10 ms; the
-internet does not.
-
-Those two rows were measured once, by me. The landing page also carries a **live** version: both
-endpoints are asked for their slot height about once a second from the reader's own browser, and
-the rate is derived from what they answer rather than typed into the page. On 7 November 2026 it
-read about 24× (4.1 slots/s on L1 against 100 on the TEE); it moves with both endpoints' load,
-which is the reason it is measured rather than written down. If the TEE endpoint is down that lane says so in front of everyone instead of the page
-carrying on claiming 671 ms.
-
-Storing the **inverse** of each receiver's ranking (`builder_rank[b][f]` = founder *f*'s position in
-builder *b*'s list) is what keeps each round O(n): deciding whether a builder prefers a new proposer
-over the one they're holding is one array lookup, not a scan.
-
-## Verifiable tie-breaks
-
-Gale–Shapley assumes strict orders. When a receiver ranked neither of two proposers, something has
-to break the tie — and breaking it by account index would quietly reward whoever registered first,
-which is exactly the bias the system claims to remove.
-
-Ties are broken with **MagicBlock VRF**, requested against the ephemeral queue when the round is
-delegated. **Matching refuses to run until the callback lands** — `run_matching` and `tick` both
-return `RandomnessMissing` rather than settling a round on registration order. The seed is published
-on the round, so anyone can replay every tie-break without seeing a single preference.
-
-The callback takes the first answer and refuses the rest: two requests can be in flight before
-either lands, and a second one overwriting the seed after the round was matched would leave the
-pairings published beside a seed that does not reproduce them — the one thing a replayable
-tie-break cannot survive. Live on devnet, and `negative:rollup` asks twice to prove it.
-
-The playground makes the whole argument arguable rather than asserted: reroll the tie-break on the
-same lists and the page counts how many of twenty-five seeds produce a different pairing. Often the
-answer is none — Gale–Shapley needs a tie-break only when a receiver has ranked *neither* of two
-proposers — and saying so is more convincing than implying the seed always matters. When it does
-matter, it decided somebody's match.
-
-## Transparent rounds, and why they're opt-in
-
-Found while building, not while designing: **animating the algorithm leaks preferences.** If round 1
-shows that founder 0 proposed to builder 2, that publishes founder 0's first choice. The full
-sequence of proposals and rejections reconstructs much of everyone's ranking.
-
-So a round carries a `transparent` flag, decided at creation:
-
-- **Transparent** — records a snapshot per round, so the algorithm can be watched resolving. For
-  demos, or rounds where every participant agreed to it.
-- **Normal** — intermediate states never leave the enclave. Only the final pairings are published.
-
-The UI presents this as a disclosure, not a display toggle.
-
-The rule is one condition inside the matching loop, and it is the privacy claim
-that lives there: a misplaced `&&` would publish the proposal sequence for
-every round ever run, and the account would look entirely ordinary. Nothing
-checked it until the Rust tests existed. `a_private_round_records_no_frames_at_all`
-does now, on a market chosen to take several rounds so there is a sequence
-worth leaking — deleting the `transparent &&` makes exactly that test fail,
-which is how I know it is a real check and not a shape.
-
-## The privacy model, stated honestly
-
-The Private ER is **TEE-enforced access control, not encryption**. Accounts are ordinary rollup
-state that the enclave refuses to serve to anyone outside the permission's member list. The
-guarantee is hardware-backed, not cryptographic.
-
-Verified live on devnet, and reproducible with `scripts/spike.ts`:
-
+```mermaid
+flowchart LR
+    W["Participant wallet"] -->|join, lock deposit| L1["Solana Devnet L1: Round, Participant, Escrow"]
+    W -->|seal ranking with session key| TEE["MagicBlock Private ER: TEE"]
+    TEE --- PR["Preferences and MatchState: private, never committed"]
+    VRF["MagicBlock VRF"] -->|tie-break seed| TEE
+    TEE -->|Gale-Shapley in one transaction| PAIRS["Pairings only"]
+    PAIRS --> L1
+    L1 -->|pay the chosen counterparty| W
 ```
-── THE GATE — can an outsider read someone's preferences?
-   ok  owner CAN read their own preferences (92 bytes)
-   ok  outsider got nothing back — account is shielded
-   ok  control: the same outsider connection CAN read the public round (512 bytes)
-   ok  unauthenticated RPC returned nothing
-```
-
-The control line matters more than the refusal. Without it, "got nothing back" would prove nothing —
-it could just mean that connection can't see rollup accounts at all. The same outsider connection
-reads the *public* round account fine, so the empty result is the permission working.
-
-### What this does not promise
-
-- **The result leaks, by design.** If you end up matched with me, you know you were on my list.
-  That's the product.
-- **A small pool leaks by elimination.** With four people per side, the pairings say a lot about the
-  rest. Rounds enforce a minimum.
-- **No identity verification.** One human can register several wallets. Out of scope for a one-week
-  build.
-
-## On chain
-
-| | |
-|---|---|
-| Program | [`5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R`](https://explorer.solana.com/address/5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R?cluster=devnet) |
-| Demo round, **transparent** | [`7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4`](https://ronda-ciega.vercel.app/round/7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4) — 6×6, VRF fulfilled, settled in 3 proposal rounds, committed back to L1. Records its frames, so the algorithm can be watched resolving. |
-| Demo round, **paid out** | [`8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR`](https://ronda-ciega.vercel.app/round/8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR) — 3×2 with real funds locked against it. Two buyers were paired. `npm run escrow` paid the first one's seller, then used the second escrow to try paying a seller the matching did not choose (refused, `NotYourPair`) and left it locked; the third went unmatched and took his deposit back. Nobody signed to receive money. The second payment can be sent from the round page by either side of that pair. |
-| Demo round, **private** | [`3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3`](https://ronda-ciega.vercel.app/round/3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3) — 6×6, the same twelve people, the same rankings, the **same pairing**, and zero recorded frames. Read these two side by side: identical answer, no visibility into how. |
-| Rollup | MagicBlock TEE ER — `https://devnet-tee.magicblock.app` |
-| VRF queue | `5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc` |
-
-Both demo rounds ran the full lifecycle, closing included: their rankings and working memory were
-destroyed inside the enclave before the round was committed back.
-
-## Accounts
 
 | Account | Visibility | Holds |
-|---|---|---|
+|:--|:--|:--|
 | `Round` | public, L1 | deadline, counts, pairings, VRF seed, transparency flag |
 | `Participant` | public, L1 | wallet, side, handle, link |
 | `Preferences` | **private, rollup only** | one person's ranking |
-| `MatchState` | **private, rollup only** | every ranking, plus the algorithm's working state |
+| `MatchState` | **private, rollup only** | every ranking plus the algorithm's working state |
 
-`Preferences` and `MatchState` are created inside the rollup and destroyed there by
-`close_preferences` and `close_match_state`, which close the permission, close the account and
-return the rent to the round that sponsored it. They are never delegated from L1 and never
-committed to it — there is no instruction anywhere in the program that moves a ranking out of the
-enclave.
+- **One transaction, whole matching:** proposal rounds run as a loop inside a single rollup transaction (671 ms wall clock measured from Mexico vs. 0.9–1.6 s *per round* when sent one by one).
+- **Verifiable tie-breaks:** matching refuses to run until the VRF callback lands, and the seed is published so anyone can replay every tie-break.
+- **Transparent rounds are opt-in:** animating the algorithm leaks proposal order, so normal rounds publish nothing but the pairings.
+- **Honest privacy model:** TEE-enforced access control, not encryption. The result itself leaks by design, small pools leak by elimination, and there's no identity verification.
 
-Order matters: closing needs the round as its rent sponsor, and once the round is committed back
-to L1 the rollup can no longer write it. Undelegating first orphans every ranking account inside
-the enclave. The UI does both in one action so it cannot be got wrong by clicking.
+The full argument — session keys, autopilot, escrow, what a wallet can't simulate — is in **[docs/DESIGN.md](docs/DESIGN.md)**, and the spec in [docs/SPEC.md](docs/SPEC.md).
 
-Closing is permissionless once a round has settled. There is nothing to gain by calling it: the
-data is unreadable to the caller either way, and destroying it is what the participant was
-promised.
+## ⛓️ On chain (Devnet)
 
-## Build
+| | |
+|:--|:--|
+| Program | [`5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R`](https://explorer.solana.com/address/5VBYCgdVwAELHuCwQgTXDB7czV9wvz65gYN3bCR9Nq9R?cluster=devnet) |
+| Demo round, **transparent** | [`7Qtv…qKq4`](https://ronda-ciega.vercel.app/round/7QtvEoTWT69VVyYHrwigmLcTevZtLfcavEWD8WdnqKq4) — 6×6, VRF fulfilled, settled in 3 proposal rounds |
+| Demo round, **private** | [`3HKS…JCs3`](https://ronda-ciega.vercel.app/round/3HKShqud9GTngwHUbGDFrNFfFxBnFiJ8EQin9jw5JCs3) — same people, same rankings, same pairing, zero recorded frames |
+| Demo round, **paid out** | [`8nMU…91dR`](https://ronda-ciega.vercel.app/round/8nMUQHBPfKW8xU528xjuVHb2ZSUxWkFwM3WTj7Rr91dR) — 3×2 with funds locked; escrow paid the matched seller and refused an unmatched one |
+| Rollup | MagicBlock TEE ER — `https://devnet-tee.magicblock.app` |
+| VRF queue | `5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc` |
 
-```bash
-make build    # compile the program
-make idl      # generate the IDL and TypeScript types
-```
+## 🛠️ Stack
 
-`anchor build` panics on native Windows (a `cargo-build-sbf` bug), so the Makefile drives
-`cargo build-sbf` per program. There is no local validator either — `solana-test-validator` doesn't
-run natively on Windows — so everything targets devnet.
+| Layer | Technology |
+|:--|:--|
+| Program | Rust · Anchor 1.0.2 · `ephemeral-rollups-sdk` 0.16.2 (Private ER permissions, VRF) |
+| Frontend | Next.js 14 · React 18 · TypeScript · Tailwind CSS · Motion · Solana wallet-adapter |
+| Tests | 55 Rust unit tests · frontend unit tests · devnet scripts for refusals, sessions, escrow and concurrency · GitHub Actions CI |
+| Deploy | Vercel |
 
-```bash
-npx ts-node scripts/spike.ts          # full round, end to end, with the privacy check
-POOL=6 npx ts-node scripts/spike.ts   # bigger market
-MODE=step npx ts-node scripts/spike.ts  # one transaction per proposal round
-```
-
-Frontend:
+## 🚀 Run it locally
 
 ```bash
 cd frontend && npm install && npm run dev
 ```
 
-## Tests
-
-CI runs everything that is deterministic and free — the unit suite, both type
-checks, the Next build, the design invariants, and the program itself: rustfmt,
-clippy, a host type check, fifty-five Rust unit tests and the SBF build. That
-last one matters more than it looks: `anchor build` panics on native Windows,
-so until CI existed nothing verified a Rust change compiled until it was
-deployed.
-
-The Rust tests are newer than they should be. Everything that verified the
-matching ran against the **TypeScript reimplementation** in the frontend — four
-hundred generated markets per click, well covered — and nothing anywhere
-checked that the two implementations agree. The one that decides who actually
-gets matched is the Rust, and it was the one with no tests. Two of the cases
-are **pinned vectors asserted in both languages**: the same lists, the same
-seed, the same expected pairing, in `programs/ronda-ciega/src/lib.rs` and in
-`frontend/tests/matching.test.ts`. A drift now turns one of the two suites red
-instead of turning up as a devnet round that disagrees with the page explaining
-it. The first version of that vector was expected by hand and was wrong — both
-implementations disagreed with it in the same way, which is how it earned its
-place.
+<details>
+<summary><b>Program, scripts and tests</b></summary>
 
 ```bash
-cargo test --package ronda-ciega   # 55 tests, host target, no validator
+make build                         # compile the program (cargo build-sbf; anchor build panics on native Windows)
+make idl                           # generate the IDL and TypeScript types
+cargo test --package ronda-ciega   # Rust unit tests, host target, no validator
+cd frontend && npm test            # frontend unit tests, no network
+npx ts-node scripts/spike.ts       # full round end to end on devnet, with the privacy check
 ```
 
-```bash
-cd frontend && npm test        # 260 unit tests, no network, ~2s
-npm run test:types             # types for the test suite
-OFFLINE=1 node scripts/verify.mjs   # the checks that read the repo
-```
+Devnet scripts that spend SOL and stay out of CI: `npm run negative`, `npm run negative:rollup`, `npm run session`, `npm run escrow`, `npm run concurrency`, `npm run operator-key`, `npm run verify`. What each one proves is described in [docs/DESIGN.md](docs/DESIGN.md#tests).
 
-The rest costs SOL and needs a funded devnet wallet, so it stays manual and out
-of CI. A pipeline that goes red because devnet is having a bad day is one people
-learn to ignore.
+</details>
 
-```bash
-npm run verify                 # the same, plus the deployed site
-npm run negative               # 11 refusals the program must make, on L1
-npm run operator-key           # a stranger key drives the rollup lifecycle
-npm run concurrency            # six wallets join at once, indices stay unique
-FULL=1 npm run negative        # + SideFull: fills a side with 16 (~0.1 SOL)
-npm run session                # the session-key path, end to end (~0.1 SOL, 2 min)
-npm run escrow                 # the money path, end to end (~0.4 SOL, 4 min)
-npm run negative:rollup        # 26 refusals inside the TEE (~0.15 SOL, 3 min)
-npm run spike                  # the full lifecycle, including the privacy gate
-```
+## 📂 Docs
 
-Two of those cases exist because of the same failure: something that is wrong
-and silent. The stat band counted up on `requestAnimationFrame` and froze
-mid-count in any tab that stopped compositing, leaving invented measurements on
-screen in the same type as the real ones. And the round-length box ran its value
-through `Number()` straight into the deadline — `Number("")` is `0` and
-`new BN(NaN).toString()` is `"0"`, not a throw, so an empty box created a round
-dated 1970: the transaction succeeded, and the round could never be joined by
-anyone, with nothing on screen saying why. Neither logged an error. Both are now
-checked from the browser.
+| Document | What's in it |
+|:--|:--|
+| [docs/DESIGN.md](docs/DESIGN.md) | Why it can't be commit-reveal, signing, tie-breaks, privacy model, accounts, tests, design notes |
+| [docs/SPEC.md](docs/SPEC.md) | The full design argument |
+| [docs/PLAN.md](docs/PLAN.md) · [docs/ROADMAP.md](docs/ROADMAP.md) | Remaining work and known gaps |
+| [docs/VIDEO.md](docs/VIDEO.md) | Demo video script |
 
-Sixteen of the program's twenty-seven error codes are exercised end to end,
-and the eight the escrow added are exercised as pure functions instead — every
-refusal `check_settle` and `check_refund` can make has a test, which is the
-part where being wrong costs somebody money. The three older gaps are
-documented in [docs/ROADMAP.md](docs/ROADMAP.md): one is unreachable behind a
-seeds constraint, one is declared and never raised (its invariant is enforced
-by a state transition instead), and one guards arithmetic on counters that
-cannot overflow.
+## 🏆 Hackathon
 
-The nineteen UI cases run in the browser against any page of the deployed site.
-Two of them wait on the network, so the run takes about ten seconds:
+Built for **[MagicBlock Solana Blitz v8](https://build.magicblock.app/?stage=blitz)** — theme *Global Startup Village*.
 
-```js
-new Function(await (await fetch("/ui-cases.js")).text())();
-await runUiCases();
-```
+## 📄 License
 
-## Layout
-
-```
-programs/ronda-ciega/   Anchor program: state, Gale–Shapley, permissions, VRF
-scripts/spike.ts        End-to-end run against devnet + the TEE rollup
-frontend/               Next.js app (ES/EN, light/dark)
-docs/SPEC.md            The full design argument
-docs/PLAN.md            Remaining work
-```
-
-## Stack
-
-Anchor `1.0.2` · `ephemeral-rollups-sdk` `0.16.2` · Solana Devnet · Next.js 14 · Motion
-
-## License
-
-MIT
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-## FIX_NOTES — design pass, 2026-10-09
+<div align="center">
 
-- **Desktop nav broke onto two lines.** Seven section links at 11px mono did not fit a 1152px bar, so each label wrapped ("Try / it"). Links are now `nowrap` and only show inline from 1560px, with a wider bar there; below that they live in the sheet, which already had them.
-- **11px and smaller text.** The `2xs` step was 11px, and charts, tags and the share chip used 9–10px. The floor is 12px now, everywhere, including chart ticks.
-- **Touch targets under 44px.** Desktop overrides dropped buttons, toggles and the wallet chip to 34–40px; the logo link, footer links, the faucet link and "See rounds" were 13–31px tall. All of them are 44px now.
-- **The hero's light box.** The old `.aurora` glow was clipped by the hero's `overflow-hidden` into a rectangle with visible edges. The atmosphere now lives in the fixed background instead.
-- **SEO.** Added `robots.txt`, `sitemap.xml`, a web manifest, `apple-icon`, a canonical URL per route (`/`, `/proof`, `/round/[address]`) and per-page titles for the two client pages.
+<img src="frontend/app/icon.svg" alt="" width="48" />
 
-## DESIGN_NOTES
+**The pairing comes out. The lists never do.**
 
-- **Background — recipe 4 of the dice, the warp tunnel.** Hexagonal rings fly toward the reader, alternating the product's two semantic colours: cyan for sealed, magenta for public. Small cyan sparks travel the other way, into the tunnel, and never come back — the rankings going into the enclave. The vanishing point sits right of the headline on desktop so the tunnel frames the text rather than crossing it. Three layers move at different rates with the pointer and the scroll: a far wash of light, the canvas tunnel, and a few near hex seals turning in real CSS 3D. Full on `/`; quiet (fewer rings, slower, 45% opacity) on `/proof` and round pages. Half the rings on phones, DPR capped at 2, paused when the tab is hidden, one still frame under reduced motion, dimmed through `--amb-strength` on the light theme. `components/AmbientBackground.tsx`.
-- **Hero.** The headline and its word-by-word reveal stay; on wide screens a drawing of the mechanism sits beside it (`components/SealedRound.tsx`): founders and builders, every ranking travelling into a locked hexagon, and only the pairings coming out. The labels are placeholders (F1, B3), not data.
-- The existing system — tokens, Instrument Serif / Inter / JetBrains Mono, springs in `lib/motion.ts`, glass — is unchanged; this pass only completes it.
-
-## Two-minute phone check
-
-1. Open https://ronda-ciega.vercel.app — hex rings drift behind the headline; nothing scrolls sideways.
-2. Open the menu (top right): every section link is there and each row is easy to hit.
-3. Switch ES/EN and light/dark: the tunnel dims on light and the text stays readable.
-4. Scroll to the charts: axis numbers are legible without zooming.
-5. Open /proof and run the 400 markets: the background is quieter there.
-6. With "Reduce motion" on in the OS, the background holds still.
+</div>
